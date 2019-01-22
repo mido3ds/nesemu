@@ -44,6 +44,8 @@ protected:
 public:
 
     NES6502_DEVICE(string romPath) {
+        logInfo("using rom: %s", romPath.c_str());
+        logInfo("filling instruction set functions");
         instrucSet.fill([]() {
             logError("invalid/unsupported opcode called");
         });
