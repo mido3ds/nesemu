@@ -55,16 +55,30 @@ struct Registers {
     } p; // processor status
 };
 
-class Device {
+class NES6502_DEVICE {
 private:
-    uint8_t memory[0x10000+1];
+    uint8_t memory[UINT16_MAX + 1];
 public:
+    uint8_t readMem(const uint16_t address) {
+        return memory[address];
+    }
+
+    void writeMem(const uint16_t address, const uint8_t value) {
+        memory[address] = value;
+    }
+
+    void reset() {
+        logInfo("reset");
+    }
+
+    void run() {
+        logInfo("run");
+        reset();
+    }
 };
 
 int main(int argc, char const *argv[])
 {
-    logInfo("in main");
-    logWarning("this is number %i", 5);
-    logError("wow what happened %s", "is bad");
+    NES6502_DEVICE().run();
     return 0;
 }
