@@ -5,12 +5,16 @@
 
 #include <cstdint>
 #include <array>
+#include <string>
+#include <cstdio>
 #include <functional>
 #include "Logger.h"
 
 using namespace std;
 
 class NES6502_DEVICE {
+protected:
+
     uint8_t memory[0xffff + 1];
 
     struct {
@@ -35,16 +39,13 @@ class NES6502_DEVICE {
     } registers; 
 
     // opcode -> function
-    array<function<void(uint8_t)>, 256> instrucSet;
-
-    inline void execute(uint8_t opcode) {
-        instrucSet[opcode](opcode);
-    }
+    array<function<void()>, 256> instrucSet;
 
 public:
-    NES6502_DEVICE() {
-        instrucSet.fill([](uint8_t opcode) {
-            logError("invalid/unsupported opcode(0x%02x) called", opcode);
+
+    NES6502_DEVICE(string romPath) {
+        instrucSet.fill([]() {
+            logError("invalid/unsupported opcode called");
         });
     }
 
@@ -63,12 +64,13 @@ public:
     void run() {
         logInfo("run");
         reset();
-        execute(0x15);
     }
 };
 
-int main(int argc, char const *argv[])
-{
-    NES6502_DEVICE().run();
-    return 0;
+int main(int argc, char const *argv[]) {
+    if (argc != 2) {
+        printf("Usage: NesEmu /path/to/rom\n");
+    } else {
+        NES6502_DEVICE(argv[1]).run();
+    }
 }
