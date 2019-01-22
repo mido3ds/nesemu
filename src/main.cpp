@@ -7,16 +7,8 @@ using namespace std;
 
 #include "Date.h"
 
-#define ANSI_COLOR_RED     "\x1b[31m"
-#define ANSI_COLOR_GREEN   "\x1b[32m"
-#define ANSI_COLOR_YELLOW  "\x1b[33m"
-#define ANSI_COLOR_BLUE    "\x1b[34m"
-#define ANSI_COLOR_MAGENTA "\x1b[35m"
-#define ANSI_COLOR_CYAN    "\x1b[36m"
-#define ANSI_COLOR_RESET   "\x1b[0m"
-
 void logInfo(string format, ...) {
-    format = string(ANSI_COLOR_BLUE "[INFO]" ANSI_COLOR_RESET) + string(GMTDateTime()) + ": " + format + '\n';
+    format = string("[INFO][") + string(GMTDateTime()) + "]: " + format + '\n';
 
     va_list args;
     va_start (args, format);
@@ -25,7 +17,7 @@ void logInfo(string format, ...) {
 }
 
 void logWarning(string format, ...) {
-    format = string(ANSI_COLOR_MAGENTA "[WARNING]" ANSI_COLOR_RESET) + string(GMTDateTime()) + ": " + format + '\n';
+    format = string("[WARNING][") + string(GMTDateTime()) + "]: " + format + '\n';
 
     va_list args;
     va_start (args, format);
@@ -34,7 +26,7 @@ void logWarning(string format, ...) {
 }
 
 void logError(string format, ...) {
-    format = string(ANSI_COLOR_RED "[ERROR]" ANSI_COLOR_RESET) + string(GMTDateTime()) + ": " + format + '\n';
+    format = string("[ERROR][") + string(GMTDateTime()) + "]: " + format + '\n';
 
     va_list args;
     va_start (args, format);
@@ -71,6 +63,8 @@ public:
 
 int main(int argc, char const *argv[])
 {
-    
+    logInfo("in main");
+    logWarning("this is number %i", 5);
+    logError("wow what happened %s", "is bad");
     return 0;
 }
