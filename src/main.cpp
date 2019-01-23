@@ -32,9 +32,8 @@ protected:
     constexpr static int DENDY_CYCLE_NS = 564; // TODO: detect video system
 
     constexpr static Color DEFAULT_COLOR = Color({0, 0, 0});
-    constexpr static int MEM_SIZE = 0xffff + 1;
 
-    uint8_t memory[MEM_SIZE];
+    array<uint8_t, UINT16_MAX+1> memory;
 
     struct Registers {
         uint16_t pc; // program counter
@@ -64,21 +63,22 @@ protected:
     };
 
     // opcode -> instruction data
-    array<Instruction, 256> instrucSet;
+    array<Instruction, UINT8_MAX+1> instrucSet;
 
-    uint32_t cycles;
+    uint32_t cycles; // TODO: cycles++ if page crossed
 
 public:
 
     NES6502_DEVICE() {
         logInfo("started building NES6502 device");
 
+        /*http://obelisk.me.uk/6502/reference.html*/
         logInfo("filling instruction set data");
+        
         instrucSet.fill({[this]() {
             logError("invalid/unsupported opcode(0x%02x) called", readMem(regs.pc));
         },0,0});
 
-        /*http://obelisk.me.uk/6502/reference.html*/
         /*ADC*/ {
             auto adc = [this](uint8_t v) {
                 regs.p.bits.c = (v == UINT8_MAX && regs.p.bits.c) 
@@ -105,18 +105,47 @@ public:
             }, 3, 4};
             instrucSet[0x7D] = {[this,&adc]() {
                 adc(readMem(indexedAbsoluteAddress(readMem(regs.pc+1), readMem(regs.pc+2), regs.x)));
-                // TODO: cycles++ if page crossed
             }, 3, 4};
             instrucSet[0x79] = {[this,&adc]() {
                 adc(readMem(indexedAbsoluteAddress(readMem(regs.pc+1), readMem(regs.pc+2), regs.y)));
-                // TODO: cycles++ if page crossed
             }, 3, 4};
             instrucSet[0x61] = {[this,&adc]() {
                 adc(readMem(indexedIndirectAddress(readMem(regs.pc+1), regs.x)));
             }, 2, 6};
             instrucSet[0x71] = {[this,&adc]() {
                 adc(readMem(indirectIndexedAddress(readMem(regs.pc+1), regs.y)));
-                // TODO: cycles++ if page crossed
+            }, 2, 5};
+        }
+
+        /*AND*/ {
+            auto and = [this](uint8_t v) {
+                regs.a |= v;
+                regs.p.bits.z = regs.a == 0;
+                regs.p.bits.n = regs.a >> 7;
+            };
+            instrucSet[0x29] = {[this,&and]() {
+                and(readMem(regs.pc+1));
+            }, 2, 2};
+            instrucSet[0x25] = {[this,&and]() {
+                and(readMem(zeroPageAddress(readMem(regs.pc+1))));
+            }, 2, 3};
+            instrucSet[0x35] = {[this,&and]() {
+                and(readMem(indexedZeroPageAddress(readMem(regs.pc+1), regs.x)));
+            }, 2, 4};
+            instrucSet[0x2D] = {[this,&and]() {
+                and(readMem(absoluteAddress(readMem(regs.pc+1), readMem(regs.pc+2))));
+            }, 3, 4};
+            instrucSet[0x3D] = {[this,&and]() {
+                and(readMem(indexedAbsoluteAddress(readMem(regs.pc+1), readMem(regs.pc+2), regs.x)));
+            }, 3, 4};
+            instrucSet[0x39] = {[this,&and]() {
+                and(readMem(indexedAbsoluteAddress(readMem(regs.pc+1), readMem(regs.pc+2), regs.y)));
+            }, 3, 4};
+            instrucSet[0x21] = {[this,&and]() {
+                and(readMem(indexedIndirectAddress(readMem(regs.pc+1), regs.x)));
+            }, 2, 6};
+            instrucSet[0x31] = {[this,&and]() {
+                and(readMem(indirectIndexedAddress(readMem(regs.pc+1), regs.y)));
             }, 2, 5};
         }
 
@@ -191,7 +220,7 @@ public:
         logInfo("start powering on");
         cycles = 0;
 
-        memset(memory, 0, MEM_SIZE);
+        memory.fill(0);
         memset(&regs, 0, sizeof regs);
 
         /*https://wiki.nesdev.com/w/index.php/CPU_ALL#At_power-up*/
