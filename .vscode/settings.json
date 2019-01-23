@@ -3,6 +3,9 @@
         "system_error": "cpp",
         "type_traits": "cpp",
         "xfunctional": "cpp",
-        "xstddef": "cpp"
-    }
+        "xstddef": "cpp",
+        "functional": "cpp"
+    },
+    "C_Cpp.dimInactiveRegions": true,
+    "C_Cpp.intelliSenseEngineFallback": "Enabled"
 }
