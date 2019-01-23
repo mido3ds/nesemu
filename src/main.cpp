@@ -149,6 +149,104 @@ public:
             }, 2, 5};
         }
 
+        /*ASL*/ {
+            auto asl = [this](uint8_t v) -> uint8_t {
+                regs.p.bits.c = v >> 7;
+                v <<= 1;
+                regs.p.bits.z = v == 0; // TODO: not sure if Accumulator only or any value
+                regs.p.bits.n = v >> 7;
+
+                return v;
+            };
+            instrucSet[0x0A] = {[this,&asl]() {
+                regs.a = asl(regs.a);
+            }, 1, 2};
+            instrucSet[0x06] = {[this,&asl]() {
+                auto addr = zeroPageAddress(readMem(regs.pc+1));
+                writeMem(addr, asl(readMem(addr)));
+            }, 2, 5};
+            instrucSet[0x16] = {[this,&asl]() {
+                auto addr = indexedZeroPageAddress(readMem(regs.pc+1), regs.x);
+                writeMem(addr, asl(readMem(addr)));
+            }, 2, 6};
+            instrucSet[0x0E] = {[this,&asl]() {
+                auto addr = absoluteAddress(readMem(regs.pc+1), readMem(regs.pc+2));
+                writeMem(addr, asl(readMem(addr)));
+            }, 3, 6};
+            instrucSet[0x1E] = {[this,&asl]() {
+                auto addr = indexedAbsoluteAddress(readMem(regs.pc+1), readMem(regs.pc+2), regs.x);
+                writeMem(addr, asl(readMem(addr)));
+            }, 3, 7};
+        }
+
+        /*BCC*/ {
+            instrucSet[0x90] = {[this]() {
+                if (!regs.p.bits.c) {
+                    regs.pc += (int8_t)readMem(regs.pc+1);
+                    cycles++;
+                }
+            }, 2, 2};
+        }
+
+        /*BCS*/ {
+            instrucSet[0xB0] = {[this]() {
+                if (regs.p.bits.c) {
+                    regs.pc += (int8_t)readMem(regs.pc+1);
+                    cycles++;
+                }
+            }, 2, 2};
+        }
+
+        /*BEQ*/ {
+            instrucSet[0xF0] = {[this]() {
+                if (regs.p.bits.z) {
+                    regs.pc += (int8_t)readMem(regs.pc+1);
+                    cycles++;
+                }
+            }, 2, 2};
+        }
+
+        /*BIT*/ {
+            auto bit = [this](uint8_t v) {
+                regs.p.bits.z = v & regs.a == 0;
+                regs.p.bits.v = v >> 6;
+                regs.p.bits.n = v >> 7;
+            };
+            instrucSet[0x24] = {[this,&bit]() {
+                bit(readMem(zeroPageAddress(readMem(regs.pc+1))));
+            }, 2, 3};
+            instrucSet[0x2C] = {[this,&bit]() {
+                bit(readMem(absoluteAddress(readMem(regs.pc+1), readMem(regs.pc+2))));
+            }, 3, 4};
+        }
+
+        /*BMI*/ {
+            instrucSet[0x30] = {[this]() {
+                if (regs.p.bits.n) {
+                    regs.pc += (int8_t)readMem(regs.pc+1);
+                    cycles++;
+                }
+            }, 2, 2};
+        }
+
+        /*BNE*/ {
+            instrucSet[0xD0] = {[this]() {
+                if (!regs.p.bits.z) {
+                    regs.pc += (int8_t)readMem(regs.pc+1);
+                    cycles++;
+                }
+            }, 2, 2};
+        }
+
+        /*BPL*/ {
+            instrucSet[0x10] = {[this]() {
+                if (!regs.p.bits.n) {
+                    regs.pc += (int8_t)readMem(regs.pc+1);
+                    cycles++;
+                }
+            }, 2, 2};
+        }
+
         logInfo("finished building NES6502 device");
     }
 
