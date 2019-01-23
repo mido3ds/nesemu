@@ -33,6 +33,9 @@ protected:
 
     constexpr static Color DEFAULT_COLOR = Color({0, 0, 0});
 
+    constexpr static uint16_t STACK_START = 0x0100;
+    constexpr static uint16_t STACK_END = 0x01FF;
+
     array<uint8_t, UINT16_MAX+1> memory;
 
     struct Registers {
@@ -247,6 +250,59 @@ public:
             }, 2, 2};
         }
 
+        /*BRK*/ {
+            instrucSet[0x00] = {[this]() {
+                push(regs.pc);
+                push(regs.p.byte);
+                regs.pc = 0xFFFE; // TODO: load IRQ interrupt table, load 0xFFFE or 0xFFFF ??
+                regs.p.bits.b = 1;
+
+                logInfo("program called BRK");
+            }, 1, 7};
+        }
+
+        /*BVC*/ {
+            instrucSet[0x50] = {[this]() {
+                if (!regs.p.bits.v) {
+                    regs.pc += (int8_t)readMem(regs.pc+1);
+                    cycles++;
+                }
+            }, 2, 2};
+        }
+
+        /*BVS*/ {
+            instrucSet[0x50] = {[this]() {
+                if (regs.p.bits.v) {
+                    regs.pc += (int8_t)readMem(regs.pc+1);
+                    cycles++;
+                }
+            }, 2, 2};
+        }
+
+        /*CLC*/ {
+            instrucSet[0x18] = {[this]() {
+                regs.p.bits.c = 0;
+            }, 1, 2};
+        }
+
+        /*CLC*/ {
+            instrucSet[0xD8] = {[this]() {
+                regs.p.bits.d = 0;
+            }, 1, 2};
+        }
+
+        /*CLI*/ {
+            instrucSet[0x58] = {[this]() {
+                regs.p.bits.i = 0;
+            }, 1, 2};
+        }
+
+        /*CLV*/ {
+            instrucSet[0xB8] = {[this]() {
+                regs.p.bits.v = 0;
+            }, 1, 2};
+        }
+
         logInfo("finished building NES6502 device");
     }
 
@@ -282,6 +338,14 @@ public:
 
     inline uint16_t indirectIndexedAddress(const uint8_t bb, const uint8_t i) {
         return absoluteAddress(readMem(bb), readMem(bb+1)) + i;
+    }
+
+    inline void push(const uint8_t v) {
+        writeMem(STACK_START + regs.sp--, v);
+    }
+
+    uint8_t pop() {
+        return readMem(STACK_END + regs.sp++);
     }
 
     void setROM(string romPath) {
