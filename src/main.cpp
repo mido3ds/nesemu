@@ -4,16 +4,22 @@
 */
 
 #include <cstdint>
+#include <cstdio>
 #include <array>
 #include <string>
-#include <cstdio>
 #include <functional>
+#include <chrono>
+#include <thread>
 #include "Logger.h"
 
 using namespace std;
 
 class NES6502_DEVICE {
 protected:
+    // approx time in nanoseconds for one cycle
+    const int NTSC_CYCLE_NS  = 559;
+    const int PAL_CYCLE_NS   = 601;
+    const int DENDY_CYCLE_NS = 564;
 
     uint8_t memory[0xffff + 1];
 
@@ -41,14 +47,62 @@ protected:
     // opcode -> function
     array<function<void()>, 256> instrucSet;
 
+    uint32_t cycles;
+
 public:
 
-    NES6502_DEVICE(string romPath) {
-        logInfo("using rom: %s", romPath.c_str());
+    NES6502_DEVICE() {
+        logInfo("building NES6502 device NTSC");
         logInfo("filling instruction set functions");
         instrucSet.fill([]() {
             logError("invalid/unsupported opcode called");
         });
+
+        /*http://obelisk.me.uk/6502/reference.html*/
+        /*ADC*/ {
+            instrucSet[0x69] = [this]() {
+                
+                cycles += 2;                
+            };
+            instrucSet[0x65] = [this]() {
+
+                cycles += 3;
+            };
+            instrucSet[0x75] = [this]() {
+
+                cycles += 4;
+            };
+            instrucSet[0x6D] = [this]() {
+
+                cycles += 4;
+            };
+            instrucSet[0x7D] = [this]() {
+
+                cycles += 4;
+            };
+            instrucSet[0x79] = [this]() {
+
+                cycles += 4;
+            };
+            instrucSet[0x61] = [this]() {
+
+                cycles += 6;
+            };
+            instrucSet[0x71] = [this]() {
+
+                cycles += 5;
+            };
+        }
+    }
+
+    void setROM(string romPath) {
+        //TODO
+        logInfo("using rom: %s", romPath.c_str());
+    }
+
+    inline void burnCycles() {
+        std::this_thread::sleep_for(std::chrono::nanoseconds(cycles * NTSC_CYCLE_NS));
+        cycles = 0;
     }
 
     uint8_t readMem(const uint16_t address) {
@@ -61,11 +115,12 @@ public:
 
     void reset() {
         logInfo("reset");
+        cycles = 0;
     }
 
-    void run() {
-        logInfo("run");
-        reset();
+    void powerOn() {
+        logInfo("power on");
+        cycles = 0;
     }
 };
 
@@ -73,6 +128,8 @@ int main(int argc, char const *argv[]) {
     if (argc != 2) {
         printf("Usage: NesEmu /path/to/rom\n");
     } else {
-        NES6502_DEVICE(argv[1]).run();
+        NES6502_DEVICE dev;
+        dev.setROM(argv[1]);
+        dev.powerOn();
     }
 }
