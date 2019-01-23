@@ -5,6 +5,7 @@
 
 #include <cstdint>
 #include <cstdio>
+#include <cstring>
 #include <array>
 #include <string>
 #include <functional>
@@ -26,10 +27,11 @@ protected:
     constexpr static int DENDY_CYCLE_NS = 564;
 
     constexpr static Color DEFAULT_COLOR = Color({0, 0, 0});
+    constexpr static int MEM_SIZE = 0xffff + 1;
 
-    uint8_t memory[0xffff + 1];
+    uint8_t memory[MEM_SIZE];
 
-    struct {
+    struct Registers {
         uint16_t pc; // program counter
         uint8_t sp; // stack pointer
         uint8_t a; // accumulator
@@ -48,7 +50,7 @@ protected:
             } bits;
             uint8_t byte;
         } p; // processor status
-    } registers; 
+    } regs; 
 
     // opcode -> function
     array<function<void()>, 256> instrucSet;
@@ -127,6 +129,20 @@ public:
     void powerOn() {
         logInfo("power on");
         cycles = 0;
+
+        memset(memory, 0, MEM_SIZE);
+
+        /*https://wiki.nesdev.com/w/index.php/CPU_ALL#At_power-up*/
+        regs.p.byte = 0x34;
+        regs.a = regs.x = regs.y = 0;
+        regs.sp = 0xFD;
+        // setting those to zero is useless, as I zero all memory
+        // memory[0x4017] = 0x00;
+        // memory[0x4015] = 0x00;
+        // memset(memory+0x4000, 0x00, 0x400F-0x4000); // memory[$4000-$400F] = $00;
+
+        //TODO: All 15 bits of noise channel LFSR = $0000[4]. 
+        //The first time the LFSR is clocked from the all-0s state, it will shift in a 1.
     }
 
     // nes color palatte -> RGB color
