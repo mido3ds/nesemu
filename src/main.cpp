@@ -15,6 +15,11 @@
 
 using namespace std;
 
+#define int8_sign(n) n>>7
+#define int16_sign(n) n>>15
+#define int32_sign(n) n>>31
+#define int64_sign(n) n>>63
+
 struct Color {
     uint8_t r, g, b;
 };
@@ -24,7 +29,7 @@ protected:
     // approx time in nanoseconds for one cycle
     constexpr static int NTSC_CYCLE_NS  = 559;
     constexpr static int PAL_CYCLE_NS   = 601;
-    constexpr static int DENDY_CYCLE_NS = 564;
+    constexpr static int DENDY_CYCLE_NS = 564; // TODO: detect video system
 
     constexpr static Color DEFAULT_COLOR = Color({0, 0, 0});
     constexpr static int MEM_SIZE = 0xffff + 1;
@@ -52,55 +57,104 @@ protected:
         } p; // processor status
     } regs; 
 
-    // opcode -> function
-    array<function<void()>, 256> instrucSet;
+    struct Instruction {
+        function<void()> exec;
+        uint8_t bytes;
+        uint16_t cycles;
+    };
+
+    // opcode -> instruction data
+    array<Instruction, 256> instrucSet;
 
     uint32_t cycles;
 
 public:
 
     NES6502_DEVICE() {
-        logInfo("building NES6502 device NTSC");
-        logInfo("filling instruction set functions");
-        instrucSet.fill([]() {
-            logError("invalid/unsupported opcode called");
-        });
+        logInfo("started building NES6502 device");
+
+        logInfo("filling instruction set data");
+        instrucSet.fill({[this]() {
+            logError("invalid/unsupported opcode(0x%02x) called", readMem(regs.pc));
+        },0,0});
 
         /*http://obelisk.me.uk/6502/reference.html*/
         /*ADC*/ {
-            instrucSet[0x69] = [this]() {
-                
-                cycles += 2;                
-            };
-            instrucSet[0x65] = [this]() {
+            auto adc = [this](uint8_t v) {
+                regs.p.bits.c = (v == UINT8_MAX && regs.p.bits.c) 
+                             || (v + regs.p.bits.c) > UINT8_MAX - regs.a; 
+                regs.p.bits.v = int8_sign(v) == int8_sign(regs.a) 
+                             && int8_sign(v+regs.a+regs.p.bits.c) != int8_sign(v); 
 
-                cycles += 3;
-            };
-            instrucSet[0x75] = [this]() {
+                regs.a += v + regs.p.bits.c;
 
-                cycles += 4;
+                regs.p.bits.z = regs.a == 0;
+                regs.p.bits.n = regs.a >> 7;
             };
-            instrucSet[0x6D] = [this]() {
-
-                cycles += 4;
-            };
-            instrucSet[0x7D] = [this]() {
-
-                cycles += 4;
-            };
-            instrucSet[0x79] = [this]() {
-
-                cycles += 4;
-            };
-            instrucSet[0x61] = [this]() {
-
-                cycles += 6;
-            };
-            instrucSet[0x71] = [this]() {
-
-                cycles += 5;
-            };
+            instrucSet[0x69] = {[this,&adc]() {
+                adc(readMem(regs.pc+1));  
+            }, 2, 2};
+            instrucSet[0x65] = {[this,&adc]() {
+                adc(readMem(zeroPageAddress(readMem(regs.pc+1))));
+            }, 2, 3};
+            instrucSet[0x75] = {[this,&adc]() {
+                adc(readMem(indexedZeroPageAddress(readMem(regs.pc+1), regs.x)));
+            }, 2, 4};
+            instrucSet[0x6D] = {[this,&adc]() {
+                adc(readMem(absoluteAddress(readMem(regs.pc+1), readMem(regs.pc+2))));
+            }, 3, 4};
+            instrucSet[0x7D] = {[this,&adc]() {
+                adc(readMem(indexedAbsoluteAddress(readMem(regs.pc+1), readMem(regs.pc+2), regs.x)));
+                // TODO: cycles++ if page crossed
+            }, 3, 4};
+            instrucSet[0x79] = {[this,&adc]() {
+                adc(readMem(indexedAbsoluteAddress(readMem(regs.pc+1), readMem(regs.pc+2), regs.y)));
+                // TODO: cycles++ if page crossed
+            }, 3, 4};
+            instrucSet[0x61] = {[this,&adc]() {
+                adc(readMem(indexedIndirectAddress(readMem(regs.pc+1), regs.x)));
+            }, 2, 6};
+            instrucSet[0x71] = {[this,&adc]() {
+                adc(readMem(indirectIndexedAddress(readMem(regs.pc+1), regs.y)));
+                // TODO: cycles++ if page crossed
+            }, 2, 5};
         }
+
+        logInfo("finished building NES6502 device");
+    }
+
+    /*addressing modes for 6502
+    from Appendix E: http://www.nesdev.com/NESDoc.pdf
+    */
+    inline uint16_t zeroPageAddress(const uint8_t bb) {
+        return bb;
+    }
+
+    // indexed
+    inline uint16_t indexedZeroPageAddress(const uint8_t bb, const uint8_t i) {
+        return (bb+i) % 0xFF;
+    }
+
+    inline uint16_t absoluteAddress(const uint8_t bb, const uint8_t cc) {
+        return cc << 8 | bb;
+    }
+
+    // indexed
+    inline uint16_t indexedAbsoluteAddress(const uint8_t bb, const uint8_t cc, const uint8_t i) {
+        return absoluteAddress(bb, cc) + i;
+    }
+
+    inline uint16_t indirectAddress(const uint8_t bb, const uint8_t cc) {
+        uint16_t ccbb = absoluteAddress(bb, cc);
+        return absoluteAddress(readMem(ccbb), readMem(ccbb+1));
+    }
+
+    inline uint16_t indexedIndirectAddress(const uint8_t bb, const uint8_t i) {
+       return absoluteAddress(readMem(bb+i), readMem(bb+i+1));
+    }
+
+    inline uint16_t indirectIndexedAddress(const uint8_t bb, const uint8_t i) {
+        return absoluteAddress(readMem(bb), readMem(bb+1)) + i;
     }
 
     void setROM(string romPath) {
@@ -122,27 +176,42 @@ public:
     }
 
     void reset() {
-        logInfo("reset");
+        logInfo("start resetting");
         cycles = 0;
+
+        /*https://wiki.nesdev.com/w/index.php/CPU_ALL#After_reset*/
+        regs.sp -= 3;
+        regs.p.bits.i = 1;
+        //TODO: apuMemory[0x4015] = 0;
+
+        logInfo("finished resetting");
     }
 
     void powerOn() {
-        logInfo("power on");
+        logInfo("start powering on");
         cycles = 0;
 
         memset(memory, 0, MEM_SIZE);
+        memset(&regs, 0, sizeof regs);
 
         /*https://wiki.nesdev.com/w/index.php/CPU_ALL#At_power-up*/
         regs.p.byte = 0x34;
-        regs.a = regs.x = regs.y = 0;
         regs.sp = 0xFD;
-        // setting those to zero is useless, as I zero all memory
-        // memory[0x4017] = 0x00;
-        // memory[0x4015] = 0x00;
-        // memset(memory+0x4000, 0x00, 0x400F-0x4000); // memory[$4000-$400F] = $00;
 
         //TODO: All 15 bits of noise channel LFSR = $0000[4]. 
         //The first time the LFSR is clocked from the all-0s state, it will shift in a 1.
+
+        powerOnApu();
+
+        logInfo("finished powering on");
+    }
+
+    inline void powerOnApu() {
+        logInfo("start powering on apu");
+
+        //TODO
+
+        logInfo("finished powering on apu");
     }
 
     // nes color palatte -> RGB color

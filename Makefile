@@ -11,7 +11,7 @@ build:
 	cmake --build "C:/Users/Mahmoud/Practice/nesemu/build" || echo ">>>> build failed! <<<<<"
 
 run:
-	"C:/Users/Mahmoud/Practice/nesemu/build/NesEmu/Debug/NesEmu.exe" mario.nes.rom
+	"C:/Users/Mahmoud/Practice/nesemu/build/NesEmu/Debug/NesEmu.exe" mario.nes
 
 clean:
 	cmake --build "C:/Users/Mahmoud/Practice/nesemu/build" --target clean || echo ">>>> clean failed! <<<<<"
