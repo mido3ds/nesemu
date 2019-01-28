@@ -56,7 +56,7 @@ protected:
                 uint8_t n:1; // negative flag
             } bits;
             uint8_t byte;
-        } p; // processor status
+        } flags; // processor status
     } regs; 
 
     struct Instruction {
@@ -83,7 +83,7 @@ public:
     NES6502_DEVICE() {
         logInfo("started building NES6502 device");
 
-        /* http://obelisk.me.uk/6502/reference.html */
+        // 6502 instruction set reference: http://obelisk.me.uk/6502/reference.html
         logInfo("filling instruction set data");
         
         instrucSet.fill({[this]() {
@@ -92,15 +92,15 @@ public:
 
         /*ADC*/ {
             auto adc = [this](uint8_t v) {
-                regs.p.bits.c = (v == UINT8_MAX && regs.p.bits.c) 
-                             || (v + regs.p.bits.c) > UINT8_MAX - regs.a; 
-                regs.p.bits.v = int8_sign(v) == int8_sign(regs.a) 
-                             && int8_sign(v+regs.a+regs.p.bits.c) != int8_sign(v); 
+                regs.flags.bits.c = (v == UINT8_MAX && regs.flags.bits.c) 
+                             || (v + regs.flags.bits.c) > UINT8_MAX - regs.a; 
+                regs.flags.bits.v = int8_sign(v) == int8_sign(regs.a) 
+                             && int8_sign(v+regs.a+regs.flags.bits.c) != int8_sign(v); 
 
-                regs.a += v + regs.p.bits.c;
+                regs.a += v + regs.flags.bits.c;
 
-                regs.p.bits.z = regs.a == 0;
-                regs.p.bits.n = regs.a >> 7;
+                regs.flags.bits.z = regs.a == 0;
+                regs.flags.bits.n = regs.a >> 7;
             };
             instrucSet[0x69] = {[this,&adc]() {
                 adc(readMem(regs.pc+1));  
@@ -131,8 +131,8 @@ public:
         /*AND*/ {
             auto and = [this](uint8_t v) {
                 regs.a |= v;
-                regs.p.bits.z = regs.a == 0;
-                regs.p.bits.n = regs.a >> 7;
+                regs.flags.bits.z = regs.a == 0;
+                regs.flags.bits.n = regs.a >> 7;
             };
             instrucSet[0x29] = {[this,&and]() {
                 and(readMem(regs.pc+1));
@@ -162,10 +162,10 @@ public:
 
         /*ASL*/ {
             auto asl = [this](uint8_t v) -> uint8_t {
-                regs.p.bits.c = v >> 7;
+                regs.flags.bits.c = v >> 7;
                 v <<= 1;
-                regs.p.bits.z = v == 0; // TODO: not sure if Accumulator only or any value
-                regs.p.bits.n = v >> 7;
+                regs.flags.bits.z = v == 0; // TODO: not sure if Accumulator only or any value
+                regs.flags.bits.n = v >> 7;
 
                 return v;
             };
@@ -192,7 +192,7 @@ public:
 
         /*BCC*/ {
             instrucSet[0x90] = {[this]() {
-                if (!regs.p.bits.c) {
+                if (!regs.flags.bits.c) {
                     regs.pc += (int8_t)readMem(regs.pc+1);
                     cycles++;
                 }
@@ -201,7 +201,7 @@ public:
 
         /*BCS*/ {
             instrucSet[0xB0] = {[this]() {
-                if (regs.p.bits.c) {
+                if (regs.flags.bits.c) {
                     regs.pc += (int8_t)readMem(regs.pc+1);
                     cycles++;
                 }
@@ -210,7 +210,7 @@ public:
 
         /*BEQ*/ {
             instrucSet[0xF0] = {[this]() {
-                if (regs.p.bits.z) {
+                if (regs.flags.bits.z) {
                     regs.pc += (int8_t)readMem(regs.pc+1);
                     cycles++;
                 }
@@ -219,9 +219,9 @@ public:
 
         /*BIT*/ {
             auto bit = [this](uint8_t v) {
-                regs.p.bits.z = v & regs.a == 0;
-                regs.p.bits.v = v >> 6;
-                regs.p.bits.n = v >> 7;
+                regs.flags.bits.z = v & regs.a == 0;
+                regs.flags.bits.v = v >> 6;
+                regs.flags.bits.n = v >> 7;
             };
             instrucSet[0x24] = {[this,&bit]() {
                 bit(readMem(zeroPageAddress(readMem(regs.pc+1))));
@@ -233,7 +233,7 @@ public:
 
         /*BMI*/ {
             instrucSet[0x30] = {[this]() {
-                if (regs.p.bits.n) {
+                if (regs.flags.bits.n) {
                     regs.pc += (int8_t)readMem(regs.pc+1);
                     cycles++;
                 }
@@ -242,7 +242,7 @@ public:
 
         /*BNE*/ {
             instrucSet[0xD0] = {[this]() {
-                if (!regs.p.bits.z) {
+                if (!regs.flags.bits.z) {
                     regs.pc += (int8_t)readMem(regs.pc+1);
                     cycles++;
                 }
@@ -251,7 +251,7 @@ public:
 
         /*BPL*/ {
             instrucSet[0x10] = {[this]() {
-                if (!regs.p.bits.n) {
+                if (!regs.flags.bits.n) {
                     regs.pc += (int8_t)readMem(regs.pc+1);
                     cycles++;
                 }
@@ -261,9 +261,9 @@ public:
         /*BRK*/ {
             instrucSet[0x00] = {[this]() {
                 pushByte(regs.pc);
-                pushByte(regs.p.byte);
-                regs.pc = 0xFFFE; // TODO: load IRQ interrupt table, load 0xFFFE or 0xFFFF ??
-                regs.p.bits.b = 1;
+                pushByte(regs.flags.byte);
+                regs.pc = readMem(0xFFFE) | readMem(0xFFFF) << 8; // load IRQ interrupt table
+                regs.flags.bits.b = 1;
 
                 logInfo("program called BRK");
             }, 1, 7};
@@ -271,7 +271,7 @@ public:
 
         /*BVC*/ {
             instrucSet[0x50] = {[this]() {
-                if (!regs.p.bits.v) {
+                if (!regs.flags.bits.v) {
                     regs.pc += (int8_t)readMem(regs.pc+1);
                     cycles++;
                 }
@@ -280,7 +280,7 @@ public:
 
         /*BVS*/ {
             instrucSet[0x50] = {[this]() {
-                if (regs.p.bits.v) {
+                if (regs.flags.bits.v) {
                     regs.pc += (int8_t)readMem(regs.pc+1);
                     cycles++;
                 }
@@ -289,34 +289,34 @@ public:
 
         /*CLC*/ {
             instrucSet[0x18] = {[this]() {
-                regs.p.bits.c = 0;
+                regs.flags.bits.c = 0;
             }, 1, 2};
         }
 
         /*CLC*/ {
             instrucSet[0xD8] = {[this]() {
-                regs.p.bits.d = 0;
+                regs.flags.bits.d = 0;
             }, 1, 2};
         }
 
         /*CLI*/ {
             instrucSet[0x58] = {[this]() {
-                regs.p.bits.i = 0;
+                regs.flags.bits.i = 0;
             }, 1, 2};
         }
 
         /*CLV*/ {
             instrucSet[0xB8] = {[this]() {
-                regs.p.bits.v = 0;
+                regs.flags.bits.v = 0;
             }, 1, 2};
         }
 
         /*CMP*/ {
             auto cmp = [this](uint8_t v) {
                 uint8_t result = regs.a - v;
-                regs.p.bits.c = result > 0;
-                regs.p.bits.z = result == 0;
-                regs.p.bits.n = result >> 7;
+                regs.flags.bits.c = result > 0;
+                regs.flags.bits.z = result == 0;
+                regs.flags.bits.n = result >> 7;
             };
             instrucSet[0xC9] = {[this,&cmp]() {
                 cmp(readMem(regs.pc+1));  
@@ -347,9 +347,9 @@ public:
         /*CPX*/ {
             auto cpx = [this](uint8_t v) {
                 uint8_t result = regs.x - v;
-                regs.p.bits.c = result > 0;
-                regs.p.bits.z = result == 0;
-                regs.p.bits.n = result >> 7;
+                regs.flags.bits.c = result > 0;
+                regs.flags.bits.z = result == 0;
+                regs.flags.bits.n = result >> 7;
             };
             instrucSet[0xE0] = {[this,&cpx]() {
                 cpx(readMem(regs.pc+1));  
@@ -365,9 +365,9 @@ public:
         /*CPY*/ {
             auto cpy = [this](uint8_t v) {
                 uint8_t result = regs.y - v;
-                regs.p.bits.c = result > 0;
-                regs.p.bits.z = result == 0;
-                regs.p.bits.n = result >> 7;
+                regs.flags.bits.c = result > 0;
+                regs.flags.bits.z = result == 0;
+                regs.flags.bits.n = result >> 7;
             };
             instrucSet[0xC0] = {[this,&cpy]() {
                 cpy(readMem(regs.pc+1));  
@@ -384,8 +384,8 @@ public:
             auto dec = [this](uint8_t v) -> uint8_t {
                 v--;
 
-                regs.p.bits.z = v == 0;
-                regs.p.bits.n = v >> 7;
+                regs.flags.bits.z = v == 0;
+                regs.flags.bits.n = v >> 7;
 
                 return v;
             };
@@ -410,16 +410,16 @@ public:
         /*DEX*/ {
             instrucSet[0xCA] = {[this]() {
                 regs.x--;
-                regs.p.bits.z = regs.x == 0;
-                regs.p.bits.n = regs.x >> 7;
+                regs.flags.bits.z = regs.x == 0;
+                regs.flags.bits.n = regs.x >> 7;
             }, 1, 2};
         }
 
         /*DEY*/ {
             instrucSet[0x88] = {[this]() {
                 regs.y--;
-                regs.p.bits.z = regs.y == 0;
-                regs.p.bits.n = regs.y >> 7;
+                regs.flags.bits.z = regs.y == 0;
+                regs.flags.bits.n = regs.y >> 7;
             }, 1, 2};
         }
 
@@ -427,8 +427,8 @@ public:
             auto eor = [this](uint8_t v) {
                 regs.a ^= v;
 
-                regs.p.bits.z = regs.a == 0;
-                regs.p.bits.n = regs.a >> 7;
+                regs.flags.bits.z = regs.a == 0;
+                regs.flags.bits.n = regs.a >> 7;
             };
             instrucSet[0x49] = {[this,&eor]() {
                 eor(readMem(regs.pc+1));  
@@ -460,8 +460,8 @@ public:
             auto inc = [this](uint8_t v) -> uint8_t {
                 v++;
 
-                regs.p.bits.z = v == 0;
-                regs.p.bits.n = v >> 7;
+                regs.flags.bits.z = v == 0;
+                regs.flags.bits.n = v >> 7;
 
                 return v;
             };
@@ -486,16 +486,16 @@ public:
         /*INX*/ {
             instrucSet[0xE8] = {[this]() {
                 regs.x++;
-                regs.p.bits.z = regs.x == 0;
-                regs.p.bits.n = regs.x >> 7;
+                regs.flags.bits.z = regs.x == 0;
+                regs.flags.bits.n = regs.x >> 7;
             }, 1, 2};
         }
 
         /*INY*/ {
             instrucSet[0xC8] = {[this]() {
                 regs.y++;
-                regs.p.bits.z = regs.y == 0;
-                regs.p.bits.n = regs.y >> 7;
+                regs.flags.bits.z = regs.y == 0;
+                regs.flags.bits.n = regs.y >> 7;
             }, 1, 2};
         }
 
@@ -519,8 +519,8 @@ public:
             auto lda = [this](uint8_t v) {
                 regs.a = v;
 
-                regs.p.bits.z = regs.a == 0;
-                regs.p.bits.n = regs.a >> 7;
+                regs.flags.bits.z = regs.a == 0;
+                regs.flags.bits.n = regs.a >> 7;
             };
             instrucSet[0xA9] = {[this,&lda]() {
                 lda(readMem(regs.pc+1));  
@@ -552,8 +552,8 @@ public:
             auto ldx = [this](uint8_t v) {
                 regs.x = v;
 
-                regs.p.bits.z = regs.x == 0;
-                regs.p.bits.n = regs.x >> 7;
+                regs.flags.bits.z = regs.x == 0;
+                regs.flags.bits.n = regs.x >> 7;
             };
             instrucSet[0xA2] = {[this,&ldx]() {
                 ldx(readMem(regs.pc+1));  
@@ -576,8 +576,8 @@ public:
             auto ldy = [this](uint8_t v) {
                 regs.y = v;
 
-                regs.p.bits.z = regs.y == 0;
-                regs.p.bits.n = regs.y >> 7;
+                regs.flags.bits.z = regs.y == 0;
+                regs.flags.bits.n = regs.y >> 7;
             };
             instrucSet[0xA0] = {[this,&ldy]() {
                 ldy(readMem(regs.pc+1));  
@@ -596,14 +596,14 @@ public:
             }, 3, 4};
         }
 
-         /*LSR*/ {
+        /*LSR*/ {
             auto lsr = [this](uint8_t v) -> uint8_t {
-                regs.p.bits.c = v & 0b1;
+                regs.flags.bits.c = v & 0b1;
                 
                 v >>= 1;
 
-                regs.p.bits.z = v == 0;
-                regs.p.bits.n = 0;
+                regs.flags.bits.z = v == 0;
+                regs.flags.bits.n = 0;
 
                 return v;
             };
@@ -636,8 +636,8 @@ public:
             auto ora = [this](uint8_t v) {
                 regs.a |= v;
 
-                regs.p.bits.z = regs.a == 0;
-                regs.p.bits.n = regs.a >> 7;
+                regs.flags.bits.z = regs.a == 0;
+                regs.flags.bits.n = regs.a >> 7;
             };
             instrucSet[0x09] = {[this,&ora]() {
                 ora(readMem(regs.pc+1));  
@@ -673,7 +673,7 @@ public:
 
         /*PHP*/ {
             instrucSet[0x08] = {[this]() {
-                pushByte(regs.p.byte);
+                pushByte(regs.flags.byte);
             }, 1, 3};
         }
 
@@ -685,8 +685,89 @@ public:
 
         /*PLP*/ {
             instrucSet[0x28] = {[this]() {
-                regs.p.byte = popByte();
+                regs.flags.byte = popByte();
             }, 1, 4};
+        }
+
+        /*ROL*/ {
+            auto rol = [this](uint8_t v) -> uint8_t {
+                uint8_t oldCarry = regs.flags.bits.c;
+                regs.flags.bits.c = v >> 7;
+                
+                v <<= 1;
+                v |= oldCarry;
+
+                regs.flags.bits.z = v == 0;
+                regs.flags.bits.n = v >> 7;
+
+                return v;
+            };
+            instrucSet[0x2A] = {[this,&rol]() {
+                regs.a = rol(regs.a);
+            }, 1, 2};
+            instrucSet[0x26] = {[this,&rol]() {
+                auto addr = readMem(zeroPageAddress(readMem(regs.pc+1)));
+                writeMem(addr, rol(addr));
+            }, 2, 5};
+            instrucSet[0x36] = {[this,&rol]() {
+                auto addr = readMem(indexedZeroPageAddress(readMem(regs.pc+1), regs.x));
+                writeMem(addr, rol(addr));
+            }, 2, 6};
+            instrucSet[0x2E] = {[this,&rol]() {
+                auto addr = readMem(absoluteAddress(readMem(regs.pc+1), readMem(regs.pc+2)));
+                writeMem(addr, rol(addr));
+            }, 3, 6};
+            instrucSet[0x3E] = {[this,&rol]() {
+                auto addr = readMem(indexedAbsoluteAddress(readMem(regs.pc+1), readMem(regs.pc+2), regs.x));
+                writeMem(addr, rol(addr));
+            }, 3, 7};
+        }
+
+        /*ROR*/ {
+            auto ror = [this](uint8_t v) -> uint8_t {
+                uint8_t oldCarry = regs.flags.bits.c;
+                regs.flags.bits.c = v & 0b1;
+                
+                v >>= 1;
+                v |= oldCarry << 7;
+
+                regs.flags.bits.z = v == 0;
+                regs.flags.bits.n = oldCarry;
+
+                return v;
+            };
+            instrucSet[0x6A] = {[this,&ror]() {
+                regs.a = ror(regs.a);
+            }, 1, 2};
+            instrucSet[0x66] = {[this,&ror]() {
+                auto addr = readMem(zeroPageAddress(readMem(regs.pc+1)));
+                writeMem(addr, ror(addr));
+            }, 2, 5};
+            instrucSet[0x76] = {[this,&ror]() {
+                auto addr = readMem(indexedZeroPageAddress(readMem(regs.pc+1), regs.x));
+                writeMem(addr, ror(addr));
+            }, 2, 6};
+            instrucSet[0x6E] = {[this,&ror]() {
+                auto addr = readMem(absoluteAddress(readMem(regs.pc+1), readMem(regs.pc+2)));
+                writeMem(addr, ror(addr));
+            }, 3, 6};
+            instrucSet[0x7E] = {[this,&ror]() {
+                auto addr = readMem(indexedAbsoluteAddress(readMem(regs.pc+1), readMem(regs.pc+2), regs.x));
+                writeMem(addr, ror(addr));
+            }, 3, 7};
+        }
+
+        /*RTI*/ {
+            instrucSet[0x40] = {[this]() {
+                regs.flags.byte = popByte();
+                regs.pc = popWord();
+            }, 1, 6};
+        }
+
+        /*RTS*/ {
+            instrucSet[0x60] = {[this]() {
+                regs.pc = popWord() + 1;
+            }, 1, 6};
         }
 
         logInfo("finished building NES6502 device");
@@ -767,7 +848,7 @@ public:
 
         /*https://wiki.nesdev.com/w/index.php/CPU_ALL#After_reset*/
         regs.sp -= 3;
-        regs.p.bits.i = 1;
+        regs.flags.bits.i = 1;
         //TODO: apuMemory[0x4015] = 0;
 
         logInfo("finished resetting");
@@ -781,7 +862,7 @@ public:
         memset(&regs, 0, sizeof regs);
 
         /*https://wiki.nesdev.com/w/index.php/CPU_ALL#At_power-up*/
-        regs.p.byte = 0x34;
+        regs.flags.byte = 0x34;
         regs.sp = 0xFD;
 
         //TODO: All 15 bits of noise channel LFSR = $0000[4]. 
