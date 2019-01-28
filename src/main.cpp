@@ -372,6 +372,49 @@ public:
             }, 3, 4};
         }
 
+        /*DEC*/ {
+            auto dec = [this](uint8_t v) -> uint8_t {
+                v--;
+
+                regs.p.bits.z = v == 0;
+                regs.p.bits.n = v >> 7;
+
+                return v;
+            };
+            instrucSet[0xC6] = {[this,&dec]() {
+                auto addr = zeroPageAddress(readMem(regs.pc+1));
+                writeMem(addr, dec(readMem(addr)));
+            }, 2, 5};
+            instrucSet[0xD6] = {[this,&dec]() {
+                auto addr = indexedZeroPageAddress(readMem(regs.pc+1), regs.x);
+                writeMem(addr, dec(readMem(addr)));
+            }, 2, 6};
+            instrucSet[0xCE] = {[this,&dec]() {
+                auto addr = absoluteAddress(readMem(regs.pc+1), readMem(regs.pc+2));
+                writeMem(addr, dec(readMem(addr)));
+            }, 3, 6};
+            instrucSet[0xDE] = {[this,&dec]() {
+                auto addr = indexedAbsoluteAddress(readMem(regs.pc+1), readMem(regs.pc+2), regs.x);
+                writeMem(addr, dec(readMem(addr)));
+            }, 3, 7};
+        }
+
+        /*DEX*/ {
+            instrucSet[0xCA] = {[this]() {
+                regs.x--;
+                regs.p.bits.z = regs.x == 0;
+                regs.p.bits.n = regs.x >> 7;
+            }, 1, 2};
+        }
+
+        /*DEY*/ {
+            instrucSet[0x88] = {[this]() {
+                regs.y--;
+                regs.p.bits.z = regs.y == 0;
+                regs.p.bits.n = regs.y >> 7;
+            }, 1, 2};
+        }
+
         logInfo("finished building NES6502 device");
     }
 
