@@ -70,6 +70,14 @@ protected:
 
     uint32_t cycles; // TODO: cycles++ if page crossed
 
+    /* TODO: decide whether to emulate this bug or not:
+    An original 6502 has does not correctly fetch the target address 
+    if the indirect vector falls on a page boundary 
+    (e.g. $xxFF where xx is any value from $00 to $FF). 
+    In this case fetches the LSB from $xxFF as expected but takes the MSB from $xx00. 
+    This is fixed in some later chips like the 65SC02 so for compatibility 
+    always ensure the indirect vector is not at the end of the page.*/
+
 public:
 
     NES6502_DEVICE() {
@@ -252,8 +260,8 @@ public:
 
         /*BRK*/ {
             instrucSet[0x00] = {[this]() {
-                push(regs.pc);
-                push(regs.p.byte);
+                pushByte(regs.pc);
+                pushByte(regs.p.byte);
                 regs.pc = 0xFFFE; // TODO: load IRQ interrupt table, load 0xFFFE or 0xFFFF ??
                 regs.p.bits.b = 1;
 
@@ -415,6 +423,98 @@ public:
             }, 1, 2};
         }
 
+        /*EOR*/ {
+            auto eor = [this](uint8_t v) {
+                regs.a ^= v;
+
+                regs.p.bits.z = regs.a == 0;
+                regs.p.bits.n = regs.a >> 7;
+            };
+            instrucSet[0x49] = {[this,&eor]() {
+                eor(readMem(regs.pc+1));  
+            }, 2, 2};
+            instrucSet[0x45] = {[this,&eor]() {
+                eor(readMem(zeroPageAddress(readMem(regs.pc+1))));
+            }, 2, 3};
+            instrucSet[0x55] = {[this,&eor]() {
+                eor(readMem(indexedZeroPageAddress(readMem(regs.pc+1), regs.x)));
+            }, 2, 4};
+            instrucSet[0x4D] = {[this,&eor]() {
+                eor(readMem(absoluteAddress(readMem(regs.pc+1), readMem(regs.pc+2))));
+            }, 3, 4};
+            instrucSet[0x5D] = {[this,&eor]() {
+                eor(readMem(indexedAbsoluteAddress(readMem(regs.pc+1), readMem(regs.pc+2), regs.x)));
+            }, 3, 4};
+            instrucSet[0x59] = {[this,&eor]() {
+                eor(readMem(indexedAbsoluteAddress(readMem(regs.pc+1), readMem(regs.pc+2), regs.y)));
+            }, 3, 4};
+            instrucSet[0x41] = {[this,&eor]() {
+                eor(readMem(indexedIndirectAddress(readMem(regs.pc+1), regs.x)));
+            }, 2, 6};
+            instrucSet[0x51] = {[this,&eor]() {
+                eor(readMem(indirectIndexedAddress(readMem(regs.pc+1), regs.y)));
+            }, 2, 5};
+        }
+
+        /*INC*/ {
+            auto inc = [this](uint8_t v) -> uint8_t {
+                v++;
+
+                regs.p.bits.z = v == 0;
+                regs.p.bits.n = v >> 7;
+
+                return v;
+            };
+            instrucSet[0xE6] = {[this,&inc]() {
+                auto addr = zeroPageAddress(readMem(regs.pc+1));
+                writeMem(addr, inc(readMem(addr)));
+            }, 2, 5};
+            instrucSet[0xF6] = {[this,&inc]() {
+                auto addr = indexedZeroPageAddress(readMem(regs.pc+1), regs.x);
+                writeMem(addr, inc(readMem(addr)));
+            }, 2, 6};
+            instrucSet[0xEE] = {[this,&inc]() {
+                auto addr = absoluteAddress(readMem(regs.pc+1), readMem(regs.pc+2));
+                writeMem(addr, inc(readMem(addr)));
+            }, 3, 6};
+            instrucSet[0xFE] = {[this,&inc]() {
+                auto addr = indexedAbsoluteAddress(readMem(regs.pc+1), readMem(regs.pc+2), regs.x);
+                writeMem(addr, inc(readMem(addr)));
+            }, 3, 7};
+        }
+
+        /*INX*/ {
+            instrucSet[0xE8] = {[this]() {
+                regs.x++;
+                regs.p.bits.z = regs.x == 0;
+                regs.p.bits.n = regs.x >> 7;
+            }, 1, 2};
+        }
+
+        /*INY*/ {
+            instrucSet[0xC8] = {[this]() {
+                regs.y++;
+                regs.p.bits.z = regs.y == 0;
+                regs.p.bits.n = regs.y >> 7;
+            }, 1, 2};
+        }
+
+        /*JMP*/ {
+            instrucSet[0x4C] = {[this]() {
+                regs.pc += readMem(absoluteAddress(readMem(regs.pc+1), readMem(regs.pc+2)));
+            }, 3, 3};
+            instrucSet[0x6C] = {[this]() {
+                regs.pc += readMem(indirectAddress(readMem(regs.pc+1), readMem(regs.pc+2)));
+            }, 3, 5};
+        }
+
+        /*JSR*/ {
+            instrucSet[0x20] = {[this]() {
+                pushWord(regs.pc);
+                regs.pc += readMem(absoluteAddress(readMem(regs.pc+1), readMem(regs.pc+2)));
+            }, 3, 6};
+        }
+
         logInfo("finished building NES6502 device");
     }
 
@@ -452,12 +552,21 @@ public:
         return absoluteAddress(readMem(bb), readMem(bb+1)) + i;
     }
 
-    inline void push(const uint8_t v) {
+    inline void pushByte(const uint8_t v) {
         writeMem(STACK_START + regs.sp--, v);
     }
 
-    uint8_t pop() {
+    inline void pushWord(const uint16_t v) {
+        pushByte((uint8_t)v);
+        pushByte((uint8_t)v>>8);
+    }
+
+    inline uint8_t popByte() {
         return readMem(STACK_END + regs.sp++);
+    }
+
+    inline uint16_t popWord() {
+        return popByte() | popByte() << 8;
     }
 
     void setROM(string romPath) {
