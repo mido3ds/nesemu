@@ -2,10 +2,11 @@
     "configurations": [
         {
             "name": "MinGW",
-            "compilerPath": "C:\\Users\\Mahmoud\\scoop\\apps\\gcc\\8.1.0\\bin\\g++.exe",
+            "compilerPath": "C:\\Users\\Mahmoud\\mingw\\bin\\g++.exe",
             "includePath": [
                 "${workspaceFolder}",
-                "C:\\Program Files (x86)\\Microsoft Visual Studio 14.0\\VC\\include"
+                "C:\\Program Files (x86)\\Microsoft Visual Studio 14.0\\VC\\include",
+                "C:\\Users\\Mahmoud\\mingw\\include"
             ],
             "defines": [
                 "_DEBUG",
