@@ -4,7 +4,9 @@
         "type_traits": "cpp",
         "xfunctional": "cpp",
         "xstddef": "cpp",
-        "functional": "cpp"
+        "functional": "cpp",
+        "cstdint": "cpp",
+        "array": "cpp"
     },
     "C_Cpp.dimInactiveRegions": true,
     "C_Cpp.intelliSenseEngineFallback": "Enabled"

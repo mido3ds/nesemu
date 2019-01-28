@@ -75,7 +75,7 @@ public:
     NES6502_DEVICE() {
         logInfo("started building NES6502 device");
 
-        /*http://obelisk.me.uk/6502/reference.html*/
+        /* http://obelisk.me.uk/6502/reference.html */
         logInfo("filling instruction set data");
         
         instrucSet.fill({[this]() {
@@ -301,6 +301,75 @@ public:
             instrucSet[0xB8] = {[this]() {
                 regs.p.bits.v = 0;
             }, 1, 2};
+        }
+
+        /*CMP*/ {
+            auto cmp = [this](uint8_t v) {
+                uint8_t result = regs.a - v;
+                regs.p.bits.c = result > 0;
+                regs.p.bits.z = result == 0;
+                regs.p.bits.n = result >> 7;
+            };
+            instrucSet[0xC9] = {[this,&cmp]() {
+                cmp(readMem(regs.pc+1));  
+            }, 2, 2};
+            instrucSet[0xC5] = {[this,&cmp]() {
+                cmp(readMem(zeroPageAddress(readMem(regs.pc+1))));
+            }, 2, 3};
+            instrucSet[0xD5] = {[this,&cmp]() {
+                cmp(readMem(indexedZeroPageAddress(readMem(regs.pc+1), regs.x)));
+            }, 2, 4};
+            instrucSet[0xCD] = {[this,&cmp]() {
+                cmp(readMem(absoluteAddress(readMem(regs.pc+1), readMem(regs.pc+2))));
+            }, 3, 4};
+            instrucSet[0xDD] = {[this,&cmp]() {
+                cmp(readMem(indexedAbsoluteAddress(readMem(regs.pc+1), readMem(regs.pc+2), regs.x)));
+            }, 3, 4};
+            instrucSet[0xD9] = {[this,&cmp]() {
+                cmp(readMem(indexedAbsoluteAddress(readMem(regs.pc+1), readMem(regs.pc+2), regs.y)));
+            }, 3, 4};
+            instrucSet[0xC1] = {[this,&cmp]() {
+                cmp(readMem(indexedIndirectAddress(readMem(regs.pc+1), regs.x)));
+            }, 2, 6};
+            instrucSet[0xD1] = {[this,&cmp]() {
+                cmp(readMem(indirectIndexedAddress(readMem(regs.pc+1), regs.y)));
+            }, 2, 5};
+        }
+
+        /*CPX*/ {
+            auto cpx = [this](uint8_t v) {
+                uint8_t result = regs.x - v;
+                regs.p.bits.c = result > 0;
+                regs.p.bits.z = result == 0;
+                regs.p.bits.n = result >> 7;
+            };
+            instrucSet[0xE0] = {[this,&cpx]() {
+                cpx(readMem(regs.pc+1));  
+            }, 2, 2};
+            instrucSet[0xE4] = {[this,&cpx]() {
+                cpx(readMem(zeroPageAddress(readMem(regs.pc+1))));
+            }, 2, 3};
+            instrucSet[0xEC] = {[this,&cpx]() {
+                cpx(readMem(absoluteAddress(readMem(regs.pc+1), readMem(regs.pc+2))));
+            }, 3, 4};
+        }
+
+        /*CPY*/ {
+            auto cpy = [this](uint8_t v) {
+                uint8_t result = regs.y - v;
+                regs.p.bits.c = result > 0;
+                regs.p.bits.z = result == 0;
+                regs.p.bits.n = result >> 7;
+            };
+            instrucSet[0xC0] = {[this,&cpy]() {
+                cpy(readMem(regs.pc+1));  
+            }, 2, 2};
+            instrucSet[0xC4] = {[this,&cpy]() {
+                cpy(readMem(zeroPageAddress(readMem(regs.pc+1))));
+            }, 2, 3};
+            instrucSet[0xCC] = {[this,&cpy]() {
+                cpy(readMem(absoluteAddress(readMem(regs.pc+1), readMem(regs.pc+2))));
+            }, 3, 4};
         }
 
         logInfo("finished building NES6502 device");
