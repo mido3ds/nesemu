@@ -17,12 +17,12 @@
 
 using namespace std;
 
-static unique_ptr<uint8_t> readBinaryFile(string path, size_t* size) {
+static unique_ptr<char> readBinaryFile(string path, size_t* size) {
     ifstream file(path, ios::in|ios::binary|ios::ate);
     if (!file.is_open()) return nullptr;
 
     *size = (size_t)file.tellg();
-    auto buffer = unique_ptr<uint8_t>(new uint8_t[*size]);
+    auto buffer = unique_ptr<char>(new char[*size]);
 
     file.seekg(0, ios::beg);
     file.read(buffer.get(), *size);
@@ -36,7 +36,7 @@ struct Color {
 };
 
 struct ROM {
-    unique_ptr<uint8_t> buffer;
+    unique_ptr<char> buffer;
     size_t size;
     string path;
 
