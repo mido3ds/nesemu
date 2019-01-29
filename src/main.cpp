@@ -9,6 +9,7 @@
 #include <fstream>
 #include <memory>
 #include <array>
+#include <vector>
 #include <string>
 #include <functional>
 #include <chrono>
@@ -48,6 +49,8 @@ struct ROM {
 
 class NES6502 {
 protected:
+    constexpr static uint32_t MEM_SIZE = 0xFFFF + 1;
+
     // approx time in nanoseconds for one cycle
     constexpr static int NTSC_CYCLE_NS  = 559;
     constexpr static int PAL_CYCLE_NS   = 601;
@@ -55,27 +58,79 @@ protected:
 
     constexpr static Color DEFAULT_COLOR = Color({0, 0, 0});
 
+    struct Region {
+        uint16_t start, end;
+
+        constexpr bool contains(uint16_t addr) {return addr <= end && addr >= start;}  
+        constexpr uint16_t size() {return (end + 1) - start;}
+    };
     // memory regions
-    constexpr static struct {uint16_t start, end;}
+    constexpr static Region
         ZERO_PAGE {0x0000, 0x0100-1},
         STACK {0x0100, 0x0200-1},
         RAM {0x0200, 0x0800-1},
-        RAM_MIRRORS {0x0800, 0x2000-1},
 
         IO_REGS0 {0x2000, 0x2008-1},
-        IO_MIRRORS {0x2008, 0x4000-1},
         IO_REGS1 {0x4000, 0x4020-1},
 
         EX_ROM {0x4020, 0x6000-1},
         SRAM {0x6000, 0x8000-1},
         PRG_ROM_LOW {0x8000, 0xC000-1},
         PRG_ROM_UP {0xC000, 0xFFFF};
+    // varm regions
+    constexpr static Region 
+        /* pattern tables */
+        PATT_TBL0 {0x0000, 0x1000-1},
+        PATT_TBL1 {0x1000, 0x2000-1},
+
+        /* name tables */
+        NAME_TBL0 {0x2000, 0x23C0-1},
+        ATT_TBL0 {0x23C0, 0x2400-1},
+        NAME_TBL1 {0x2400, 0x27C0-1},
+        ATT_TBL1 {0x27C0, 0x2800-1},
+        NAME_TBL2 {0x2800, 0x2BC0-1},
+        ATT_TBL2 {0x2BC0, 0x2C00-1},
+        NAME_TBL3 {0x2C00, 0x2FC0-1},
+        ATT_TBL3 {0x2FC0, 0x3000-1},
+
+        /* palettes */
+        IMG_PLT {0x3F00, 0x3F10-1},
+        SPR_PLT {0x3F10, 0x3F20-1};
+
+    struct Mirror {
+        Region source, dest;
+
+        vector<uint16_t> getAdresses(const uint16_t address) {
+            if (source.contains(address)) {
+                uint16_t relativeAdress = address - source.start;
+                uint16_t num = dest.size()/source.size();
+
+                vector<uint16_t> adresses(num);
+                for (int i = 0; i < num; i++) {
+                    adresses[i] = dest.start + relativeAdress * (i+1);
+                }
+                return adresses;
+            }
+
+            return vector<uint16_t>();
+        }
+    };
+    constexpr static array<Mirror, 2> MEM_MIRRORS {
+        Mirror({{0x0000, 0x07FF}, {0x0800, 0x2000-1}}),
+        Mirror({IO_REGS0, {0x2008, 0x4000-1}}),
+    };
+    constexpr static array<Mirror, 3> VRAM_MIRRORS {
+        Mirror({{0x2000, 0x2EFF}, {0x3000, 0x3F00-1}}),
+        Mirror({{0x3F00, 0x3F1F}, {0x3F20, 0x4000-1}}),
+        Mirror({{0x0000, 0x3FFF}, {0x4000, 0xFFFF}}),
+    };
     
     // interrupt vector table
     constexpr static uint16_t
         IRQ = 0xFFFE, NMI = 0xFFFA, RH = 0xFFFC;
 
-    array<uint8_t, UINT16_MAX+1> memory;
+    array<uint8_t, MEM_SIZE> memory;
+    array<uint8_t, MEM_SIZE> vram;
     ROM rom;
 
     struct Registers {
@@ -1001,20 +1056,20 @@ public:
         return absoluteAddress(readByte(bb), readByte(bb+1)) + i;
     }
 
-    inline void pushByte(const uint8_t v) {
+    void pushByte(const uint8_t v) {
         writeByte(STACK.start + regs.sp--, v);
     }
 
-    inline void pushWord(const uint16_t v) {
+    void pushWord(const uint16_t v) {
         pushByte((uint8_t)v);
         pushByte((uint8_t)v>>8);
     }
 
-    inline uint8_t popByte() {
+    uint8_t popByte() {
         return readByte(STACK.end + regs.sp++);
     }
 
-    inline uint16_t popWord() {
+    uint16_t popWord() {
         return popByte() | popByte() << 8;
     }
 
@@ -1035,7 +1090,7 @@ public:
         // TODO
     }
 
-    inline void burnCycles() {
+    void burnCycles() {
         std::this_thread::sleep_for(std::chrono::nanoseconds(cycles * NTSC_CYCLE_NS));
         cycles = 0;
     }
@@ -1046,6 +1101,13 @@ public:
 
     void writeByte(const uint16_t address, const uint8_t value) {
         memory[address] = value;
+
+        // apply mirroring 
+        for (auto mirror: MEM_MIRRORS) {
+            for (auto mirrorAddr: mirror.getAdresses(address)) {
+                memory[mirrorAddr] = value;
+            }
+        }
     }
 
     uint16_t readWord(const uint16_t address) {
@@ -1055,6 +1117,30 @@ public:
     void writeWord(const uint16_t address, const uint16_t value) {
         writeByte(address, (uint8_t)value);
         writeByte(address+1, (uint8_t)(value >> 8));
+    }
+
+    uint8_t readByte_VRAM(const uint16_t address) {
+        return vram[address];
+    }
+
+    void writeByte_VRAM(const uint16_t address, const uint8_t value) {
+        vram[address] = value;
+
+        // apply mirroring 
+        for (auto mirror: VRAM_MIRRORS) {
+            for (auto mirrorAddr: mirror.getAdresses(address)) {
+                vram[mirrorAddr] = value;
+            }
+        }
+    }
+
+    uint16_t readWord_VRAM(const uint16_t address) {
+        return readByte_VRAM(address) | readByte_VRAM(address+1) << 8;
+    }
+
+    void writeWord_VRAM(const uint16_t address, const uint16_t value) {
+        writeByte_VRAM(address, (uint8_t)value);
+        writeByte_VRAM(address+1, (uint8_t)(value >> 8));
     }
 
     void reset() {
