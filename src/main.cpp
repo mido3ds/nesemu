@@ -92,12 +92,12 @@ public:
 
         /*ADC*/ {
             auto adc = [this](uint8_t v) {
-                regs.flags.bits.c = (v == UINT8_MAX && regs.flags.bits.c) 
-                             || (v + regs.flags.bits.c) > UINT8_MAX - regs.a; 
-                regs.flags.bits.v = int8_sign(v) == int8_sign(regs.a) 
-                             && int8_sign(v+regs.a+regs.flags.bits.c) != int8_sign(v); 
+                uint16_t result = regs.a + v + regs.flags.bits.c;
 
-                regs.a += v + regs.flags.bits.c;
+                regs.flags.bits.c = (uint16_t)result > UINT8_MAX; 
+                regs.flags.bits.v = (int16_t)result > INT8_MAX || (int16_t)result < INT8_MIN; 
+
+                regs.a = (uint8_t)result;
 
                 regs.flags.bits.z = regs.a == 0;
                 regs.flags.bits.n = regs.a >> 7;
@@ -262,7 +262,7 @@ public:
             instrucSet[0x00] = {[this]() {
                 pushByte(regs.pc);
                 pushByte(regs.flags.byte);
-                regs.pc = readMem(0xFFFE) | readMem(0xFFFF) << 8; // load IRQ interrupt table
+                regs.pc = readIRQ(); 
                 regs.flags.bits.b = 1;
 
                 logInfo("program called BRK");
@@ -770,6 +770,158 @@ public:
             }, 1, 6};
         }
 
+        /*SBC*/ {
+            auto sbc = [this](uint8_t v) {
+                uint16_t result = regs.a - v - (~ regs.flags.bits.c);
+
+                regs.flags.bits.c = (uint16_t)result > UINT8_MAX; 
+                regs.flags.bits.v = (int16_t)result > INT8_MAX || (int16_t)result < INT8_MAX; 
+
+                regs.a = (uint8_t)result;
+
+                regs.flags.bits.z = regs.a == 0;
+                regs.flags.bits.n = regs.a >> 7;
+            };
+            instrucSet[0xE9] = {[this,&sbc]() {
+                sbc(readMem(regs.pc+1));  
+            }, 2, 2};
+            instrucSet[0xE5] = {[this,&sbc]() {
+                sbc(readMem(zeroPageAddress(readMem(regs.pc+1))));
+            }, 2, 3};
+            instrucSet[0xF5] = {[this,&sbc]() {
+                sbc(readMem(indexedZeroPageAddress(readMem(regs.pc+1), regs.x)));
+            }, 2, 4};
+            instrucSet[0xED] = {[this,&sbc]() {
+                sbc(readMem(absoluteAddress(readMem(regs.pc+1), readMem(regs.pc+2))));
+            }, 3, 4};
+            instrucSet[0xFD] = {[this,&sbc]() {
+                sbc(readMem(indexedAbsoluteAddress(readMem(regs.pc+1), readMem(regs.pc+2), regs.x)));
+            }, 3, 4};
+            instrucSet[0xF9] = {[this,&sbc]() {
+                sbc(readMem(indexedAbsoluteAddress(readMem(regs.pc+1), readMem(regs.pc+2), regs.y)));
+            }, 3, 4};
+            instrucSet[0xE1] = {[this,&sbc]() {
+                sbc(readMem(indexedIndirectAddress(readMem(regs.pc+1), regs.x)));
+            }, 2, 6};
+            instrucSet[0xF1] = {[this,&sbc]() {
+                sbc(readMem(indirectIndexedAddress(readMem(regs.pc+1), regs.y)));
+            }, 2, 5};
+        }
+
+        /*SEC*/ {
+            instrucSet[0x38] = {[this]() {
+                regs.flags.bits.c = 1;
+            }, 1, 2};
+        }
+
+        /*SED*/ {
+            instrucSet[0xF8] = {[this]() {
+                regs.flags.bits.d = 1;
+            }, 1, 2};
+        }
+
+        /*SEI*/ {
+            instrucSet[0x78] = {[this]() {
+                regs.flags.bits.i = 1;
+            }, 1, 2};
+        }
+
+        /*STA*/ {
+            instrucSet[0x85] = {[this]() {
+                writeMem(readMem(zeroPageAddress(readMem(regs.pc+1))), regs.a);
+            }, 2, 3};
+            instrucSet[0x95] = {[this]() {
+                writeMem(readMem(indexedZeroPageAddress(readMem(regs.pc+1), regs.x)), regs.a);
+            }, 2, 4};
+            instrucSet[0x8D] = {[this]() {
+                writeMem(readMem(absoluteAddress(readMem(regs.pc+1), readMem(regs.pc+2))), regs.a);
+            }, 3, 4};
+            instrucSet[0x9D] = {[this]() {
+                writeMem(readMem(indexedAbsoluteAddress(readMem(regs.pc+1), readMem(regs.pc+2), regs.x)), regs.a);
+            }, 3, 5};
+            instrucSet[0x99] = {[this]() {
+                writeMem(readMem(indexedAbsoluteAddress(readMem(regs.pc+1), readMem(regs.pc+2), regs.y)), regs.a);
+            }, 3, 5};
+            instrucSet[0x81] = {[this]() {
+                writeMem(readMem(indexedIndirectAddress(readMem(regs.pc+1), regs.x)), regs.a);
+            }, 2, 6};
+            instrucSet[0x91] = {[this]() {
+                writeMem(readMem(indirectIndexedAddress(readMem(regs.pc+1), regs.y)), regs.a);
+            }, 2, 6};
+        }
+
+        /*STX*/ {
+            instrucSet[0x86] = {[this]() {
+                writeMem(readMem(zeroPageAddress(readMem(regs.pc+1))), regs.x);
+            }, 2, 3};
+            instrucSet[0x96] = {[this]() {
+                writeMem(readMem(indexedZeroPageAddress(readMem(regs.pc+1), regs.y)), regs.x);
+            }, 2, 4};
+            instrucSet[0x8E] = {[this]() {
+                writeMem(readMem(absoluteAddress(readMem(regs.pc+1), readMem(regs.pc+2))), regs.x);
+            }, 3, 4};
+        }
+
+        /*STY*/ {
+            instrucSet[0x84] = {[this]() {
+                writeMem(readMem(zeroPageAddress(readMem(regs.pc+1))), regs.y);
+            }, 2, 3};
+            instrucSet[0x94] = {[this]() {
+                writeMem(readMem(indexedZeroPageAddress(readMem(regs.pc+1), regs.x)), regs.y);
+            }, 2, 4};
+            instrucSet[0x8C] = {[this]() {
+                writeMem(readMem(absoluteAddress(readMem(regs.pc+1), readMem(regs.pc+2))), regs.y);
+            }, 3, 4};
+        }        
+
+        /*TAX*/ {
+            instrucSet[0xAA] = {[this]() {
+                regs.x = regs.a;
+                regs.flags.bits.z = regs.x == 0;
+                regs.flags.bits.n = regs.x >> 7;
+            }, 1, 2};
+        }
+
+        /*TAY*/ {
+            instrucSet[0xA8] = {[this]() {
+                regs.y = regs.a;
+                regs.flags.bits.z = regs.y == 0;
+                regs.flags.bits.n = regs.y >> 7;
+            }, 1, 2};
+        }
+
+        /*TSX*/ {
+            instrucSet[0xBA] = {[this]() {
+                regs.x = regs.sp;
+                regs.flags.bits.z = regs.x == 0;
+                regs.flags.bits.n = regs.x >> 7;
+            }, 1, 2};
+        }
+
+        /*TXA*/ {
+            instrucSet[0x8A] = {[this]() {
+                regs.a = regs.x;
+                regs.flags.bits.z = regs.x == 0;
+                regs.flags.bits.n = regs.x >> 7;
+            }, 1, 2};
+        }
+
+        /*TXS*/ {
+            instrucSet[0x9A] = {[this]() {
+                regs.sp = regs.x;
+                regs.flags.bits.z = regs.x == 0;
+                regs.flags.bits.n = regs.x >> 7;
+            }, 1, 2};
+        }
+
+        /*TYA*/ {
+            instrucSet[0x98] = {[this]() {
+                regs.a = regs.y;
+                regs.flags.bits.z = regs.a == 0;
+                regs.flags.bits.n = regs.a >> 7;
+            }, 1, 2};
+        }
+
         logInfo("finished building NES6502 device");
     }
 
@@ -822,6 +974,33 @@ public:
 
     inline uint16_t popWord() {
         return popByte() | popByte() << 8;
+    }
+
+    inline uint16_t readIRQ() {
+        return readMem(0xFFFE) | readMem(0xFFFF) << 8;
+    }
+
+    inline void writeIRQ(uint16_t irq) {
+        writeMem(0xFFFE, irq);
+        writeMem(0xFFFF, irq >> 8);
+    }
+
+    inline uint16_t readInterruptHandler() {
+        return readMem(0xFFFA) | readMem(0xFFFB) << 8;
+    }
+
+    inline uint16_t writeInterruptHandler(uint16_t ih) {
+        writeMem(0xFFFA, ih);
+        writeMem(0xFFFFB, ih >> 8);
+    }
+
+    inline uint16_t readPowerOnReset() {
+        return readMem(0xFFFC) | readMem(0xFFFD) << 8;
+    }
+
+    inline void writePowerOnReset(uint16_t pr) {
+        writeMem(0xFFFC, pr);
+        writeMem(0xFFFD, pr >> 8);
     }
 
     void setROM(string romPath) {
