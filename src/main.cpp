@@ -6,6 +6,8 @@
 #include <cstdint>
 #include <cstdio>
 #include <cstring>
+#include <fstream>
+#include <memory>
 #include <array>
 #include <string>
 #include <functional>
@@ -15,16 +17,36 @@
 
 using namespace std;
 
-#define int8_sign(n) n>>7
-#define int16_sign(n) n>>15
-#define int32_sign(n) n>>31
-#define int64_sign(n) n>>63
+static unique_ptr<uint8_t> readBinaryFile(string path, size_t* size) {
+    ifstream file(path, ios::in|ios::binary|ios::ate);
+    if (!file.is_open()) return nullptr;
+
+    *size = (size_t)file.tellg();
+    auto buffer = unique_ptr<uint8_t>(new uint8_t[*size]);
+
+    file.seekg(0, ios::beg);
+    file.read(buffer.get(), *size);
+    file.close();
+
+    return buffer;
+}
 
 struct Color {
     uint8_t r, g, b;
 };
 
-class NES6502_DEVICE {
+struct ROM {
+    unique_ptr<uint8_t> buffer;
+    size_t size;
+    string path;
+
+    static ROM fromFile(string path) {
+        size_t size;
+        return {readBinaryFile(path, &size), size, path};
+    }
+};
+
+class NES6502 {
 protected:
     // approx time in nanoseconds for one cycle
     constexpr static int NTSC_CYCLE_NS  = 559;
@@ -33,10 +55,28 @@ protected:
 
     constexpr static Color DEFAULT_COLOR = Color({0, 0, 0});
 
-    constexpr static uint16_t STACK_START = 0x0100;
-    constexpr static uint16_t STACK_END = 0x01FF;
+    // memory regions
+    constexpr static struct {uint16_t start, end;}
+        ZERO_PAGE {0x0000, 0x0100-1},
+        STACK {0x0100, 0x0200-1},
+        RAM {0x0200, 0x0800-1},
+        RAM_MIRRORS {0x0800, 0x2000-1},
+
+        IO_REGS0 {0x2000, 0x2008-1},
+        IO_MIRRORS {0x2008, 0x4000-1},
+        IO_REGS1 {0x4000, 0x4020-1},
+
+        EX_ROM {0x4020, 0x6000-1},
+        SRAM {0x6000, 0x8000-1},
+        PRG_ROM_LOW {0x8000, 0xC000-1},
+        PRG_ROM_UP {0xC000, 0xFFFF};
+    
+    // interrupt vector table
+    constexpr static uint16_t
+        IRQ = 0xFFFE, NMI = 0xFFFA, RH = 0xFFFC;
 
     array<uint8_t, UINT16_MAX+1> memory;
+    ROM rom;
 
     struct Registers {
         uint16_t pc; // program counter
@@ -80,14 +120,14 @@ protected:
 
 public:
 
-    NES6502_DEVICE() {
+    NES6502() {
         logInfo("started building NES6502 device");
 
         // 6502 instruction set reference: http://obelisk.me.uk/6502/reference.html
         logInfo("filling instruction set data");
         
         instrucSet.fill({[this]() {
-            logError("invalid/unsupported opcode(0x%02x) called", readMem(regs.pc));
+            logError("invalid/unsupported opcode(0x%02x) called", readByte(regs.pc));
         },0,0});
 
         /*ADC*/ {
@@ -103,28 +143,28 @@ public:
                 regs.flags.bits.n = regs.a >> 7;
             };
             instrucSet[0x69] = {[this,&adc]() {
-                adc(readMem(regs.pc+1));  
+                adc(readByte(regs.pc+1));  
             }, 2, 2};
             instrucSet[0x65] = {[this,&adc]() {
-                adc(readMem(zeroPageAddress(readMem(regs.pc+1))));
+                adc(readByte(zeroPageAddress(readByte(regs.pc+1))));
             }, 2, 3};
             instrucSet[0x75] = {[this,&adc]() {
-                adc(readMem(indexedZeroPageAddress(readMem(regs.pc+1), regs.x)));
+                adc(readByte(indexedZeroPageAddress(readByte(regs.pc+1), regs.x)));
             }, 2, 4};
             instrucSet[0x6D] = {[this,&adc]() {
-                adc(readMem(absoluteAddress(readMem(regs.pc+1), readMem(regs.pc+2))));
+                adc(readByte(absoluteAddress(readByte(regs.pc+1), readByte(regs.pc+2))));
             }, 3, 4};
             instrucSet[0x7D] = {[this,&adc]() {
-                adc(readMem(indexedAbsoluteAddress(readMem(regs.pc+1), readMem(regs.pc+2), regs.x)));
+                adc(readByte(indexedAbsoluteAddress(readByte(regs.pc+1), readByte(regs.pc+2), regs.x)));
             }, 3, 4};
             instrucSet[0x79] = {[this,&adc]() {
-                adc(readMem(indexedAbsoluteAddress(readMem(regs.pc+1), readMem(regs.pc+2), regs.y)));
+                adc(readByte(indexedAbsoluteAddress(readByte(regs.pc+1), readByte(regs.pc+2), regs.y)));
             }, 3, 4};
             instrucSet[0x61] = {[this,&adc]() {
-                adc(readMem(indexedIndirectAddress(readMem(regs.pc+1), regs.x)));
+                adc(readByte(indexedIndirectAddress(readByte(regs.pc+1), regs.x)));
             }, 2, 6};
             instrucSet[0x71] = {[this,&adc]() {
-                adc(readMem(indirectIndexedAddress(readMem(regs.pc+1), regs.y)));
+                adc(readByte(indirectIndexedAddress(readByte(regs.pc+1), regs.y)));
             }, 2, 5};
         }
 
@@ -135,28 +175,28 @@ public:
                 regs.flags.bits.n = regs.a >> 7;
             };
             instrucSet[0x29] = {[this,&and]() {
-                and(readMem(regs.pc+1));
+                and(readByte(regs.pc+1));
             }, 2, 2};
             instrucSet[0x25] = {[this,&and]() {
-                and(readMem(zeroPageAddress(readMem(regs.pc+1))));
+                and(readByte(zeroPageAddress(readByte(regs.pc+1))));
             }, 2, 3};
             instrucSet[0x35] = {[this,&and]() {
-                and(readMem(indexedZeroPageAddress(readMem(regs.pc+1), regs.x)));
+                and(readByte(indexedZeroPageAddress(readByte(regs.pc+1), regs.x)));
             }, 2, 4};
             instrucSet[0x2D] = {[this,&and]() {
-                and(readMem(absoluteAddress(readMem(regs.pc+1), readMem(regs.pc+2))));
+                and(readByte(absoluteAddress(readByte(regs.pc+1), readByte(regs.pc+2))));
             }, 3, 4};
             instrucSet[0x3D] = {[this,&and]() {
-                and(readMem(indexedAbsoluteAddress(readMem(regs.pc+1), readMem(regs.pc+2), regs.x)));
+                and(readByte(indexedAbsoluteAddress(readByte(regs.pc+1), readByte(regs.pc+2), regs.x)));
             }, 3, 4};
             instrucSet[0x39] = {[this,&and]() {
-                and(readMem(indexedAbsoluteAddress(readMem(regs.pc+1), readMem(regs.pc+2), regs.y)));
+                and(readByte(indexedAbsoluteAddress(readByte(regs.pc+1), readByte(regs.pc+2), regs.y)));
             }, 3, 4};
             instrucSet[0x21] = {[this,&and]() {
-                and(readMem(indexedIndirectAddress(readMem(regs.pc+1), regs.x)));
+                and(readByte(indexedIndirectAddress(readByte(regs.pc+1), regs.x)));
             }, 2, 6};
             instrucSet[0x31] = {[this,&and]() {
-                and(readMem(indirectIndexedAddress(readMem(regs.pc+1), regs.y)));
+                and(readByte(indirectIndexedAddress(readByte(regs.pc+1), regs.y)));
             }, 2, 5};
         }
 
@@ -173,27 +213,27 @@ public:
                 regs.a = asl(regs.a);
             }, 1, 2};
             instrucSet[0x06] = {[this,&asl]() {
-                auto addr = zeroPageAddress(readMem(regs.pc+1));
-                writeMem(addr, asl(readMem(addr)));
+                auto addr = zeroPageAddress(readByte(regs.pc+1));
+                writeByte(addr, asl(readByte(addr)));
             }, 2, 5};
             instrucSet[0x16] = {[this,&asl]() {
-                auto addr = indexedZeroPageAddress(readMem(regs.pc+1), regs.x);
-                writeMem(addr, asl(readMem(addr)));
+                auto addr = indexedZeroPageAddress(readByte(regs.pc+1), regs.x);
+                writeByte(addr, asl(readByte(addr)));
             }, 2, 6};
             instrucSet[0x0E] = {[this,&asl]() {
-                auto addr = absoluteAddress(readMem(regs.pc+1), readMem(regs.pc+2));
-                writeMem(addr, asl(readMem(addr)));
+                auto addr = absoluteAddress(readByte(regs.pc+1), readByte(regs.pc+2));
+                writeByte(addr, asl(readByte(addr)));
             }, 3, 6};
             instrucSet[0x1E] = {[this,&asl]() {
-                auto addr = indexedAbsoluteAddress(readMem(regs.pc+1), readMem(regs.pc+2), regs.x);
-                writeMem(addr, asl(readMem(addr)));
+                auto addr = indexedAbsoluteAddress(readByte(regs.pc+1), readByte(regs.pc+2), regs.x);
+                writeByte(addr, asl(readByte(addr)));
             }, 3, 7};
         }
 
         /*BCC*/ {
             instrucSet[0x90] = {[this]() {
                 if (!regs.flags.bits.c) {
-                    regs.pc += (int8_t)readMem(regs.pc+1);
+                    regs.pc += (int8_t)readByte(regs.pc+1);
                     cycles++;
                 }
             }, 2, 2};
@@ -202,7 +242,7 @@ public:
         /*BCS*/ {
             instrucSet[0xB0] = {[this]() {
                 if (regs.flags.bits.c) {
-                    regs.pc += (int8_t)readMem(regs.pc+1);
+                    regs.pc += (int8_t)readByte(regs.pc+1);
                     cycles++;
                 }
             }, 2, 2};
@@ -211,7 +251,7 @@ public:
         /*BEQ*/ {
             instrucSet[0xF0] = {[this]() {
                 if (regs.flags.bits.z) {
-                    regs.pc += (int8_t)readMem(regs.pc+1);
+                    regs.pc += (int8_t)readByte(regs.pc+1);
                     cycles++;
                 }
             }, 2, 2};
@@ -224,17 +264,17 @@ public:
                 regs.flags.bits.n = v >> 7;
             };
             instrucSet[0x24] = {[this,&bit]() {
-                bit(readMem(zeroPageAddress(readMem(regs.pc+1))));
+                bit(readByte(zeroPageAddress(readByte(regs.pc+1))));
             }, 2, 3};
             instrucSet[0x2C] = {[this,&bit]() {
-                bit(readMem(absoluteAddress(readMem(regs.pc+1), readMem(regs.pc+2))));
+                bit(readByte(absoluteAddress(readByte(regs.pc+1), readByte(regs.pc+2))));
             }, 3, 4};
         }
 
         /*BMI*/ {
             instrucSet[0x30] = {[this]() {
                 if (regs.flags.bits.n) {
-                    regs.pc += (int8_t)readMem(regs.pc+1);
+                    regs.pc += (int8_t)readByte(regs.pc+1);
                     cycles++;
                 }
             }, 2, 2};
@@ -243,7 +283,7 @@ public:
         /*BNE*/ {
             instrucSet[0xD0] = {[this]() {
                 if (!regs.flags.bits.z) {
-                    regs.pc += (int8_t)readMem(regs.pc+1);
+                    regs.pc += (int8_t)readByte(regs.pc+1);
                     cycles++;
                 }
             }, 2, 2};
@@ -252,7 +292,7 @@ public:
         /*BPL*/ {
             instrucSet[0x10] = {[this]() {
                 if (!regs.flags.bits.n) {
-                    regs.pc += (int8_t)readMem(regs.pc+1);
+                    regs.pc += (int8_t)readByte(regs.pc+1);
                     cycles++;
                 }
             }, 2, 2};
@@ -260,9 +300,11 @@ public:
 
         /*BRK*/ {
             instrucSet[0x00] = {[this]() {
+                if (regs.flags.bits.i == 0) return;
+
                 pushByte(regs.pc);
                 pushByte(regs.flags.byte);
-                regs.pc = readIRQ(); 
+                regs.pc = readWord(IRQ); 
                 regs.flags.bits.b = 1;
 
                 logInfo("program called BRK");
@@ -272,7 +314,7 @@ public:
         /*BVC*/ {
             instrucSet[0x50] = {[this]() {
                 if (!regs.flags.bits.v) {
-                    regs.pc += (int8_t)readMem(regs.pc+1);
+                    regs.pc += (int8_t)readByte(regs.pc+1);
                     cycles++;
                 }
             }, 2, 2};
@@ -281,7 +323,7 @@ public:
         /*BVS*/ {
             instrucSet[0x50] = {[this]() {
                 if (regs.flags.bits.v) {
-                    regs.pc += (int8_t)readMem(regs.pc+1);
+                    regs.pc += (int8_t)readByte(regs.pc+1);
                     cycles++;
                 }
             }, 2, 2};
@@ -319,28 +361,28 @@ public:
                 regs.flags.bits.n = result >> 7;
             };
             instrucSet[0xC9] = {[this,&cmp]() {
-                cmp(readMem(regs.pc+1));  
+                cmp(readByte(regs.pc+1));  
             }, 2, 2};
             instrucSet[0xC5] = {[this,&cmp]() {
-                cmp(readMem(zeroPageAddress(readMem(regs.pc+1))));
+                cmp(readByte(zeroPageAddress(readByte(regs.pc+1))));
             }, 2, 3};
             instrucSet[0xD5] = {[this,&cmp]() {
-                cmp(readMem(indexedZeroPageAddress(readMem(regs.pc+1), regs.x)));
+                cmp(readByte(indexedZeroPageAddress(readByte(regs.pc+1), regs.x)));
             }, 2, 4};
             instrucSet[0xCD] = {[this,&cmp]() {
-                cmp(readMem(absoluteAddress(readMem(regs.pc+1), readMem(regs.pc+2))));
+                cmp(readByte(absoluteAddress(readByte(regs.pc+1), readByte(regs.pc+2))));
             }, 3, 4};
             instrucSet[0xDD] = {[this,&cmp]() {
-                cmp(readMem(indexedAbsoluteAddress(readMem(regs.pc+1), readMem(regs.pc+2), regs.x)));
+                cmp(readByte(indexedAbsoluteAddress(readByte(regs.pc+1), readByte(regs.pc+2), regs.x)));
             }, 3, 4};
             instrucSet[0xD9] = {[this,&cmp]() {
-                cmp(readMem(indexedAbsoluteAddress(readMem(regs.pc+1), readMem(regs.pc+2), regs.y)));
+                cmp(readByte(indexedAbsoluteAddress(readByte(regs.pc+1), readByte(regs.pc+2), regs.y)));
             }, 3, 4};
             instrucSet[0xC1] = {[this,&cmp]() {
-                cmp(readMem(indexedIndirectAddress(readMem(regs.pc+1), regs.x)));
+                cmp(readByte(indexedIndirectAddress(readByte(regs.pc+1), regs.x)));
             }, 2, 6};
             instrucSet[0xD1] = {[this,&cmp]() {
-                cmp(readMem(indirectIndexedAddress(readMem(regs.pc+1), regs.y)));
+                cmp(readByte(indirectIndexedAddress(readByte(regs.pc+1), regs.y)));
             }, 2, 5};
         }
 
@@ -352,13 +394,13 @@ public:
                 regs.flags.bits.n = result >> 7;
             };
             instrucSet[0xE0] = {[this,&cpx]() {
-                cpx(readMem(regs.pc+1));  
+                cpx(readByte(regs.pc+1));  
             }, 2, 2};
             instrucSet[0xE4] = {[this,&cpx]() {
-                cpx(readMem(zeroPageAddress(readMem(regs.pc+1))));
+                cpx(readByte(zeroPageAddress(readByte(regs.pc+1))));
             }, 2, 3};
             instrucSet[0xEC] = {[this,&cpx]() {
-                cpx(readMem(absoluteAddress(readMem(regs.pc+1), readMem(regs.pc+2))));
+                cpx(readByte(absoluteAddress(readByte(regs.pc+1), readByte(regs.pc+2))));
             }, 3, 4};
         }
 
@@ -370,13 +412,13 @@ public:
                 regs.flags.bits.n = result >> 7;
             };
             instrucSet[0xC0] = {[this,&cpy]() {
-                cpy(readMem(regs.pc+1));  
+                cpy(readByte(regs.pc+1));  
             }, 2, 2};
             instrucSet[0xC4] = {[this,&cpy]() {
-                cpy(readMem(zeroPageAddress(readMem(regs.pc+1))));
+                cpy(readByte(zeroPageAddress(readByte(regs.pc+1))));
             }, 2, 3};
             instrucSet[0xCC] = {[this,&cpy]() {
-                cpy(readMem(absoluteAddress(readMem(regs.pc+1), readMem(regs.pc+2))));
+                cpy(readByte(absoluteAddress(readByte(regs.pc+1), readByte(regs.pc+2))));
             }, 3, 4};
         }
 
@@ -390,20 +432,20 @@ public:
                 return v;
             };
             instrucSet[0xC6] = {[this,&dec]() {
-                auto addr = zeroPageAddress(readMem(regs.pc+1));
-                writeMem(addr, dec(readMem(addr)));
+                auto addr = zeroPageAddress(readByte(regs.pc+1));
+                writeByte(addr, dec(readByte(addr)));
             }, 2, 5};
             instrucSet[0xD6] = {[this,&dec]() {
-                auto addr = indexedZeroPageAddress(readMem(regs.pc+1), regs.x);
-                writeMem(addr, dec(readMem(addr)));
+                auto addr = indexedZeroPageAddress(readByte(regs.pc+1), regs.x);
+                writeByte(addr, dec(readByte(addr)));
             }, 2, 6};
             instrucSet[0xCE] = {[this,&dec]() {
-                auto addr = absoluteAddress(readMem(regs.pc+1), readMem(regs.pc+2));
-                writeMem(addr, dec(readMem(addr)));
+                auto addr = absoluteAddress(readByte(regs.pc+1), readByte(regs.pc+2));
+                writeByte(addr, dec(readByte(addr)));
             }, 3, 6};
             instrucSet[0xDE] = {[this,&dec]() {
-                auto addr = indexedAbsoluteAddress(readMem(regs.pc+1), readMem(regs.pc+2), regs.x);
-                writeMem(addr, dec(readMem(addr)));
+                auto addr = indexedAbsoluteAddress(readByte(regs.pc+1), readByte(regs.pc+2), regs.x);
+                writeByte(addr, dec(readByte(addr)));
             }, 3, 7};
         }
 
@@ -431,28 +473,28 @@ public:
                 regs.flags.bits.n = regs.a >> 7;
             };
             instrucSet[0x49] = {[this,&eor]() {
-                eor(readMem(regs.pc+1));  
+                eor(readByte(regs.pc+1));  
             }, 2, 2};
             instrucSet[0x45] = {[this,&eor]() {
-                eor(readMem(zeroPageAddress(readMem(regs.pc+1))));
+                eor(readByte(zeroPageAddress(readByte(regs.pc+1))));
             }, 2, 3};
             instrucSet[0x55] = {[this,&eor]() {
-                eor(readMem(indexedZeroPageAddress(readMem(regs.pc+1), regs.x)));
+                eor(readByte(indexedZeroPageAddress(readByte(regs.pc+1), regs.x)));
             }, 2, 4};
             instrucSet[0x4D] = {[this,&eor]() {
-                eor(readMem(absoluteAddress(readMem(regs.pc+1), readMem(regs.pc+2))));
+                eor(readByte(absoluteAddress(readByte(regs.pc+1), readByte(regs.pc+2))));
             }, 3, 4};
             instrucSet[0x5D] = {[this,&eor]() {
-                eor(readMem(indexedAbsoluteAddress(readMem(regs.pc+1), readMem(regs.pc+2), regs.x)));
+                eor(readByte(indexedAbsoluteAddress(readByte(regs.pc+1), readByte(regs.pc+2), regs.x)));
             }, 3, 4};
             instrucSet[0x59] = {[this,&eor]() {
-                eor(readMem(indexedAbsoluteAddress(readMem(regs.pc+1), readMem(regs.pc+2), regs.y)));
+                eor(readByte(indexedAbsoluteAddress(readByte(regs.pc+1), readByte(regs.pc+2), regs.y)));
             }, 3, 4};
             instrucSet[0x41] = {[this,&eor]() {
-                eor(readMem(indexedIndirectAddress(readMem(regs.pc+1), regs.x)));
+                eor(readByte(indexedIndirectAddress(readByte(regs.pc+1), regs.x)));
             }, 2, 6};
             instrucSet[0x51] = {[this,&eor]() {
-                eor(readMem(indirectIndexedAddress(readMem(regs.pc+1), regs.y)));
+                eor(readByte(indirectIndexedAddress(readByte(regs.pc+1), regs.y)));
             }, 2, 5};
         }
 
@@ -466,20 +508,20 @@ public:
                 return v;
             };
             instrucSet[0xE6] = {[this,&inc]() {
-                auto addr = zeroPageAddress(readMem(regs.pc+1));
-                writeMem(addr, inc(readMem(addr)));
+                auto addr = zeroPageAddress(readByte(regs.pc+1));
+                writeByte(addr, inc(readByte(addr)));
             }, 2, 5};
             instrucSet[0xF6] = {[this,&inc]() {
-                auto addr = indexedZeroPageAddress(readMem(regs.pc+1), regs.x);
-                writeMem(addr, inc(readMem(addr)));
+                auto addr = indexedZeroPageAddress(readByte(regs.pc+1), regs.x);
+                writeByte(addr, inc(readByte(addr)));
             }, 2, 6};
             instrucSet[0xEE] = {[this,&inc]() {
-                auto addr = absoluteAddress(readMem(regs.pc+1), readMem(regs.pc+2));
-                writeMem(addr, inc(readMem(addr)));
+                auto addr = absoluteAddress(readByte(regs.pc+1), readByte(regs.pc+2));
+                writeByte(addr, inc(readByte(addr)));
             }, 3, 6};
             instrucSet[0xFE] = {[this,&inc]() {
-                auto addr = indexedAbsoluteAddress(readMem(regs.pc+1), readMem(regs.pc+2), regs.x);
-                writeMem(addr, inc(readMem(addr)));
+                auto addr = indexedAbsoluteAddress(readByte(regs.pc+1), readByte(regs.pc+2), regs.x);
+                writeByte(addr, inc(readByte(addr)));
             }, 3, 7};
         }
 
@@ -501,17 +543,17 @@ public:
 
         /*JMP*/ {
             instrucSet[0x4C] = {[this]() {
-                regs.pc += readMem(absoluteAddress(readMem(regs.pc+1), readMem(regs.pc+2)));
+                regs.pc += readByte(absoluteAddress(readByte(regs.pc+1), readByte(regs.pc+2)));
             }, 3, 3};
             instrucSet[0x6C] = {[this]() {
-                regs.pc += readMem(indirectAddress(readMem(regs.pc+1), readMem(regs.pc+2)));
+                regs.pc += readByte(indirectAddress(readByte(regs.pc+1), readByte(regs.pc+2)));
             }, 3, 5};
         }
 
         /*JSR*/ {
             instrucSet[0x20] = {[this]() {
                 pushWord(regs.pc);
-                regs.pc += readMem(absoluteAddress(readMem(regs.pc+1), readMem(regs.pc+2)));
+                regs.pc += readByte(absoluteAddress(readByte(regs.pc+1), readByte(regs.pc+2)));
             }, 3, 6};
         }
 
@@ -523,28 +565,28 @@ public:
                 regs.flags.bits.n = regs.a >> 7;
             };
             instrucSet[0xA9] = {[this,&lda]() {
-                lda(readMem(regs.pc+1));  
+                lda(readByte(regs.pc+1));  
             }, 2, 2};
             instrucSet[0xA5] = {[this,&lda]() {
-                lda(readMem(zeroPageAddress(readMem(regs.pc+1))));
+                lda(readByte(zeroPageAddress(readByte(regs.pc+1))));
             }, 2, 3};
             instrucSet[0xB5] = {[this,&lda]() {
-                lda(readMem(indexedZeroPageAddress(readMem(regs.pc+1), regs.x)));
+                lda(readByte(indexedZeroPageAddress(readByte(regs.pc+1), regs.x)));
             }, 2, 4};
             instrucSet[0xAD] = {[this,&lda]() {
-                lda(readMem(absoluteAddress(readMem(regs.pc+1), readMem(regs.pc+2))));
+                lda(readByte(absoluteAddress(readByte(regs.pc+1), readByte(regs.pc+2))));
             }, 3, 4};
             instrucSet[0xBD] = {[this,&lda]() {
-                lda(readMem(indexedAbsoluteAddress(readMem(regs.pc+1), readMem(regs.pc+2), regs.x)));
+                lda(readByte(indexedAbsoluteAddress(readByte(regs.pc+1), readByte(regs.pc+2), regs.x)));
             }, 3, 4};
             instrucSet[0xB9] = {[this,&lda]() {
-                lda(readMem(indexedAbsoluteAddress(readMem(regs.pc+1), readMem(regs.pc+2), regs.y)));
+                lda(readByte(indexedAbsoluteAddress(readByte(regs.pc+1), readByte(regs.pc+2), regs.y)));
             }, 3, 4};
             instrucSet[0xA1] = {[this,&lda]() {
-                lda(readMem(indexedIndirectAddress(readMem(regs.pc+1), regs.x)));
+                lda(readByte(indexedIndirectAddress(readByte(regs.pc+1), regs.x)));
             }, 2, 6};
             instrucSet[0xB1] = {[this,&lda]() {
-                lda(readMem(indirectIndexedAddress(readMem(regs.pc+1), regs.y)));
+                lda(readByte(indirectIndexedAddress(readByte(regs.pc+1), regs.y)));
             }, 2, 5};
         }
 
@@ -556,19 +598,19 @@ public:
                 regs.flags.bits.n = regs.x >> 7;
             };
             instrucSet[0xA2] = {[this,&ldx]() {
-                ldx(readMem(regs.pc+1));  
+                ldx(readByte(regs.pc+1));  
             }, 2, 2};
             instrucSet[0xA6] = {[this,&ldx]() {
-                ldx(readMem(zeroPageAddress(readMem(regs.pc+1))));
+                ldx(readByte(zeroPageAddress(readByte(regs.pc+1))));
             }, 2, 3};
             instrucSet[0xB6] = {[this,&ldx]() {
-                ldx(readMem(indexedZeroPageAddress(readMem(regs.pc+1), regs.y)));
+                ldx(readByte(indexedZeroPageAddress(readByte(regs.pc+1), regs.y)));
             }, 2, 4};
             instrucSet[0xAE] = {[this,&ldx]() {
-                ldx(readMem(absoluteAddress(readMem(regs.pc+1), readMem(regs.pc+2))));
+                ldx(readByte(absoluteAddress(readByte(regs.pc+1), readByte(regs.pc+2))));
             }, 3, 4};
             instrucSet[0xBE] = {[this,&ldx]() {
-                ldx(readMem(indexedAbsoluteAddress(readMem(regs.pc+1), readMem(regs.pc+2), regs.y)));
+                ldx(readByte(indexedAbsoluteAddress(readByte(regs.pc+1), readByte(regs.pc+2), regs.y)));
             }, 3, 4};
         }
 
@@ -580,19 +622,19 @@ public:
                 regs.flags.bits.n = regs.y >> 7;
             };
             instrucSet[0xA0] = {[this,&ldy]() {
-                ldy(readMem(regs.pc+1));  
+                ldy(readByte(regs.pc+1));  
             }, 2, 2};
             instrucSet[0xA4] = {[this,&ldy]() {
-                ldy(readMem(zeroPageAddress(readMem(regs.pc+1))));
+                ldy(readByte(zeroPageAddress(readByte(regs.pc+1))));
             }, 2, 3};
             instrucSet[0xB4] = {[this,&ldy]() {
-                ldy(readMem(indexedZeroPageAddress(readMem(regs.pc+1), regs.x)));
+                ldy(readByte(indexedZeroPageAddress(readByte(regs.pc+1), regs.x)));
             }, 2, 4};
             instrucSet[0xAC] = {[this,&ldy]() {
-                ldy(readMem(absoluteAddress(readMem(regs.pc+1), readMem(regs.pc+2))));
+                ldy(readByte(absoluteAddress(readByte(regs.pc+1), readByte(regs.pc+2))));
             }, 3, 4};
             instrucSet[0xBC] = {[this,&ldy]() {
-                ldy(readMem(indexedAbsoluteAddress(readMem(regs.pc+1), readMem(regs.pc+2), regs.x)));
+                ldy(readByte(indexedAbsoluteAddress(readByte(regs.pc+1), readByte(regs.pc+2), regs.x)));
             }, 3, 4};
         }
 
@@ -611,20 +653,20 @@ public:
                 regs.a = lsr(regs.a);
             }, 1, 2};
             instrucSet[0x46] = {[this,&lsr]() {
-                auto addr = readMem(zeroPageAddress(readMem(regs.pc+1)));
-                writeMem(addr, lsr(addr));
+                auto addr = readByte(zeroPageAddress(readByte(regs.pc+1)));
+                writeByte(addr, lsr(addr));
             }, 2, 5};
             instrucSet[0x56] = {[this,&lsr]() {
-                auto addr = readMem(indexedZeroPageAddress(readMem(regs.pc+1), regs.x));
-                writeMem(addr, lsr(addr));
+                auto addr = readByte(indexedZeroPageAddress(readByte(regs.pc+1), regs.x));
+                writeByte(addr, lsr(addr));
             }, 2, 6};
             instrucSet[0x4E] = {[this,&lsr]() {
-                auto addr = readMem(absoluteAddress(readMem(regs.pc+1), readMem(regs.pc+2)));
-                writeMem(addr, lsr(addr));
+                auto addr = readByte(absoluteAddress(readByte(regs.pc+1), readByte(regs.pc+2)));
+                writeByte(addr, lsr(addr));
             }, 3, 6};
             instrucSet[0x5E] = {[this,&lsr]() {
-                auto addr = readMem(indexedAbsoluteAddress(readMem(regs.pc+1), readMem(regs.pc+2), regs.x));
-                writeMem(addr, lsr(addr));
+                auto addr = readByte(indexedAbsoluteAddress(readByte(regs.pc+1), readByte(regs.pc+2), regs.x));
+                writeByte(addr, lsr(addr));
             }, 3, 7};
         }
 
@@ -640,28 +682,28 @@ public:
                 regs.flags.bits.n = regs.a >> 7;
             };
             instrucSet[0x09] = {[this,&ora]() {
-                ora(readMem(regs.pc+1));  
+                ora(readByte(regs.pc+1));  
             }, 2, 2};
             instrucSet[0x05] = {[this,&ora]() {
-                ora(readMem(zeroPageAddress(readMem(regs.pc+1))));
+                ora(readByte(zeroPageAddress(readByte(regs.pc+1))));
             }, 2, 3};
             instrucSet[0x15] = {[this,&ora]() {
-                ora(readMem(indexedZeroPageAddress(readMem(regs.pc+1), regs.x)));
+                ora(readByte(indexedZeroPageAddress(readByte(regs.pc+1), regs.x)));
             }, 2, 4};
             instrucSet[0x0D] = {[this,&ora]() {
-                ora(readMem(absoluteAddress(readMem(regs.pc+1), readMem(regs.pc+2))));
+                ora(readByte(absoluteAddress(readByte(regs.pc+1), readByte(regs.pc+2))));
             }, 3, 4};
             instrucSet[0x1D] = {[this,&ora]() {
-                ora(readMem(indexedAbsoluteAddress(readMem(regs.pc+1), readMem(regs.pc+2), regs.x)));
+                ora(readByte(indexedAbsoluteAddress(readByte(regs.pc+1), readByte(regs.pc+2), regs.x)));
             }, 3, 4};
             instrucSet[0x19] = {[this,&ora]() {
-                ora(readMem(indexedAbsoluteAddress(readMem(regs.pc+1), readMem(regs.pc+2), regs.y)));
+                ora(readByte(indexedAbsoluteAddress(readByte(regs.pc+1), readByte(regs.pc+2), regs.y)));
             }, 3, 4};
             instrucSet[0x01] = {[this,&ora]() {
-                ora(readMem(indexedIndirectAddress(readMem(regs.pc+1), regs.x)));
+                ora(readByte(indexedIndirectAddress(readByte(regs.pc+1), regs.x)));
             }, 2, 6};
             instrucSet[0x11] = {[this,&ora]() {
-                ora(readMem(indirectIndexedAddress(readMem(regs.pc+1), regs.y)));
+                ora(readByte(indirectIndexedAddress(readByte(regs.pc+1), regs.y)));
             }, 2, 5};
         }
 
@@ -706,20 +748,20 @@ public:
                 regs.a = rol(regs.a);
             }, 1, 2};
             instrucSet[0x26] = {[this,&rol]() {
-                auto addr = readMem(zeroPageAddress(readMem(regs.pc+1)));
-                writeMem(addr, rol(addr));
+                auto addr = readByte(zeroPageAddress(readByte(regs.pc+1)));
+                writeByte(addr, rol(addr));
             }, 2, 5};
             instrucSet[0x36] = {[this,&rol]() {
-                auto addr = readMem(indexedZeroPageAddress(readMem(regs.pc+1), regs.x));
-                writeMem(addr, rol(addr));
+                auto addr = readByte(indexedZeroPageAddress(readByte(regs.pc+1), regs.x));
+                writeByte(addr, rol(addr));
             }, 2, 6};
             instrucSet[0x2E] = {[this,&rol]() {
-                auto addr = readMem(absoluteAddress(readMem(regs.pc+1), readMem(regs.pc+2)));
-                writeMem(addr, rol(addr));
+                auto addr = readByte(absoluteAddress(readByte(regs.pc+1), readByte(regs.pc+2)));
+                writeByte(addr, rol(addr));
             }, 3, 6};
             instrucSet[0x3E] = {[this,&rol]() {
-                auto addr = readMem(indexedAbsoluteAddress(readMem(regs.pc+1), readMem(regs.pc+2), regs.x));
-                writeMem(addr, rol(addr));
+                auto addr = readByte(indexedAbsoluteAddress(readByte(regs.pc+1), readByte(regs.pc+2), regs.x));
+                writeByte(addr, rol(addr));
             }, 3, 7};
         }
 
@@ -740,20 +782,20 @@ public:
                 regs.a = ror(regs.a);
             }, 1, 2};
             instrucSet[0x66] = {[this,&ror]() {
-                auto addr = readMem(zeroPageAddress(readMem(regs.pc+1)));
-                writeMem(addr, ror(addr));
+                auto addr = readByte(zeroPageAddress(readByte(regs.pc+1)));
+                writeByte(addr, ror(addr));
             }, 2, 5};
             instrucSet[0x76] = {[this,&ror]() {
-                auto addr = readMem(indexedZeroPageAddress(readMem(regs.pc+1), regs.x));
-                writeMem(addr, ror(addr));
+                auto addr = readByte(indexedZeroPageAddress(readByte(regs.pc+1), regs.x));
+                writeByte(addr, ror(addr));
             }, 2, 6};
             instrucSet[0x6E] = {[this,&ror]() {
-                auto addr = readMem(absoluteAddress(readMem(regs.pc+1), readMem(regs.pc+2)));
-                writeMem(addr, ror(addr));
+                auto addr = readByte(absoluteAddress(readByte(regs.pc+1), readByte(regs.pc+2)));
+                writeByte(addr, ror(addr));
             }, 3, 6};
             instrucSet[0x7E] = {[this,&ror]() {
-                auto addr = readMem(indexedAbsoluteAddress(readMem(regs.pc+1), readMem(regs.pc+2), regs.x));
-                writeMem(addr, ror(addr));
+                auto addr = readByte(indexedAbsoluteAddress(readByte(regs.pc+1), readByte(regs.pc+2), regs.x));
+                writeByte(addr, ror(addr));
             }, 3, 7};
         }
 
@@ -783,28 +825,28 @@ public:
                 regs.flags.bits.n = regs.a >> 7;
             };
             instrucSet[0xE9] = {[this,&sbc]() {
-                sbc(readMem(regs.pc+1));  
+                sbc(readByte(regs.pc+1));  
             }, 2, 2};
             instrucSet[0xE5] = {[this,&sbc]() {
-                sbc(readMem(zeroPageAddress(readMem(regs.pc+1))));
+                sbc(readByte(zeroPageAddress(readByte(regs.pc+1))));
             }, 2, 3};
             instrucSet[0xF5] = {[this,&sbc]() {
-                sbc(readMem(indexedZeroPageAddress(readMem(regs.pc+1), regs.x)));
+                sbc(readByte(indexedZeroPageAddress(readByte(regs.pc+1), regs.x)));
             }, 2, 4};
             instrucSet[0xED] = {[this,&sbc]() {
-                sbc(readMem(absoluteAddress(readMem(regs.pc+1), readMem(regs.pc+2))));
+                sbc(readByte(absoluteAddress(readByte(regs.pc+1), readByte(regs.pc+2))));
             }, 3, 4};
             instrucSet[0xFD] = {[this,&sbc]() {
-                sbc(readMem(indexedAbsoluteAddress(readMem(regs.pc+1), readMem(regs.pc+2), regs.x)));
+                sbc(readByte(indexedAbsoluteAddress(readByte(regs.pc+1), readByte(regs.pc+2), regs.x)));
             }, 3, 4};
             instrucSet[0xF9] = {[this,&sbc]() {
-                sbc(readMem(indexedAbsoluteAddress(readMem(regs.pc+1), readMem(regs.pc+2), regs.y)));
+                sbc(readByte(indexedAbsoluteAddress(readByte(regs.pc+1), readByte(regs.pc+2), regs.y)));
             }, 3, 4};
             instrucSet[0xE1] = {[this,&sbc]() {
-                sbc(readMem(indexedIndirectAddress(readMem(regs.pc+1), regs.x)));
+                sbc(readByte(indexedIndirectAddress(readByte(regs.pc+1), regs.x)));
             }, 2, 6};
             instrucSet[0xF1] = {[this,&sbc]() {
-                sbc(readMem(indirectIndexedAddress(readMem(regs.pc+1), regs.y)));
+                sbc(readByte(indirectIndexedAddress(readByte(regs.pc+1), regs.y)));
             }, 2, 5};
         }
 
@@ -828,49 +870,49 @@ public:
 
         /*STA*/ {
             instrucSet[0x85] = {[this]() {
-                writeMem(readMem(zeroPageAddress(readMem(regs.pc+1))), regs.a);
+                writeByte(readByte(zeroPageAddress(readByte(regs.pc+1))), regs.a);
             }, 2, 3};
             instrucSet[0x95] = {[this]() {
-                writeMem(readMem(indexedZeroPageAddress(readMem(regs.pc+1), regs.x)), regs.a);
+                writeByte(readByte(indexedZeroPageAddress(readByte(regs.pc+1), regs.x)), regs.a);
             }, 2, 4};
             instrucSet[0x8D] = {[this]() {
-                writeMem(readMem(absoluteAddress(readMem(regs.pc+1), readMem(regs.pc+2))), regs.a);
+                writeByte(readByte(absoluteAddress(readByte(regs.pc+1), readByte(regs.pc+2))), regs.a);
             }, 3, 4};
             instrucSet[0x9D] = {[this]() {
-                writeMem(readMem(indexedAbsoluteAddress(readMem(regs.pc+1), readMem(regs.pc+2), regs.x)), regs.a);
+                writeByte(readByte(indexedAbsoluteAddress(readByte(regs.pc+1), readByte(regs.pc+2), regs.x)), regs.a);
             }, 3, 5};
             instrucSet[0x99] = {[this]() {
-                writeMem(readMem(indexedAbsoluteAddress(readMem(regs.pc+1), readMem(regs.pc+2), regs.y)), regs.a);
+                writeByte(readByte(indexedAbsoluteAddress(readByte(regs.pc+1), readByte(regs.pc+2), regs.y)), regs.a);
             }, 3, 5};
             instrucSet[0x81] = {[this]() {
-                writeMem(readMem(indexedIndirectAddress(readMem(regs.pc+1), regs.x)), regs.a);
+                writeByte(readByte(indexedIndirectAddress(readByte(regs.pc+1), regs.x)), regs.a);
             }, 2, 6};
             instrucSet[0x91] = {[this]() {
-                writeMem(readMem(indirectIndexedAddress(readMem(regs.pc+1), regs.y)), regs.a);
+                writeByte(readByte(indirectIndexedAddress(readByte(regs.pc+1), regs.y)), regs.a);
             }, 2, 6};
         }
 
         /*STX*/ {
             instrucSet[0x86] = {[this]() {
-                writeMem(readMem(zeroPageAddress(readMem(regs.pc+1))), regs.x);
+                writeByte(readByte(zeroPageAddress(readByte(regs.pc+1))), regs.x);
             }, 2, 3};
             instrucSet[0x96] = {[this]() {
-                writeMem(readMem(indexedZeroPageAddress(readMem(regs.pc+1), regs.y)), regs.x);
+                writeByte(readByte(indexedZeroPageAddress(readByte(regs.pc+1), regs.y)), regs.x);
             }, 2, 4};
             instrucSet[0x8E] = {[this]() {
-                writeMem(readMem(absoluteAddress(readMem(regs.pc+1), readMem(regs.pc+2))), regs.x);
+                writeByte(readByte(absoluteAddress(readByte(regs.pc+1), readByte(regs.pc+2))), regs.x);
             }, 3, 4};
         }
 
         /*STY*/ {
             instrucSet[0x84] = {[this]() {
-                writeMem(readMem(zeroPageAddress(readMem(regs.pc+1))), regs.y);
+                writeByte(readByte(zeroPageAddress(readByte(regs.pc+1))), regs.y);
             }, 2, 3};
             instrucSet[0x94] = {[this]() {
-                writeMem(readMem(indexedZeroPageAddress(readMem(regs.pc+1), regs.x)), regs.y);
+                writeByte(readByte(indexedZeroPageAddress(readByte(regs.pc+1), regs.x)), regs.y);
             }, 2, 4};
             instrucSet[0x8C] = {[this]() {
-                writeMem(readMem(absoluteAddress(readMem(regs.pc+1), readMem(regs.pc+2))), regs.y);
+                writeByte(readByte(absoluteAddress(readByte(regs.pc+1), readByte(regs.pc+2))), regs.y);
             }, 3, 4};
         }        
 
@@ -948,19 +990,19 @@ public:
 
     inline uint16_t indirectAddress(const uint8_t bb, const uint8_t cc) {
         uint16_t ccbb = absoluteAddress(bb, cc);
-        return absoluteAddress(readMem(ccbb), readMem(ccbb+1));
+        return absoluteAddress(readByte(ccbb), readByte(ccbb+1));
     }
 
     inline uint16_t indexedIndirectAddress(const uint8_t bb, const uint8_t i) {
-       return absoluteAddress(readMem(bb+i), readMem(bb+i+1));
+       return absoluteAddress(readByte(bb+i), readByte(bb+i+1));
     }
 
     inline uint16_t indirectIndexedAddress(const uint8_t bb, const uint8_t i) {
-        return absoluteAddress(readMem(bb), readMem(bb+1)) + i;
+        return absoluteAddress(readByte(bb), readByte(bb+1)) + i;
     }
 
     inline void pushByte(const uint8_t v) {
-        writeMem(STACK_START + regs.sp--, v);
+        writeByte(STACK.start + regs.sp--, v);
     }
 
     inline void pushWord(const uint16_t v) {
@@ -969,43 +1011,28 @@ public:
     }
 
     inline uint8_t popByte() {
-        return readMem(STACK_END + regs.sp++);
+        return readByte(STACK.end + regs.sp++);
     }
 
     inline uint16_t popWord() {
         return popByte() | popByte() << 8;
     }
 
-    inline uint16_t readIRQ() {
-        return readMem(0xFFFE) | readMem(0xFFFF) << 8;
-    }
-
-    inline void writeIRQ(uint16_t irq) {
-        writeMem(0xFFFE, irq);
-        writeMem(0xFFFF, irq >> 8);
-    }
-
-    inline uint16_t readInterruptHandler() {
-        return readMem(0xFFFA) | readMem(0xFFFB) << 8;
-    }
-
-    inline uint16_t writeInterruptHandler(uint16_t ih) {
-        writeMem(0xFFFA, ih);
-        writeMem(0xFFFFB, ih >> 8);
-    }
-
-    inline uint16_t readPowerOnReset() {
-        return readMem(0xFFFC) | readMem(0xFFFD) << 8;
-    }
-
-    inline void writePowerOnReset(uint16_t pr) {
-        writeMem(0xFFFC, pr);
-        writeMem(0xFFFD, pr >> 8);
-    }
-
     void setROM(string romPath) {
-        //TODO
         logInfo("using rom: %s", romPath.c_str());
+        rom = ROM::fromFile(romPath);
+        if (!rom.buffer) {
+            logError("couldn't read rom in path: %s", romPath.c_str());
+            return;
+        }
+        if (rom.size == 0) {
+            logError("rom is empty");
+            return;
+        }
+
+        memcpy(&memory[EX_ROM.start], rom.buffer.get(), rom.size);
+        logInfo("copied rom");
+        // TODO
     }
 
     inline void burnCycles() {
@@ -1013,12 +1040,21 @@ public:
         cycles = 0;
     }
 
-    uint8_t readMem(const uint16_t address) {
+    uint8_t readByte(const uint16_t address) {
         return memory[address];
     }
 
-    void writeMem(const uint16_t address, const uint8_t value) {
+    void writeByte(const uint16_t address, const uint8_t value) {
         memory[address] = value;
+    }
+
+    uint16_t readWord(const uint16_t address) {
+        return readByte(address) | readByte(address+1) << 8;
+    }
+
+    void writeWord(const uint16_t address, const uint16_t value) {
+        writeByte(address, (uint8_t)value);
+        writeByte(address+1, (uint8_t)(value >> 8));
     }
 
     void reset() {
@@ -1040,7 +1076,7 @@ public:
         memory.fill(0);
         memset(&regs, 0, sizeof regs);
 
-        /*https://wiki.nesdev.com/w/index.php/CPU_ALL#At_power-up*/
+        // https://wiki.nesdev.com/w/index.php/CPU_ALL#At_power-up
         regs.flags.byte = 0x34;
         regs.sp = 0xFD;
 
@@ -1142,7 +1178,7 @@ int main(int argc, char const *argv[]) {
     if (argc != 2) {
         printf("Usage: NesEmu /path/to/rom\n");
     } else {
-        NES6502_DEVICE dev;
+        NES6502 dev;
         dev.setROM(argv[1]);
         dev.powerOn();
     }
