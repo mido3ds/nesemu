@@ -3,6 +3,16 @@
     NES-6502 Emulator
 */
 
+// TODO: cycles++ if page crossed
+/* TODO: decide whether to emulate this bug or not:
+    An original 6502 has does not correctly fetch the target address 
+    if the indirect vector falls on a page boundary 
+    (e.g. $xxFF where xx is any value from $00 to $FF). 
+    In this case fetches the LSB from $xxFF as expected but takes the MSB from $xx00. 
+    This is fixed in some later chips like the 65SC02 so for compatibility 
+    always ensure the indirect vector is not at the end of the page.
+*/
+
 #include <cstdint>
 #include <cstdio>
 #include <cstring>
@@ -47,93 +57,105 @@ struct ROM {
     }
 };
 
+struct Instruction {
+    function<void()> exec;
+    uint8_t bytes;
+    uint16_t cycles;
+};
+
+struct Region {
+    uint16_t start, end;
+
+    constexpr bool contains(uint16_t addr) {return addr <= end && addr >= start;}  
+    constexpr uint16_t size() {return (end + 1) - start;}
+};
+
+struct Mirror {
+    Region source, dest;
+
+    vector<uint16_t> getAdresses(const uint16_t address) {
+        if (source.contains(address)) {
+            uint16_t relativeAdress = address - source.start;
+            uint16_t num = dest.size()/source.size();
+
+            vector<uint16_t> adresses(num);
+            for (int i = 0; i < num; i++) {
+                adresses[i] = dest.start + relativeAdress * (i+1);
+            }
+            return adresses;
+        }
+
+        return vector<uint16_t>();
+    }
+};
+
+constexpr uint32_t MEM_SIZE = 0xFFFF + 1;
+
+constexpr uint16_t PPU_CTRL_REG0 = 0x2000, 
+                    PPU_CTRL_REG1 = 0x2001, 
+                    PPU_STS_REG = 0x2002;
+
+// approx time in nanoseconds for one cycle
+constexpr int NTSC_CYCLE_NS  = 559;
+constexpr int PAL_CYCLE_NS   = 601;
+constexpr int DENDY_CYCLE_NS = 564; // TODO: detect video system
+
+constexpr Color DEFAULT_COLOR = Color({0, 0, 0});
+
+// memory regions
+constexpr Region
+    ZERO_PAGE {0x0000, 0x0100-1},
+    STACK {0x0100, 0x0200-1},
+    RAM {0x0200, 0x0800-1},
+
+    IO_REGS0 {0x2000, 0x2008-1},
+    IO_REGS1 {0x4000, 0x4020-1},
+
+    EX_ROM {0x4020, 0x6000-1},
+    SRAM {0x6000, 0x8000-1},
+    PRG_ROM_LOW {0x8000, 0xC000-1},
+    PRG_ROM_UP {0xC000, 0xFFFF};
+
+// varm regions
+constexpr Region 
+    /* pattern tables */
+    PATT_TBL0 {0x0000, 0x1000-1},
+    PATT_TBL1 {0x1000, 0x2000-1},
+
+    /* name tables */
+    NAME_TBL0 {0x2000, 0x23C0-1},
+    ATT_TBL0 {0x23C0, 0x2400-1},
+    NAME_TBL1 {0x2400, 0x27C0-1},
+    ATT_TBL1 {0x27C0, 0x2800-1},
+    NAME_TBL2 {0x2800, 0x2BC0-1},
+    ATT_TBL2 {0x2BC0, 0x2C00-1},
+    NAME_TBL3 {0x2C00, 0x2FC0-1},
+    ATT_TBL3 {0x2FC0, 0x3000-1},
+
+    /* palettes */
+    IMG_PLT {0x3F00, 0x3F10-1},
+    SPR_PLT {0x3F10, 0x3F20-1};
+
+constexpr array<Mirror, 2> MEM_MIRRORS {
+    Mirror({{0x0000, 0x07FF}, {0x0800, 0x2000-1}}),
+    Mirror({IO_REGS0, {0x2008, 0x4000-1}}),
+};
+
+constexpr array<Mirror, 3> VRAM_MIRRORS {
+    Mirror({{0x2000, 0x2EFF}, {0x3000, 0x3F00-1}}),
+    Mirror({{0x3F00, 0x3F1F}, {0x3F20, 0x4000-1}}),
+    Mirror({{0x0000, 0x3FFF}, {0x4000, 0xFFFF}}),
+};
+
+// interrupt vector table
+constexpr uint16_t
+    IRQ = 0xFFFE, NMI = 0xFFFA, RH = 0xFFFC;
+
+
 class NES6502 {
 protected:
-    constexpr static uint32_t MEM_SIZE = 0xFFFF + 1;
 
-    // approx time in nanoseconds for one cycle
-    constexpr static int NTSC_CYCLE_NS  = 559;
-    constexpr static int PAL_CYCLE_NS   = 601;
-    constexpr static int DENDY_CYCLE_NS = 564; // TODO: detect video system
-
-    constexpr static Color DEFAULT_COLOR = Color({0, 0, 0});
-
-    struct Region {
-        uint16_t start, end;
-
-        constexpr bool contains(uint16_t addr) {return addr <= end && addr >= start;}  
-        constexpr uint16_t size() {return (end + 1) - start;}
-    };
-    // memory regions
-    constexpr static Region
-        ZERO_PAGE {0x0000, 0x0100-1},
-        STACK {0x0100, 0x0200-1},
-        RAM {0x0200, 0x0800-1},
-
-        IO_REGS0 {0x2000, 0x2008-1},
-        IO_REGS1 {0x4000, 0x4020-1},
-
-        EX_ROM {0x4020, 0x6000-1},
-        SRAM {0x6000, 0x8000-1},
-        PRG_ROM_LOW {0x8000, 0xC000-1},
-        PRG_ROM_UP {0xC000, 0xFFFF};
-    // varm regions
-    constexpr static Region 
-        /* pattern tables */
-        PATT_TBL0 {0x0000, 0x1000-1},
-        PATT_TBL1 {0x1000, 0x2000-1},
-
-        /* name tables */
-        NAME_TBL0 {0x2000, 0x23C0-1},
-        ATT_TBL0 {0x23C0, 0x2400-1},
-        NAME_TBL1 {0x2400, 0x27C0-1},
-        ATT_TBL1 {0x27C0, 0x2800-1},
-        NAME_TBL2 {0x2800, 0x2BC0-1},
-        ATT_TBL2 {0x2BC0, 0x2C00-1},
-        NAME_TBL3 {0x2C00, 0x2FC0-1},
-        ATT_TBL3 {0x2FC0, 0x3000-1},
-
-        /* palettes */
-        IMG_PLT {0x3F00, 0x3F10-1},
-        SPR_PLT {0x3F10, 0x3F20-1};
-
-    struct Mirror {
-        Region source, dest;
-
-        vector<uint16_t> getAdresses(const uint16_t address) {
-            if (source.contains(address)) {
-                uint16_t relativeAdress = address - source.start;
-                uint16_t num = dest.size()/source.size();
-
-                vector<uint16_t> adresses(num);
-                for (int i = 0; i < num; i++) {
-                    adresses[i] = dest.start + relativeAdress * (i+1);
-                }
-                return adresses;
-            }
-
-            return vector<uint16_t>();
-        }
-    };
-    constexpr static array<Mirror, 2> MEM_MIRRORS {
-        Mirror({{0x0000, 0x07FF}, {0x0800, 0x2000-1}}),
-        Mirror({IO_REGS0, {0x2008, 0x4000-1}}),
-    };
-    constexpr static array<Mirror, 3> VRAM_MIRRORS {
-        Mirror({{0x2000, 0x2EFF}, {0x3000, 0x3F00-1}}),
-        Mirror({{0x3F00, 0x3F1F}, {0x3F20, 0x4000-1}}),
-        Mirror({{0x0000, 0x3FFF}, {0x4000, 0xFFFF}}),
-    };
-    
-    // interrupt vector table
-    constexpr static uint16_t
-        IRQ = 0xFFFE, NMI = 0xFFFA, RH = 0xFFFC;
-
-    array<uint8_t, MEM_SIZE> memory;
-    array<uint8_t, MEM_SIZE> vram;
-    ROM rom;
-
-    struct Registers {
+    struct {
         uint16_t pc; // program counter
         uint8_t sp; // stack pointer
         uint8_t a; // accumulator
@@ -152,26 +174,14 @@ protected:
             } bits;
             uint8_t byte;
         } flags; // processor status
-    } regs; 
+    } regs;
 
-    struct Instruction {
-        function<void()> exec;
-        uint8_t bytes;
-        uint16_t cycles;
-    };
-
-    // opcode -> instruction data
+    ROM rom;
+    array<uint8_t, MEM_SIZE> memory;
+    array<uint8_t, MEM_SIZE> vram;
     array<Instruction, UINT8_MAX+1> instrucSet;
 
-    uint32_t cycles; // TODO: cycles++ if page crossed
-
-    /* TODO: decide whether to emulate this bug or not:
-    An original 6502 has does not correctly fetch the target address 
-    if the indirect vector falls on a page boundary 
-    (e.g. $xxFF where xx is any value from $00 to $FF). 
-    In this case fetches the LSB from $xxFF as expected but takes the MSB from $xx00. 
-    This is fixed in some later chips like the 65SC02 so for compatibility 
-    always ensure the indirect vector is not at the end of the page.*/
+    uint16_t cycles;
 
 public:
 
@@ -1091,11 +1101,13 @@ public:
     }
 
     void burnCycles() {
+        // TODO better burning
         std::this_thread::sleep_for(std::chrono::nanoseconds(cycles * NTSC_CYCLE_NS));
         cycles = 0;
     }
 
     uint8_t readByte(const uint16_t address) {
+        if (address == PPU_STS_REG) return readPPUStatusRegister();
         return memory[address];
     }
 
@@ -1143,6 +1155,34 @@ public:
         writeByte_VRAM(address+1, (uint8_t)(value >> 8));
     }
 
+    inline bool isNMIEnabled() {return memory[PPU_CTRL_REG0] >> 7;}
+
+    inline void setNMI(bool isEnabled) {memory[PPU_CTRL_REG0] |= isEnabled << 7;}
+
+    enum class SpriteType {S8x8 = 0, S8x16 = 1};
+    inline SpriteType getSpriteType() {return (SpriteType)((memory[PPU_CTRL_REG0] >> 5) & 1);}
+    inline void setSpriteType(SpriteType t) {memory[PPU_CTRL_REG0] |= (uint8_t)t << 5;}
+
+    inline uint8_t getPPUIncrementRate() {
+        return (memory[PPU_CTRL_REG0] >> 2) & 1 ? /*vertical*/32 : /*horizontal*/1;
+    }
+
+    inline bool isBckgShown() {return (memory[PPU_CTRL_REG1] >> 3) & 1;}
+    inline bool isSpritesShown() {return (memory[PPU_CTRL_REG1] >> 4) & 1;}
+
+    inline void setVBlankState(bool isOccurring) {memory[PPU_STS_REG] |= isOccurring << 7;}
+    inline bool isVBlankOccurring() {return memory[PPU_STS_REG] >> 7;}
+
+    inline bool vramAcceptsWrites() {return (memory[PPU_STS_REG] >> 4) & 1;}
+    inline void setVRamWriteState(bool acceptsWrites) {memory[PPU_STS_REG] |= acceptsWrites << 4;}
+
+    inline uint8_t readPPUStatusRegister() {
+        memory[0x2005] = memory[0x2006] = 0;
+        uint8_t old = memory[PPU_STS_REG];
+        memory[PPU_STS_REG] &= ~(1 << 4);
+        return old;
+    }
+
     void reset() {
         logInfo("start resetting");
         cycles = 0;
@@ -1150,7 +1190,8 @@ public:
         /*https://wiki.nesdev.com/w/index.php/CPU_ALL#After_reset*/
         regs.sp -= 3;
         regs.flags.bits.i = 1;
-        //TODO: apuMemory[0x4015] = 0;
+        vram[0x4015] = 0;
+        regs.pc = readWord(RH);
 
         logInfo("finished resetting");
     }
@@ -1165,16 +1206,17 @@ public:
         // https://wiki.nesdev.com/w/index.php/CPU_ALL#At_power-up
         regs.flags.byte = 0x34;
         regs.sp = 0xFD;
+        regs.pc = readWord(RH);
 
         //TODO: All 15 bits of noise channel LFSR = $0000[4]. 
         //The first time the LFSR is clocked from the all-0s state, it will shift in a 1.
 
-        powerOnApu();
+        powerOnPPU();
 
         logInfo("finished powering on");
     }
 
-    inline void powerOnApu() {
+    inline void powerOnPPU() {
         logInfo("start powering on apu");
 
         //TODO
