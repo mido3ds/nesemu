@@ -6,7 +6,9 @@
         "xstddef": "cpp",
         "functional": "cpp",
         "cstdint": "cpp",
-        "array": "cpp"
+        "array": "cpp",
+        "initializer_list": "cpp",
+        "utility": "cpp"
     },
     "C_Cpp.dimInactiveRegions": true,
     "C_Cpp.intelliSenseEngineFallback": "Enabled"

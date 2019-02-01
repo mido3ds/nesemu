@@ -73,14 +73,15 @@ struct Region {
 struct Mirror {
     Region source, dest;
 
-    vector<uint16_t> getAdresses(const uint16_t address) {
+    vector<uint16_t> getAdresses(const uint16_t address) const {
         if (source.contains(address)) {
             uint16_t relativeAdress = address - source.start;
-            uint16_t num = dest.size()/source.size();
+            uint16_t stripe = source.size();
+            uint16_t num = dest.size()/stripe;
 
             vector<uint16_t> adresses(num);
             for (int i = 0; i < num; i++) {
-                adresses[i] = dest.start + relativeAdress * (i+1);
+                adresses[i] = dest.start + relativeAdress + stripe * i;
             }
             return adresses;
         }
@@ -133,7 +134,7 @@ constexpr Region
     ATT_TBL3 {0x2FC0, 0x3000-1},
 
     /* palettes */
-    IMG_PLT {0x3F00, 0x3F10-1},
+    IMG_PLT {0x3F00, 0x3F10-1}, // TODO: check mirroring byte 0x3F00 correctly
     SPR_PLT {0x3F10, 0x3F20-1};
 
 constexpr array<Mirror, 2> MEM_MIRRORS {
@@ -1141,6 +1142,12 @@ public:
         // apply mirroring 
         for (auto mirror: VRAM_MIRRORS) {
             for (auto mirrorAddr: mirror.getAdresses(address)) {
+                vram[mirrorAddr] = value;
+            }
+        }
+
+        if (address == 0x3F00) {
+            for (auto& mirrorAddr: {0x3F04, 0x3F08, 0x3F0C, 0x3F10, 0x3F14, 0x3F18, 0x3F1C}) {
                 vram[mirrorAddr] = value;
             }
         }
