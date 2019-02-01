@@ -134,7 +134,7 @@ constexpr Region
     ATT_TBL3 {0x2FC0, 0x3000-1},
 
     /* palettes */
-    IMG_PLT {0x3F00, 0x3F10-1}, // TODO: check mirroring byte 0x3F00 correctly
+    IMG_PLT {0x3F00, 0x3F10-1}, 
     SPR_PLT {0x3F10, 0x3F20-1};
 
 constexpr array<Mirror, 2> MEM_MIRRORS {
