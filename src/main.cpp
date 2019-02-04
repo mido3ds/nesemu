@@ -90,6 +90,26 @@ struct Mirror {
     }
 };
 
+enum class SpriteType {S8x8 = 0, S8x16 = 1};
+
+struct SpriteInfo {
+    uint8_t y; // Y-coordinate of the top left of the sprite minus 1
+    uint8_t i; // Index number of the sprite in the pattern tables.
+
+    union {
+        struct {
+            uint8_t color:2; // Most significant two bits of the colour
+            uint8_t __unused__:3;
+            uint8_t pritority:1; // Indicates whether this sprite has priority over the background
+            uint8_t hFlip:1; // Indicates whether to flip the sprite horizontally
+            uint8_t vFlip:1; // Indicates whether to flip the sprite vertically}
+        } bits;
+        uint8_t byte;
+    } attr;
+};
+
+constexpr uint8_t SPRITE_8x8_SIZE = 16;
+constexpr uint8_t SPRITE_8x16_SIZE = 2 * SPRITE_8x8_SIZE;
 constexpr uint32_t MEM_SIZE = 0xFFFF + 1;
 
 constexpr uint16_t PPU_CTRL_REG0 = 0x2000, 
@@ -1148,9 +1168,14 @@ public:
 
     inline void setNMI(bool isEnabled) {memory[PPU_CTRL_REG0] |= isEnabled << 7;}
 
-    enum class SpriteType {S8x8 = 0, S8x16 = 1};
     inline SpriteType getSpriteType() {return (SpriteType)((memory[PPU_CTRL_REG0] >> 5) & 1);}
     inline void setSpriteType(SpriteType t) {memory[PPU_CTRL_REG0] |= (uint8_t)t << 5;}
+
+    uint16_t getSpriteAddr(const SpriteInfo& inf, SpriteType type) {
+        if (type == SpriteType::S8x8) return PATT_TBL0.start + inf.i * SPRITE_8x8_SIZE;
+        if (inf.i % 2 == 0) return PATT_TBL0.start + inf.i * SPRITE_8x16_SIZE;
+        return PATT_TBL1.start + inf.i * SPRITE_8x16_SIZE;
+    }
 
     inline uint8_t getPPUIncrementRate() {
         return (memory[PPU_CTRL_REG0] >> 2) & 1 ? /*vertical*/32 : /*horizontal*/1;
@@ -1164,6 +1189,20 @@ public:
 
     inline bool vramAcceptsWrites() {return (memory[PPU_STS_REG] >> 4) & 1;}
     inline void setVRamWriteState(bool acceptsWrites) {memory[PPU_STS_REG] |= acceptsWrites << 4;}
+
+    // Only eight sprites are allowed per scanline, and the system indicates when this number has
+    // been reached by setting bit 5 of I/O register $2002.
+    inline void setReachedMaxSprites(bool state) {memory[PPU_STS_REG] |= state << 5;}
+    inline bool reachedMaxSprites() {return (memory[PPU_STS_REG] >> 5) & 1;}
+
+    inline void setSprite0Hit(bool isHit) {memory[PPU_STS_REG] |= isHit << 6;}
+    inline bool isSprite0Hit() {return (memory[PPU_STS_REG] >> 6) & 1;}
+
+    /*TODO: implement this in PPU
+        Sprites can be read or written one at a time by first writing the required address to $2003 and
+        then reading or writing $2004. Alternatively the whole of SPR-RAM can be written in one
+        DMA operation by writing to $4014.
+    */
 
     inline uint8_t readPPUStatusRegister() {
         memory[0x2005] = memory[0x2006] = 0;
