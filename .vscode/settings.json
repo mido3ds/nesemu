@@ -8,7 +8,9 @@
         "cstdint": "cpp",
         "array": "cpp",
         "initializer_list": "cpp",
-        "utility": "cpp"
+        "utility": "cpp",
+        "istream": "cpp",
+        "xiosbase": "cpp"
     },
     "C_Cpp.dimInactiveRegions": true,
     "C_Cpp.intelliSenseEngineFallback": "Enabled"

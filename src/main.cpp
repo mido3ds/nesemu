@@ -90,7 +90,8 @@ struct Mirror {
     }
 };
 
-enum class SpriteType {S8x8 = 0, S8x16 = 1};
+enum class SpriteType : uint8_t {S8x8 = 0, S8x16 = 1};
+enum class ColorMode : uint8_t {Color = 0, Monochrome = 1};
 
 struct SpriteInfo {
     uint8_t y; // Y-coordinate of the top left of the sprite minus 1
@@ -99,7 +100,7 @@ struct SpriteInfo {
     union {
         struct {
             uint8_t color:2; // Most significant two bits of the colour
-            uint8_t __unused__:3;
+            uint8_t:3;
             uint8_t pritority:1; // Indicates whether this sprite has priority over the background
             uint8_t hFlip:1; // Indicates whether to flip the sprite horizontally
             uint8_t vFlip:1; // Indicates whether to flip the sprite vertically}
@@ -114,7 +115,8 @@ constexpr uint32_t MEM_SIZE = 0xFFFF + 1;
 
 constexpr uint16_t PPU_CTRL_REG0 = 0x2000, 
                     PPU_CTRL_REG1 = 0x2001, 
-                    PPU_STS_REG = 0x2002;
+                    PPU_STS_REG = 0x2002,
+                    PPU_SCRL_REG = 0x2006;
 
 // approx time in nanoseconds for one cycle
 constexpr int NTSC_CYCLE_NS  = 559;
@@ -189,7 +191,7 @@ protected:
                 uint8_t i:1; // interrupt disable
                 uint8_t d:1; // decimal mode
                 uint8_t b:1; // break command
-                uint8_t __unused__:1; 
+                uint8_t:1; 
                 uint8_t v:1; // overflow flag
                 uint8_t n:1; // negative flag
             } bits;
@@ -200,7 +202,112 @@ protected:
     ROM rom;
     array<uint8_t, MEM_SIZE> memory;
     array<uint8_t, MEM_SIZE> vram;
+    array<uint8_t, 256> sprram; // sprite ram
     array<Instruction, UINT8_MAX+1> instrucSet;
+
+    union ScrollReg {
+        struct {
+            uint8_t xScroll:5;
+            uint8_t yScroll:5;
+            uint8_t bit10:1;
+            uint8_t bit11:1;
+            uint8_t yOffset:3;
+            uint8_t:1;
+        } bits;
+        uint16_t word;
+
+        void incXScroll() {bits.bit10 ^= (++bits.xScroll == 0);}
+        void incYScroll() {
+            if (++bits.yScroll == 30) {
+                bits.bit11 ^= 1;
+                bits.yScroll = 0;
+            }
+        }
+    } *scrollReg = (ScrollReg*)(memory.data() + PPU_SCRL_REG);
+
+    union PPUControlReg {
+        struct {
+            // reg0
+            uint8_t nameTable:2; // name table 0, 1, 2 or 3
+            uint8_t ppuIncRate:1; // 0 -> 1 or 1 -> 32
+            uint8_t spritesPattTable:1; // pattern table 0 or 1
+            uint8_t bckgPattTable:1; // pattern table 0 or 1
+            SpriteType spriteType:1;
+            uint8_t:1; // Changes PPU between master and slave modes. This is not used by the NES.
+            bool nmiEnabled:1; // whether non-maskable-interrupt should occur upon V-Blank or not
+
+            // reg1
+            ColorMode colorMode:1;
+            bool showLeftBckg:1; // whether to show background in the left 8 pixels or not
+            bool showLeftSprites:1; // whether to show sprites in the left 8 pixels or not
+            bool showBckg:1;  // whether to show whole background or not
+            bool showSprites:1; // whether to show whole sprites or not
+            uint8_t color:3; // background colour in monochrome mode or colour intensity in colour mode
+        } bits;
+        uint8_t reg0, reg1;
+
+        uint16_t getNameTableAddress() {return 0x2000 + bits.nameTable * 0x0400;}
+        uint8_t getPPUIncrementRate() {return bits.ppuIncRate ? /*vertical*/32 : /*horizontal*/1;}
+    } *controlReg = (PPUControlReg*)(memory.data() + PPU_CTRL_REG0);
+
+    union PPUStatusReg {
+        struct {
+            uint8_t:1;
+            uint8_t:1;
+            uint8_t:1;
+            uint8_t:1;
+            uint8_t ignoreVramWrites:1;
+            uint8_t spritesMoreThan8:1;    
+            uint8_t sprite0Hit:1; // set when a non-transparent pixel of 
+                                // sprite 0 overlaps a non-transparent background pixel
+            uint8_t vblank:1; // set when V-Blank is occurring
+        } bits;
+        uint8_t byte;
+    } *statusReg = (PPUStatusReg*)(memory.data() + PPU_STS_REG);
+
+    uint8_t& sprramAddrReg                    = memory[0x2003];
+    uint8_t& sprramIOReg                      = memory[0x2004];
+
+    uint8_t& vramAddrReg0                     = memory[0x2005];
+    uint8_t& vramAddrReg1                     = memory[0x2006];
+    uint8_t& vramIOReg                        = memory[0x2007];
+
+    uint8_t& apuPulse1ControlReg              = memory[0x4000];
+    uint8_t& apuPulse1RampControlReg          = memory[0x4001];
+    uint8_t& apuPulse1FineTuneReg             = memory[0x4002];
+    uint8_t& apuPulse1CoarseTuneReg           = memory[0x4003];
+    uint8_t& apuPulse2ControlReg              = memory[0x4004];
+    uint8_t& apuPulse2RampControlReg          = memory[0x4005];
+    uint8_t& apuPulse2FineTuneReg             = memory[0x4006];
+    uint8_t& apuPulse2CoarseTuneReg           = memory[0x4007];
+    uint8_t& apuTriangleControlReg1           = memory[0x4008];
+    uint8_t& apuTriangleControlReg2           = memory[0x4009];
+    uint8_t& apuTriangleFrequencyReg1         = memory[0x400A];
+    uint8_t& apuTriangleFrequencyReg2         = memory[0x400B];
+    uint8_t& apuNoiseControlReg1              = memory[0x400C];
+    uint8_t& apuNoiseFrequencyReg1            = memory[0x400E];
+    uint8_t& apuNoiseFrequencyReg2            = memory[0x400F];
+    uint8_t& apuDeltaModulationControlReg     = memory[0x4010];
+    uint8_t& apuDeltaModulationDAReg          = memory[0x4011];
+    uint8_t& apuDeltaModulationAddressReg     = memory[0x4012];
+    uint8_t& apuDeltaModulationDataLengthReg  = memory[0x4013];
+    uint8_t& apuVerticalClockSignalReg        = memory[0x4015];
+
+    uint8_t& spriteDMAReg                     = memory[0x4014];
+
+    // TODO listen for changes in reg
+    struct JoyPadReg {
+        union {
+            uint8_t data:1; // Reads data from joypad or causes joypad strobe when writing.
+            uint8_t:1;
+            uint8_t:1;
+            uint8_t zapperIsPointing:1;
+            uint8_t zapperIsTriggered:1;
+            uint8_t:3;
+        } bits;
+        uint8_t byte;
+    } *joypadReg0 = (JoyPadReg*)(memory.data() + 0x4016), 
+    *joypadReg1 = (JoyPadReg*)(memory.data() + 0x4017);
 
     uint16_t cycles;
 
@@ -1126,17 +1233,43 @@ public:
                 memory[mirrorAddr] = value;
             }
         }
+
+        if (address == 0x4014) {
+            // DMA from memory -> sprram
+            memcpy(sprram.data(), memory.data() + 0x100 * value, sprram.size());
+        } else if (address == 0x2004) {
+            sprram[sprramAddrReg] = value;
+        } else {
+            // TODO: implement 0x2006 vram io regs reading/writing
+            // if (address = 0x2006) {
+            //     static int numWrites = 0;
+            //     static uint8_t lastWrite = 0;
+                
+            //     numWrites++;
+            //     if (numWrites == 1) {
+            //         lastWrite = value;
+            //     } else {
+            //         numWrites = 0;
+            //         uint16_t addr = value << 8 | lastWrite;
+
+            //     }
+            // }
+            // if (address == 0x2006 && ++numWritesTo0x2006 == 2) {
+            //     numWritesTo0x2006 = 0;
+            //     vram[vramAddrReg1]
+            // }
+        }
     }
 
     template<typename T>
     void push(T v) {
-        write<T>(STACK.start + regs.sp, v);
+        write<T>(STACK.start + regs.sp, v); // TODO: make it wrap around if stack is full
         regs.sp -= sizeof T;
     }
 
     template<typename T>
     T pop() {
-        T v = read<T>(STACK.end + regs.sp);
+        T v = read<T>(STACK.end + regs.sp); // TODO: from start or end
         regs.sp += sizeof T;
         return v;
     }
@@ -1164,50 +1297,16 @@ public:
         }
     }
 
-    inline bool isNMIEnabled() {return memory[PPU_CTRL_REG0] >> 7;}
-
-    inline void setNMI(bool isEnabled) {memory[PPU_CTRL_REG0] |= isEnabled << 7;}
-
-    inline SpriteType getSpriteType() {return (SpriteType)((memory[PPU_CTRL_REG0] >> 5) & 1);}
-    inline void setSpriteType(SpriteType t) {memory[PPU_CTRL_REG0] |= (uint8_t)t << 5;}
-
-    uint16_t getSpriteAddr(const SpriteInfo& inf, SpriteType type) {
-        if (type == SpriteType::S8x8) return PATT_TBL0.start + inf.i * SPRITE_8x8_SIZE;
-        if (inf.i % 2 == 0) return PATT_TBL0.start + inf.i * SPRITE_8x16_SIZE;
-        return PATT_TBL1.start + inf.i * SPRITE_8x16_SIZE;
+    uint16_t getSpriteAddr(SpriteInfo* inf, SpriteType type) {
+        if (type == SpriteType::S8x8) return PATT_TBL0.start + inf->i * SPRITE_8x8_SIZE;
+        if (inf->i % 2 == 0) return PATT_TBL0.start + inf->i * SPRITE_8x16_SIZE;
+        return PATT_TBL1.start + inf->i * SPRITE_8x16_SIZE;
     }
-
-    inline uint8_t getPPUIncrementRate() {
-        return (memory[PPU_CTRL_REG0] >> 2) & 1 ? /*vertical*/32 : /*horizontal*/1;
-    }
-
-    inline bool isBckgShown() {return (memory[PPU_CTRL_REG1] >> 3) & 1;}
-    inline bool isSpritesShown() {return (memory[PPU_CTRL_REG1] >> 4) & 1;}
-
-    inline void setVBlankState(bool isOccurring) {memory[PPU_STS_REG] |= isOccurring << 7;}
-    inline bool isVBlankOccurring() {return memory[PPU_STS_REG] >> 7;}
-
-    inline bool vramAcceptsWrites() {return (memory[PPU_STS_REG] >> 4) & 1;}
-    inline void setVRamWriteState(bool acceptsWrites) {memory[PPU_STS_REG] |= acceptsWrites << 4;}
-
-    // Only eight sprites are allowed per scanline, and the system indicates when this number has
-    // been reached by setting bit 5 of I/O register $2002.
-    inline void setReachedMaxSprites(bool state) {memory[PPU_STS_REG] |= state << 5;}
-    inline bool reachedMaxSprites() {return (memory[PPU_STS_REG] >> 5) & 1;}
-
-    inline void setSprite0Hit(bool isHit) {memory[PPU_STS_REG] |= isHit << 6;}
-    inline bool isSprite0Hit() {return (memory[PPU_STS_REG] >> 6) & 1;}
-
-    /*TODO: implement this in PPU
-        Sprites can be read or written one at a time by first writing the required address to $2003 and
-        then reading or writing $2004. Alternatively the whole of SPR-RAM can be written in one
-        DMA operation by writing to $4014.
-    */
 
     inline uint8_t readPPUStatusRegister() {
-        memory[0x2005] = memory[0x2006] = 0;
-        uint8_t old = memory[PPU_STS_REG];
-        memory[PPU_STS_REG] &= ~(1 << 4);
+        vramAddrReg0 = vramAddrReg1 = 0;
+        uint8_t old = statusReg->byte;
+        statusReg->byte &= ~(1 << 4);
         return old;
     }
 
