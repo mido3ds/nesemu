@@ -118,10 +118,16 @@ constexpr uint16_t PPU_CTRL_REG0 = 0x2000,
                     PPU_STS_REG = 0x2002,
                     PPU_SCRL_REG = 0x2006;
 
-// approx time in nanoseconds for one cycle
-constexpr int NTSC_CYCLE_NS  = 559;
-constexpr int PAL_CYCLE_NS   = 601;
-constexpr int DENDY_CYCLE_NS = 564; // TODO: detect video system
+// Video systems info 
+constexpr struct {
+    int cpuCycles; // in nanoseconds
+    int fps;
+    float timePerFrame; // in milliseconds
+    int scanlinesPerFrame;
+    float cpuCyclesPerScanline;
+    struct {int width, height;} resolution;
+} NTSC {559, 60, 16.67f, 262, 113.33f, {256, 224}},
+PAL {601, 50, 20, 312, 106.56f, {256, 240}};
 
 constexpr Color DEFAULT_COLOR = Color({0, 0, 0});
 
@@ -310,6 +316,22 @@ protected:
     *joypadReg1 = (JoyPadReg*)(memory.data() + 0x4017);
 
     uint16_t cycles;
+
+    // temporary placeholder for values written in memory[0x2006]
+    struct X2006Reg {
+        uint16_t addr;
+
+        // possible states, multiple ones could be combined
+        static constexpr uint8_t 
+            EMPTY=0,  // addr is not yet initialized
+            LSN=0b1, // leaset significant nibble (4 bits) has been loaded
+            FULL=0b10, // most signifcant nibble (4 bits) has been loaded
+            CAN_READ=0b100, CAN_WRITE=0b1000, 
+            READ_BUFFERED=0b10000; // you can only read colr-palette
+
+        // bitset indicates the state of 0x2006 register
+        uint8_t state = EMPTY; 
+    } temp0x2006; 
 
 public:
 
@@ -1213,14 +1235,27 @@ public:
 
     void burnCycles() {
         // TODO better burning
-        std::this_thread::sleep_for(std::chrono::nanoseconds(cycles * NTSC_CYCLE_NS));
+        std::this_thread::sleep_for(std::chrono::nanoseconds(cycles * NTSC.cpuCycles));
         cycles = 0;
     }
 
     template<typename T>
     T read(uint16_t address) {
         if (address == PPU_STS_REG) return (T) readPPUStatusRegister();
-        else return *((T*) (memory.data() + address));
+        if (address == 0x2007) {
+            if (temp0x2006.state & X2006Reg::CAN_READ 
+            || (temp0x2006.state & X2006Reg::READ_BUFFERED && temp0x2006.addr >= IMG_PLT.start)) {
+                auto v = vram[temp0x2006.addr];
+                temp0x2006.addr += controlReg->getPPUIncrementRate();
+                return v;
+            }
+
+            if (temp0x2006.state & X2006Reg::READ_BUFFERED) {
+                temp0x2006.state |= X2006Reg::CAN_READ;
+            }  
+        }
+
+        return *((T*) (memory.data() + address));
     }
 
     template<typename T>
@@ -1239,25 +1274,14 @@ public:
             memcpy(sprram.data(), memory.data() + 0x100 * value, sprram.size());
         } else if (address == 0x2004) {
             sprram[sprramAddrReg] = value;
-        } else {
-            // TODO: implement 0x2006 vram io regs reading/writing
-            // if (address = 0x2006) {
-            //     static int numWrites = 0;
-            //     static uint8_t lastWrite = 0;
-                
-            //     numWrites++;
-            //     if (numWrites == 1) {
-            //         lastWrite = value;
-            //     } else {
-            //         numWrites = 0;
-            //         uint16_t addr = value << 8 | lastWrite;
-
-            //     }
-            // }
-            // if (address == 0x2006 && ++numWritesTo0x2006 == 2) {
-            //     numWritesTo0x2006 = 0;
-            //     vram[vramAddrReg1]
-            // }
+        } else if (address == 0x2006) {
+            if (temp0x2006.state & (X2006Reg::EMPTY | X2006Reg::FULL)) {
+                temp0x2006.state = X2006Reg::LSN;
+                temp0x2006.addr = value;
+            } else if (temp0x2006.state & X2006Reg::LSN) {
+                temp0x2006.state = X2006Reg::FULL | X2006Reg::CAN_WRITE | X2006Reg::READ_BUFFERED;
+                temp0x2006.addr |= value << 8;
+            }
         }
     }
 
