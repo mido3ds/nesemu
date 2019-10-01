@@ -24,6 +24,8 @@
 #include <functional>
 #include <chrono>
 #include <thread>
+#include <sstream>
+#include <SDL2/SDL.h>
 #include "Logger.h"
 
 using namespace std;
@@ -1453,11 +1455,83 @@ public:
     }
 };
 
-#include <SDL2/SDL.h>
-#include <iostream>
+class Window {
+protected:
+    SDL_Window* window = nullptr;
+    SDL_Renderer* renderer = nullptr;
+    bool quit = false;
 
-const int SCREEN_WIDTH = NTSC.resolution.width * 2;
-const int SCREEN_HEIGHT = NTSC.resolution.height * 2;
+public:
+    Window() {}
+
+    ~Window() {
+        if (window) {
+            SDL_DestroyWindow(window);
+        }
+
+        if (renderer) {
+            SDL_DestroyRenderer(renderer);
+        }
+
+        SDL_Quit();
+    }
+
+    void init(string title, int width, int height) {
+        SDL_Init(SDL_INIT_VIDEO);
+        window = SDL_CreateWindow(
+            title.c_str(),
+            SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
+            width, height,
+            SDL_WINDOW_SHOWN
+        );
+        renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
+    }
+
+    inline void clear(Color c, uint8_t a = 0) {
+        SDL_SetRenderDrawColor(renderer, c.r, c.g, c.b, a);
+        SDL_RenderClear(renderer);
+    }
+
+    inline void pixel(int x, int y, Color c, uint8_t a = 255) {
+        SDL_SetRenderDrawColor(renderer, c.r, c.g, c.b, a);
+        SDL_RenderDrawPoint(renderer, x, y);
+    }
+
+    inline void present() {
+        SDL_RenderPresent(renderer);
+    }
+
+    inline void close() {
+        quit = true;
+    }
+
+    inline bool shouldClose() {
+        return quit;
+    }
+
+    void loop(NES6502* dev) {
+        SDL_Event event;
+        
+        while (!shouldClose()) {
+            while (SDL_PollEvent(&event)) {
+                if (event.type == SDL_QUIT) {
+                    close();
+                }
+
+                // TODO: let device take input
+                // dev->input()
+            }
+
+            // TODO: let device draw frame
+            // dev->frame(this);
+
+            dev->burnCycles();
+        }
+    }
+};
+
+constexpr int SCREEN_WIDTH = NTSC.resolution.width * 2;
+constexpr int SCREEN_HEIGHT = NTSC.resolution.height * 2;
 
 int main(int argc, char const *argv[]) {
     if (argc != 2) {
@@ -1467,18 +1541,18 @@ int main(int argc, char const *argv[]) {
         dev.setROM(argv[1]);
         dev.powerOn();
 
-        if (SDL_Init( SDL_INIT_VIDEO ) < 0) {
-        std::cout << "SDL could not initialize! SDL_Error: " << SDL_GetError() << std::endl;
-        } else {
-            
-            SDL_CreateWindow(
-                "SDL2 Demo",
-                SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
-                SCREEN_WIDTH, SCREEN_HEIGHT,
-                SDL_WINDOW_SHOWN
-            );
-            
-            SDL_Delay(2000);
-        }
+        Window w;
+
+        ostringstream ss;
+        ss << "NESEMU - " << argv[1] << " [" << SCREEN_WIDTH << "x" << SCREEN_HEIGHT << "]";
+
+        w.init(ss.str(), SCREEN_WIDTH, SCREEN_HEIGHT);
+        w.clear({0,0,0});
+
+        for (int i = 0; i < SCREEN_WIDTH; ++i)
+            w.pixel(i, i, {255,0,0});
+        w.present();
+
+        w.loop(&dev);
     }
 }
