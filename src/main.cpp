@@ -1459,7 +1459,11 @@ class Window {
 protected:
     SDL_Window* window = nullptr;
     SDL_Renderer* renderer = nullptr;
+    SDL_Texture* backBuffer = nullptr;
+
     bool quit = false;
+
+    SDL_Rect windowSize, resl;
 
 public:
     Window() {}
@@ -1473,21 +1477,46 @@ public:
             SDL_DestroyRenderer(renderer);
         }
 
+        if (backBuffer) {
+            SDL_DestroyTexture(backBuffer);
+        }
+
         SDL_Quit();
     }
 
-    void init(string title, int width, int height) {
-        SDL_Init(SDL_INIT_VIDEO);
+    void init(string title, int width, int height, int reslW, int reslH) {
+        windowSize = {0, 0, width, height};
+        resl = {0, 0, reslW, reslH};
+
+        SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO);
+
         window = SDL_CreateWindow(
             title.c_str(),
             SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
             width, height,
             SDL_WINDOW_SHOWN
         );
-        renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
+
+        renderer = SDL_CreateRenderer(
+            window, 
+            -1, 
+              SDL_RENDERER_ACCELERATED 
+            | SDL_RENDERER_PRESENTVSYNC 
+            | SDL_RENDERER_TARGETTEXTURE
+        );
+
+        backBuffer = SDL_CreateTexture(
+            renderer,
+            SDL_GetWindowPixelFormat(window), 
+            SDL_TEXTUREACCESS_TARGET,
+            width, 
+            height
+        );
+
+        SDL_SetRenderTarget(renderer, backBuffer);
     }
 
-    inline void clear(Color c, uint8_t a = 0) {
+    inline void clear(Color c = {0, 0, 0}, uint8_t a = 0) {
         SDL_SetRenderDrawColor(renderer, c.r, c.g, c.b, a);
         SDL_RenderClear(renderer);
     }
@@ -1497,25 +1526,27 @@ public:
         SDL_RenderDrawPoint(renderer, x, y);
     }
 
-    inline void present() {
+    void render() {
+        // clear window
+        SDL_SetRenderTarget(renderer, NULL);
+        clear();
+
+        // render backBuffer onto screen at (0,0) correclty sized
+        SDL_RenderCopy(renderer, backBuffer, &resl, &windowSize);     
         SDL_RenderPresent(renderer);
-    }
 
-    inline void close() {
-        quit = true;
-    }
-
-    inline bool shouldClose() {
-        return quit;
+        // clear backbuffer
+        SDL_SetRenderTarget(renderer, backBuffer);
+        clear();
     }
 
     void loop(NES6502* dev) {
         SDL_Event event;
         
-        while (!shouldClose()) {
+        while (!quit) {
             while (SDL_PollEvent(&event)) {
                 if (event.type == SDL_QUIT) {
-                    close();
+                    quit = true;
                 }
 
                 // TODO: let device take input
@@ -1525,13 +1556,19 @@ public:
             // TODO: let device draw frame
             // dev->frame(this);
 
+            for (int i = 0; i < resl.w; i++)
+                for (int j = 0; j < resl.h; j++)
+                    if (i == j)
+                        pixel(i, j, {255,0,0});
+            render();
+
             dev->burnCycles();
         }
     }
 };
 
-constexpr int SCREEN_WIDTH = NTSC.resolution.width * 2;
-constexpr int SCREEN_HEIGHT = NTSC.resolution.height * 2;
+constexpr int SCREEN_WIDTH = NTSC.resolution.width * 3;
+constexpr int SCREEN_HEIGHT = NTSC.resolution.height * 3;
 
 int main(int argc, char const *argv[]) {
     if (argc != 2) {
@@ -1546,13 +1583,7 @@ int main(int argc, char const *argv[]) {
         ostringstream ss;
         ss << "NESEMU - " << argv[1] << " [" << SCREEN_WIDTH << "x" << SCREEN_HEIGHT << "]";
 
-        w.init(ss.str(), SCREEN_WIDTH, SCREEN_HEIGHT);
-        w.clear({0,0,0});
-
-        for (int i = 0; i < SCREEN_WIDTH; ++i)
-            w.pixel(i, i, {255,0,0});
-        w.present();
-
+        w.init(ss.str(), SCREEN_WIDTH, SCREEN_HEIGHT, NTSC.resolution.width, NTSC.resolution.height);
         w.loop(&dev);
     }
 }
