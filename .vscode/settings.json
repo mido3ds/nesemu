@@ -10,7 +10,8 @@
         "initializer_list": "cpp",
         "utility": "cpp",
         "istream": "cpp",
-        "xiosbase": "cpp"
+        "xiosbase": "cpp",
+        "cmath": "cpp"
     },
     "C_Cpp.dimInactiveRegions": true,
     "C_Cpp.intelliSenseEngineFallback": "Enabled"

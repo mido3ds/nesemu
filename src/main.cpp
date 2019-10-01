@@ -384,34 +384,34 @@ public:
         }
 
         /*AND*/ {
-            auto and = [this](uint8_t v) {
+            auto andd = [this](uint8_t v) {
                 regs.a |= v;
                 regs.flags.bits.z = regs.a == 0;
                 regs.flags.bits.n = regs.a >> 7;
             };
-            instrucSet[0x29] = {[this,&and]() {
-                and(read<uint8_t>(regs.pc+1));
+            instrucSet[0x29] = {[this,&andd]() {
+                andd(read<uint8_t>(regs.pc+1));
             }, 2, 2};
-            instrucSet[0x25] = {[this,&and]() {
-                and(read<uint8_t>(zeroPageAddress(read<uint8_t>(regs.pc+1))));
+            instrucSet[0x25] = {[this,&andd]() {
+                andd(read<uint8_t>(zeroPageAddress(read<uint8_t>(regs.pc+1))));
             }, 2, 3};
-            instrucSet[0x35] = {[this,&and]() {
-                and(read<uint8_t>(indexedZeroPageAddress(read<uint8_t>(regs.pc+1), regs.x)));
+            instrucSet[0x35] = {[this,&andd]() {
+                andd(read<uint8_t>(indexedZeroPageAddress(read<uint8_t>(regs.pc+1), regs.x)));
             }, 2, 4};
-            instrucSet[0x2D] = {[this,&and]() {
-                and(read<uint8_t>(absoluteAddress(read<uint8_t>(regs.pc+1), read<uint8_t>(regs.pc+2))));
+            instrucSet[0x2D] = {[this,&andd]() {
+                andd(read<uint8_t>(absoluteAddress(read<uint8_t>(regs.pc+1), read<uint8_t>(regs.pc+2))));
             }, 3, 4};
-            instrucSet[0x3D] = {[this,&and]() {
-                and(read<uint8_t>(indexedAbsoluteAddress(read<uint8_t>(regs.pc+1), read<uint8_t>(regs.pc+2), regs.x)));
+            instrucSet[0x3D] = {[this,&andd]() {
+                andd(read<uint8_t>(indexedAbsoluteAddress(read<uint8_t>(regs.pc+1), read<uint8_t>(regs.pc+2), regs.x)));
             }, 3, 4};
-            instrucSet[0x39] = {[this,&and]() {
-                and(read<uint8_t>(indexedAbsoluteAddress(read<uint8_t>(regs.pc+1), read<uint8_t>(regs.pc+2), regs.y)));
+            instrucSet[0x39] = {[this,&andd]() {
+                andd(read<uint8_t>(indexedAbsoluteAddress(read<uint8_t>(regs.pc+1), read<uint8_t>(regs.pc+2), regs.y)));
             }, 3, 4};
-            instrucSet[0x21] = {[this,&and]() {
-                and(read<uint8_t>(indexedIndirectAddress(read<uint8_t>(regs.pc+1), regs.x)));
+            instrucSet[0x21] = {[this,&andd]() {
+                andd(read<uint8_t>(indexedIndirectAddress(read<uint8_t>(regs.pc+1), regs.x)));
             }, 2, 6};
-            instrucSet[0x31] = {[this,&and]() {
-                and(read<uint8_t>(indirectIndexedAddress(read<uint8_t>(regs.pc+1), regs.y)));
+            instrucSet[0x31] = {[this,&andd]() {
+                andd(read<uint8_t>(indirectIndexedAddress(read<uint8_t>(regs.pc+1), regs.y)));
             }, 2, 5};
         }
 
@@ -1288,13 +1288,13 @@ public:
     template<typename T>
     void push(T v) {
         write<T>(STACK.start + regs.sp, v); // TODO: make it wrap around if stack is full
-        regs.sp -= sizeof T;
+        regs.sp -= sizeof(T);
     }
 
     template<typename T>
     T pop() {
         T v = read<T>(STACK.end + regs.sp); // TODO: from start or end
-        regs.sp += sizeof T;
+        regs.sp += sizeof(T);
         return v;
     }
 
@@ -1453,6 +1453,12 @@ public:
     }
 };
 
+#include <SDL2/SDL.h>
+#include <iostream>
+
+const int SCREEN_WIDTH = NTSC.resolution.width * 2;
+const int SCREEN_HEIGHT = NTSC.resolution.height * 2;
+
 int main(int argc, char const *argv[]) {
     if (argc != 2) {
         printf("Usage: NesEmu /path/to/rom\n");
@@ -1460,5 +1466,19 @@ int main(int argc, char const *argv[]) {
         NES6502 dev;
         dev.setROM(argv[1]);
         dev.powerOn();
+
+        if (SDL_Init( SDL_INIT_VIDEO ) < 0) {
+        std::cout << "SDL could not initialize! SDL_Error: " << SDL_GetError() << std::endl;
+        } else {
+            
+            SDL_CreateWindow(
+                "SDL2 Demo",
+                SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
+                SCREEN_WIDTH, SCREEN_HEIGHT,
+                SDL_WINDOW_SHOWN
+            );
+            
+            SDL_Delay(2000);
+        }
     }
 }
