@@ -48,9 +48,10 @@ target_link_libraries(${PROJECT_NAME} ${SDL2_LIBRARIES})
 #
 # add yaml-cpp
 #
-find_package(YAML-CPP REQUIRED)
-include_directories(${YAML-CPP_INCLUDE_DIRS})
-target_link_libraries(${PROJECT_NAME} ${YAML-CPP_LIBRARIES})
+find_package(PkgConfig)
+pkg_check_modules(YAMLCPP REQUIRED yaml-cpp>=0.5)
+include_directories(${YAMLCPP_INCLUDE_DIRS})
+target_link_libraries(${PROJECT_NAME} ${YAMLCPP_LIBRARIES})
 
 #
 # create makefile

@@ -204,7 +204,7 @@ struct {
     SDL_Rect windowSize = {0, 0, NTSC.resolution.width * 3, NTSC.resolution.height * 3}, 
             resolution = {0, 0, NTSC.resolution.width, NTSC.resolution.height};
 
-    private: static SDL_Scancode stringToScancode(string name) {
+    private: static SDL_Scancode map(string name) {
         static const unordered_map<string, SDL_Scancode> table {
             {"up", SDL_SCANCODE_UP},
             {"down", SDL_SCANCODE_DOWN},
@@ -256,11 +256,30 @@ struct {
     public: void fromFile(string path) {
         logInfo("loading config");
 
-        // YAML::Node config = YAML::LoadFile(path);
+        YAML::Node config = YAML::LoadFile(path);
 
-        // if (config["controls"] && config["controls"]["keyboard"]) {
+        if (config["controls"]["keyboard"]) {
+            auto key = config["controls"]["keyboard"];
 
-        // }
+            up = key["up"] ? map(key["up"].as<string>()) : up;
+            down = key["down"] ? map(key["down"].as<string>()) : down;
+            left = key["left"] ? map(key["left"].as<string>()) : left;
+            right = key["right"] ? map(key["right"].as<string>()) : right;
+            a = key["a"] ? map(key["a"].as<string>()) : a;
+            b = key["b"] ? map(key["b"].as<string>()) : b;
+            pause = key["pause"] ? map(key["pause"].as<string>()) : pause;
+            exit = key["exit"] ? map(key["exit"].as<string>()) : exit;
+            reset = key["reset"] ? map(key["reset"].as<string>()) : reset;
+            start = key["start"] ? map(key["start"].as<string>()) : start;
+            select = key["select"] ? map(key["select"].as<string>()) : select;
+        }
+
+        if (config["video-system"]) {
+            sys = config["video-system"].as<string>() == "pal" ? PAL:NTSC;
+        }
+
+        windowSize.w = config["window"]["width"] ? config["window"]["width"].as<int>() : windowSize.w;
+        windowSize.h = config["window"]["height"] ? config["window"]["height"].as<int>() : windowSize.h;
 
         logInfo("done loading config");
     }
@@ -1647,7 +1666,9 @@ public:
                         logInfo("exit");
                         return false;
                     } else if (state[config.pause]) {
-                        logInfo("pause");
+                        if (pause) logInfo("pause");
+                        else logInfo("unpause");
+                        
                         pause = !pause;
                         continue;
                     }
