@@ -46,6 +46,13 @@ include_directories(${SDL2_INCLUDE_DIRS})
 target_link_libraries(${PROJECT_NAME} ${SDL2_LIBRARIES})
 
 #
+# add yaml-cpp
+#
+find_package(YAML-CPP REQUIRED)
+include_directories(${YAML-CPP_INCLUDE_DIRS})
+target_link_libraries(${PROJECT_NAME} ${YAML-CPP_LIBRARIES})
+
+#
 # create makefile
 #
 file (WRITE Makefile "# auto-generated makefile
