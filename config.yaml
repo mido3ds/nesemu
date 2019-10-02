@@ -14,3 +14,7 @@ controls:
     reset: backspace
 
 video-system: ntsc # or pal
+
+window:
+  width: 768
+  height: 672
