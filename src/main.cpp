@@ -1684,9 +1684,13 @@ public:
 };
 
 int main(int argc, char const *argv[]) {
-    if (argc < 2) {
+    if (argc == 1) {
         printf("Usage: NesEmu /path/to/rom [/path/to/config.yaml]\n");
         return 1;
+    }
+
+    if (argc >= 3) {
+        config.fromFile(argv[2]);
     }
 
     ostringstream ss;
@@ -1694,16 +1698,14 @@ int main(int argc, char const *argv[]) {
 
     Window w(ss.str());
 
-    bool restart = true;
-    while (restart) {
+    NES6502 dev;
+    dev.setROM(argv[1]);
+    dev.powerOn();
+
+    while (w.loop(&dev)) {
         if (argc == 3) {
             config.fromFile(argv[2]);
         }
-
-        NES6502 dev;
-        dev.setROM(argv[1]);
-        dev.powerOn();
-
-        restart = w.loop(&dev);
+        dev.reset();
     }
 }
