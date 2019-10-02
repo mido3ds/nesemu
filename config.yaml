@@ -1,0 +1,16 @@
+controls:
+  # joystick:
+  keyboard:
+    up: up
+    down: down
+    right: right
+    left: left
+    start: enter
+    select: tab
+    pause: p
+    a: a
+    b: s
+    exit: esc
+    reset: backspace
+
+video-system: ntsc # or pal

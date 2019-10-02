@@ -25,7 +25,10 @@
 #include <chrono>
 #include <thread>
 #include <sstream>
+#include <unordered_map>
+#include <cctype>
 #include <SDL2/SDL.h>
+#include <yaml-cpp/yaml.h>
 #include "Logger.h"
 
 using namespace std;
@@ -121,7 +124,7 @@ constexpr uint16_t PPU_CTRL_REG0 = 0x2000,
                     PPU_SCRL_REG = 0x2006;
 
 // Video systems info 
-constexpr struct {
+constexpr struct VideoSystem {
     int cpuCycles; // in nanoseconds
     int fps;
     float timePerFrame; // in milliseconds
@@ -1455,6 +1458,87 @@ public:
     }
 };
 
+struct {
+    SDL_Scancode 
+        up = SDL_SCANCODE_UP, 
+        down = SDL_SCANCODE_DOWN, 
+        left = SDL_SCANCODE_LEFT, 
+        right = SDL_SCANCODE_RIGHT, 
+        a = SDL_SCANCODE_A, 
+        b = SDL_SCANCODE_S, 
+        pause = SDL_SCANCODE_P, 
+        exit = SDL_SCANCODE_ESCAPE, 
+        reset = SDL_SCANCODE_BACKSPACE, 
+        start = SDL_SCANCODE_KP_ENTER, 
+        select = SDL_SCANCODE_TAB;
+
+    VideoSystem sys = NTSC;
+
+    SDL_Rect windowSize = {0, 0, NTSC.resolution.width * 3, NTSC.resolution.height * 3}, 
+            resolution = {0, 0, NTSC.resolution.width, NTSC.resolution.height};
+
+    private: static SDL_Scancode stringToScancode(string name) {
+        static const unordered_map<string, SDL_Scancode> table {
+            {"up", SDL_SCANCODE_UP},
+            {"down", SDL_SCANCODE_DOWN},
+            {"right", SDL_SCANCODE_RIGHT},
+            {"left", SDL_SCANCODE_LEFT},
+            {"esc", SDL_SCANCODE_ESCAPE},
+            {"enter", SDL_SCANCODE_KP_ENTER},
+            {"tab", SDL_SCANCODE_TAB},
+            {"lctrl", SDL_SCANCODE_LCTRL},
+            {"rctrl", SDL_SCANCODE_RCTRL},
+            {"lalt", SDL_SCANCODE_LALT},
+            {"ralt", SDL_SCANCODE_RALT},
+            {"=", SDL_SCANCODE_EQUALS},
+            {"+", SDL_SCANCODE_KP_PLUS},
+            {"backspace", SDL_SCANCODE_BACKSPACE},
+            {"space", SDL_SCANCODE_SPACE},
+            {"f1", SDL_SCANCODE_F1},
+            {"f2", SDL_SCANCODE_F2},
+            {"f3", SDL_SCANCODE_F3},
+            {"f4", SDL_SCANCODE_F4},
+            {"f5", SDL_SCANCODE_F5},
+            {"f6", SDL_SCANCODE_F6},
+            {"f7", SDL_SCANCODE_F7},
+            {"f8", SDL_SCANCODE_F8},
+            {"f9", SDL_SCANCODE_F9},
+            {"f10", SDL_SCANCODE_F10},
+            {"f11", SDL_SCANCODE_F11},
+            {"f12", SDL_SCANCODE_F12},
+        };
+
+        if (table.find(name) != table.end()) {
+            return table.at(name);
+        } 
+
+        if (name.size() == 1) {
+            if (isalpha(name[0])) {
+                return SDL_Scancode(tolower(name[0]) - 'a' + SDL_SCANCODE_A);
+            } 
+
+            if (isdigit(name[0])) {
+                return SDL_Scancode(name[0] - '0' + SDL_SCANCODE_0);
+            }
+        }
+
+        logError("[stringToScancode] cant find a scancode for %s", name.c_str());
+        return SDL_SCANCODE_UNKNOWN;
+    }
+
+    public: void fromFile(string path) {
+        logInfo("loading config");
+
+        // YAML::Node config = YAML::LoadFile(path);
+
+        // if (config["controls"] && config["controls"]["keyboard"]) {
+
+        // }
+
+        logInfo("done loading config");
+    }
+} config;
+
 class Window {
 protected:
     SDL_Window* window = nullptr;
@@ -1463,37 +1547,14 @@ protected:
 
     bool quit = false;
 
-    SDL_Rect windowSize, resl;
-
 public:
-    Window() {}
-
-    ~Window() {
-        if (window) {
-            SDL_DestroyWindow(window);
-        }
-
-        if (renderer) {
-            SDL_DestroyRenderer(renderer);
-        }
-
-        if (backBuffer) {
-            SDL_DestroyTexture(backBuffer);
-        }
-
-        SDL_Quit();
-    }
-
-    void init(string title, int width, int height, int reslW, int reslH) {
-        windowSize = {0, 0, width, height};
-        resl = {0, 0, reslW, reslH};
-
+    Window(string title) {
         SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO);
 
         window = SDL_CreateWindow(
             title.c_str(),
             SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
-            width, height,
+            config.windowSize.w, config.windowSize.h,
             SDL_WINDOW_SHOWN
         );
 
@@ -1509,11 +1570,27 @@ public:
             renderer,
             SDL_GetWindowPixelFormat(window), 
             SDL_TEXTUREACCESS_TARGET,
-            width, 
-            height
+            config.windowSize.w, 
+            config.windowSize.h
         );
 
         SDL_SetRenderTarget(renderer, backBuffer);
+    }
+
+    ~Window() {
+        if (window) {
+            SDL_DestroyWindow(window);
+        }
+
+        if (renderer) {
+            SDL_DestroyRenderer(renderer);
+        }
+
+        if (backBuffer) {
+            SDL_DestroyTexture(backBuffer);
+        }
+
+        SDL_Quit();
     }
 
     inline void clear(Color c = {0, 0, 0}, uint8_t a = 0) {
@@ -1532,7 +1609,7 @@ public:
         clear();
 
         // render backBuffer onto screen at (0,0) correclty sized
-        SDL_RenderCopy(renderer, backBuffer, &resl, &windowSize);     
+        SDL_RenderCopy(renderer, backBuffer, &config.resolution, &config.windowSize);     
         SDL_RenderPresent(renderer);
 
         // clear backbuffer
@@ -1556,8 +1633,8 @@ public:
             // TODO: let device draw frame
             // dev->frame(this);
 
-            for (int i = 0; i < resl.w; i++)
-                for (int j = 0; j < resl.h; j++)
+            for (int i = 0; i < config.resolution.w; i++)
+                for (int j = 0; j < config.resolution.h; j++)
                     if (i == j)
                         pixel(i, j, {255,0,0});
             render();
@@ -1567,23 +1644,22 @@ public:
     }
 };
 
-constexpr int SCREEN_WIDTH = NTSC.resolution.width * 3;
-constexpr int SCREEN_HEIGHT = NTSC.resolution.height * 3;
-
 int main(int argc, char const *argv[]) {
-    if (argc != 2) {
-        printf("Usage: NesEmu /path/to/rom\n");
-    } else {
-        NES6502 dev;
-        dev.setROM(argv[1]);
-        dev.powerOn();
-
-        Window w;
-
-        ostringstream ss;
-        ss << "NESEMU - " << argv[1] << " [" << SCREEN_WIDTH << "x" << SCREEN_HEIGHT << "]";
-
-        w.init(ss.str(), SCREEN_WIDTH, SCREEN_HEIGHT, NTSC.resolution.width, NTSC.resolution.height);
-        w.loop(&dev);
+    if (argc < 2) {
+        printf("Usage: NesEmu /path/to/rom [/path/to/config.yaml]\n");
+        return 1;
     }
+
+    if (argc == 3) {
+        config.fromFile(argv[2]);
+    }
+
+    NES6502 dev;
+    dev.setROM(argv[1]);
+    dev.powerOn();
+
+    ostringstream ss;
+    ss << "NESEMU - " << argv[1] << " [" << config.windowSize.w << "x" << config.windowSize.h << "]";
+
+    Window(ss.str()).loop(&dev);
 }
