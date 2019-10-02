@@ -1641,10 +1641,13 @@ public:
                     const auto* state = SDL_GetKeyboardState(NULL);
 
                     if (state[config.reset]) {
+                        logInfo("reset");
                         return true;
                     } else if (state[config.exit]) {
+                        logInfo("exit");
                         return false;
                     } else if (state[config.pause]) {
+                        logInfo("pause");
                         pause = !pause;
                         continue;
                     }
@@ -1686,8 +1689,12 @@ int main(int argc, char const *argv[]) {
         return 1;
     }
 
-    bool restart = true;
+    ostringstream ss;
+    ss << "NESEMU - " << argv[1] << " [" << config.windowSize.w << "x" << config.windowSize.h << "]";
 
+    Window w(ss.str());
+
+    bool restart = true;
     while (restart) {
         if (argc == 3) {
             config.fromFile(argv[2]);
@@ -1697,10 +1704,6 @@ int main(int argc, char const *argv[]) {
         dev.setROM(argv[1]);
         dev.powerOn();
 
-        ostringstream ss;
-        ss << "NESEMU - " << argv[1] << " [" << config.windowSize.w << "x" << config.windowSize.h << "]";
-
-        Window w(ss.str());
         restart = w.loop(&dev);
     }
 }
