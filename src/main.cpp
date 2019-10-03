@@ -285,6 +285,67 @@ struct {
     }
 } config;
 
+class Renderer {
+private:
+    SDL_Renderer* renderer = nullptr;
+    SDL_Texture* backBuffer = nullptr;
+
+public:
+    Renderer(SDL_Window* window) {
+        renderer = SDL_CreateRenderer(
+            window, 
+            -1, 
+              SDL_RENDERER_ACCELERATED 
+            | SDL_RENDERER_PRESENTVSYNC 
+            | SDL_RENDERER_TARGETTEXTURE
+        );
+
+        backBuffer = SDL_CreateTexture(
+            renderer,
+            SDL_GetWindowPixelFormat(window), 
+            SDL_TEXTUREACCESS_TARGET,
+            config.windowSize.w, 
+            config.windowSize.h
+        );
+
+        SDL_SetRenderTarget(renderer, backBuffer);
+    }
+
+    ~Renderer() {
+        if (renderer) {
+            SDL_DestroyRenderer(renderer);
+        }
+
+        if (backBuffer) {
+            SDL_DestroyTexture(backBuffer);
+        }
+    }
+
+    inline void clear(Color c = {0, 0, 0}, uint8_t a = 0) {
+        SDL_SetRenderDrawColor(renderer, c.r, c.g, c.b, a);
+        SDL_RenderClear(renderer);
+    }
+
+    inline void pixel(int x, int y, Color c, uint8_t a = 255) {
+        SDL_SetRenderDrawColor(renderer, c.r, c.g, c.b, a);
+        SDL_RenderDrawPoint(renderer, x, y);
+    }
+
+    void render() {
+        // clear window
+        SDL_SetRenderTarget(renderer, NULL);
+        clear();
+
+        // render backBuffer onto screen at (0,0) correclty sized
+        SDL_RenderCopy(renderer, backBuffer, &config.resolution, &config.windowSize);     
+        SDL_RenderPresent(renderer);
+
+        // clear backbuffer
+        SDL_SetRenderTarget(renderer, backBuffer);
+        clear();
+    }
+};
+
 class NES6502 {
 protected:
 
@@ -1566,13 +1627,16 @@ public:
         
         return colorPalatte[palatte];
     }
+
+    void render(Renderer const* renderer) {
+        // TODO: let device draw frame
+    }
 };
 
 class Window {
 protected:
     SDL_Window* window = nullptr;
-    SDL_Renderer* renderer = nullptr;
-    SDL_Texture* backBuffer = nullptr;
+    Renderer* renderer = nullptr;
 
     bool quit = false, pause = false;
 
@@ -1587,23 +1651,7 @@ public:
             SDL_WINDOW_SHOWN
         );
 
-        renderer = SDL_CreateRenderer(
-            window, 
-            -1, 
-              SDL_RENDERER_ACCELERATED 
-            | SDL_RENDERER_PRESENTVSYNC 
-            | SDL_RENDERER_TARGETTEXTURE
-        );
-
-        backBuffer = SDL_CreateTexture(
-            renderer,
-            SDL_GetWindowPixelFormat(window), 
-            SDL_TEXTUREACCESS_TARGET,
-            config.windowSize.w, 
-            config.windowSize.h
-        );
-
-        SDL_SetRenderTarget(renderer, backBuffer);
+        renderer = new Renderer(window);
     }
 
     ~Window() {
@@ -1612,38 +1660,10 @@ public:
         }
 
         if (renderer) {
-            SDL_DestroyRenderer(renderer);
-        }
-
-        if (backBuffer) {
-            SDL_DestroyTexture(backBuffer);
+            delete renderer;
         }
 
         SDL_Quit();
-    }
-
-    inline void clear(Color c = {0, 0, 0}, uint8_t a = 0) {
-        SDL_SetRenderDrawColor(renderer, c.r, c.g, c.b, a);
-        SDL_RenderClear(renderer);
-    }
-
-    inline void pixel(int x, int y, Color c, uint8_t a = 255) {
-        SDL_SetRenderDrawColor(renderer, c.r, c.g, c.b, a);
-        SDL_RenderDrawPoint(renderer, x, y);
-    }
-
-    void render() {
-        // clear window
-        SDL_SetRenderTarget(renderer, NULL);
-        clear();
-
-        // render backBuffer onto screen at (0,0) correclty sized
-        SDL_RenderCopy(renderer, backBuffer, &config.resolution, &config.windowSize);     
-        SDL_RenderPresent(renderer);
-
-        // clear backbuffer
-        SDL_SetRenderTarget(renderer, backBuffer);
-        clear();
     }
 
     bool loop(NES6502* dev) {
@@ -1685,18 +1705,17 @@ public:
             dev->joypad0.start = state[config.start];
             dev->joypad0.select = state[config.select];
 
-            // TODO: let device draw frame
-            // dev->frame(this);
+            dev->render(renderer);
 
             for (int i = 0; i < config.resolution.w; i++) {
                 for (int j = 0; j < config.resolution.h; j++) {
                     if (i == j) {
-                        pixel(i, j, {g,0,0});
+                        renderer->pixel(i, j, {g,0,0});
                     }
                 }
             }
             g++;
-            render();
+            renderer->render();
 
             dev->burnCycles();
         }
