@@ -1392,21 +1392,23 @@ public:
         return absoluteAddress(read<uint8_t>(bb), read<uint8_t>(bb+1)) + i;
     }
 
-    void setROM(string romPath) {
+    bool setROM(string romPath) {
         logInfo("using rom: %s", romPath.c_str());
         rom = ROM::fromFile(romPath);
         if (!rom.buffer) {
             logError("couldn't read rom in path: %s", romPath.c_str());
-            return;
+            return false;
         }
         if (rom.size == 0) {
             logError("rom is empty");
-            return;
+            return false;
         }
 
         memcpy(&memory[EX_ROM.start], rom.buffer.get(), rom.size);
         logInfo("copied rom");
         // TODO
+
+        return true;
     }
 
     void burnCycles() {
@@ -1523,7 +1525,7 @@ public:
         logInfo("finished resetting");
     }
 
-    void powerOn() {
+    bool powerOn() {
         logInfo("start powering on");
         cycles = 0;
 
@@ -1538,17 +1540,23 @@ public:
         //TODO: All 15 bits of noise channel LFSR = $0000[4]. 
         //The first time the LFSR is clocked from the all-0s state, it will shift in a 1.
 
-        powerOnPPU();
+        if (!powerOnPPU()) {
+            return false;
+        }
 
         logInfo("finished powering on");
+
+        return true;
     }
 
-    inline void powerOnPPU() {
+    inline bool powerOnPPU() {
         logInfo("start powering on apu");
 
         //TODO
 
         logInfo("finished powering on apu");
+
+        return true;
     }
 
     // nes color palatte -> RGB color
@@ -1739,8 +1747,12 @@ int main(int argc, char const *argv[]) {
     Window w(ss.str());
 
     NES6502 dev;
-    dev.setROM(argv[1]);
-    dev.powerOn();
+    if (!dev.setROM(argv[1])) {
+        return 1;
+    }
+    if (!dev.powerOn()) {
+        return 1;
+    }
 
     while (w.loop(&dev)) {
         if (argc == 3) {
