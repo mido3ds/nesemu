@@ -62,6 +62,9 @@ file (WRITE Makefile "# auto-generated makefile
 
 .PHONY: all cmake build run
 
+rom=donkey-kong.nes
+config=config.yaml
+
 all: cmake build run
 
 cmake:
@@ -71,11 +74,11 @@ build:
 \tcmake --build \"${CMAKE_BINARY_DIR}\" || echo \">>>> build failed! <<<<<\"
 
 run:
-\t\"${CMAKE_BINARY_DIR}/${PROJECT_NAME}/Debug/${PROJECT_NAME}${CMAKE_EXECUTABLE_SUFFIX}\" mario.nes config.yaml || \"${CMAKE_BINARY_DIR}/${PROJECT_NAME}/${PROJECT_NAME}${CMAKE_EXECUTABLE_SUFFIX}\" mario.nes config.yaml
+\t\"${CMAKE_BINARY_DIR}/${PROJECT_NAME}/${PROJECT_NAME}${CMAKE_EXECUTABLE_SUFFIX}\" $(rom) $(config)
 
 clean:
-\tcmake --build \"${CMAKE_BINARY_DIR}\" --target clean || echo \">>>> clean failed! <<<<<\"
+\tcmake --build \"${CMAKE_BINARY_DIR}\" --target clean\"
 
 cleanAll:
-\t      del Makefile && rd /s /q build && rd /s /q CMakeFiles || rm -rf build CMakeFiles Makefile
+\trm -rf build CMakeFiles Makefile
 ")
