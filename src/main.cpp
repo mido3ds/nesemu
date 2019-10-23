@@ -114,6 +114,32 @@ struct SpriteInfo {
     } attr;
 };
 
+/*
+ *  DCBA98 76543210
+ *  ---------------
+ *  0HRRRR CCCCPTTT
+ *  |||||| |||||+++- T: Fine Y offset, the row number within a tile
+ *  |||||| ||||+---- P: Bit plane (0: "lower"; 1: "upper")
+ *  |||||| ++++----- C: Tile column
+ *  ||++++---------- R: Tile row
+ *  |+-------------- H: Half of sprite table (0: "left"; 1: "right")
+ *  +--------------- 0: Pattern table is at $0000-$1FFF
+ */
+union PatternTablePointer {
+    enum class BitPlane {LOWER, UPPER};
+    enum class TableHalf {LEFT, RIGHT};
+
+    struct {
+        uint8_t rowInTile:3;
+        BitPlane bitPlane:1;
+        uint8_t tileCol:4;
+        uint8_t tileRow:4;
+        TableHalf tableHalf:1;
+        uint8_t:3;
+    } bits;
+    const uint16_t word = 0;
+};
+
 constexpr uint8_t SPRITE_8x8_SIZE = 16;
 constexpr uint8_t SPRITE_8x16_SIZE = 2 * SPRITE_8x8_SIZE;
 constexpr uint32_t MEM_SIZE = 0xFFFF + 1;
