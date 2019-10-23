@@ -40,20 +40,16 @@ add_executable (${PROJECT_NAME} ${PROJECT_SOURCES} ${PROJECT_HEADERS}
 set_target_properties (${PROJECT_NAME} PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${PROJECT_NAME})
 
-# 
-# add conan depends
+#
+# setup conan
 #
 include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
 conan_basic_setup()
+
 target_link_libraries(${PROJECT_NAME} ${CONAN_LIBS})
 
-#
-# add yaml-cpp
-#
-find_package(PkgConfig)
-pkg_check_modules(YAMLCPP REQUIRED yaml-cpp>=0.5)
-include_directories(${YAMLCPP_INCLUDE_DIRS})
-target_link_libraries(${PROJECT_NAME} ${YAMLCPP_LIBRARIES})
+string(REPLACE ";" " -L" CONAN_LIB_DIRS "${CONAN_LIB_DIRS}")
+set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -L${CONAN_LIB_DIRS}")
 
 #
 # create makefile
@@ -68,10 +64,10 @@ config=config.yaml
 all: cmake build run
 
 cmake:
-\tcmake -S. -B\"${CMAKE_BINARY_DIR}\" || echo \">>>> cmake initialization failed! <<<<<\"
+\tcmake -S. -B\"${CMAKE_BINARY_DIR}\"
 
 build:
-\tcmake --build \"${CMAKE_BINARY_DIR}\" || echo \">>>> build failed! <<<<<\"
+\tcmake --build \"${CMAKE_BINARY_DIR}\"
 
 run:
 \t\"${CMAKE_BINARY_DIR}/${PROJECT_NAME}/${PROJECT_NAME}${CMAKE_EXECUTABLE_SUFFIX}\" $(rom) $(config)
