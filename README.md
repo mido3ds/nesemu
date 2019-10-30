@@ -1,12 +1,16 @@
 # nesemu [WIP]
-NES emulator in c++
+NES emulator in modern c++
 
 ## Dependencies:
+- sdl2
+- yaml-cpp 
 
-sdl2, yaml-cpp, conan package manger
+## After clone:
+- install latest version of cmake and conan
+- `$ ./init.sh`
 
-## To Start on debian:
-`$ ./init.sh`
+## Build:
+`$ make build`
 
-## on other systems
-install conan, download & compile & install sdl2 and yaml-cpp
+## Run:
+`$ make run [rom=/path/to/rom.ines] [config=/path/to/config.yaml]`
