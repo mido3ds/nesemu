@@ -64,7 +64,7 @@ config=config.yaml
 all: cmake build run
 
 cmake:
-\tcmake -S. -B\"${CMAKE_BINARY_DIR}\"
+\tcmake . -B\"${CMAKE_BINARY_DIR}\"
 
 build:
 \tcmake --build \"${CMAKE_BINARY_DIR}\"
