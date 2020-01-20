@@ -34,7 +34,5 @@
 *build*
 .vscode
 
-Makefile
-
 *.rom
 *.nes
