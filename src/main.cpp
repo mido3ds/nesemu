@@ -1662,8 +1662,12 @@ public:
         return colorPalatte[palatte];
     }
 
-    void render(Renderer const* renderer) {
-        // TODO: let device draw frame
+    void onePPUCycle(Renderer const* renderer) {
+        // TODO
+    }
+
+    void oneCPUCycle() {
+        // TODO
     }
 };
 
@@ -1702,7 +1706,6 @@ public:
 
     bool loop(NES6502* dev) {
         SDL_Event event;
-        uint8_t g = 3;
         
         while (!quit) {
             while (SDL_PollEvent(&event) || pause) {
@@ -1739,16 +1742,9 @@ public:
             dev->joypad0.start = state[config.start];
             dev->joypad0.select = state[config.select];
 
-            dev->render(renderer);
+            dev->oneCPUCycle();
+            dev->onePPUCycle(renderer);
 
-            for (int i = 0; i < config.resolution.w; i++) {
-                for (int j = 0; j < config.resolution.h; j++) {
-                    if (i == j) {
-                        renderer->pixel(i, j, {g,0,0});
-                    }
-                }
-            }
-            g++;
             renderer->render();
 
             dev->burnCycles();
