@@ -50,31 +50,3 @@ target_link_libraries(${PROJECT_NAME} ${CONAN_LIBS})
 
 string(REPLACE ";" " -L" CONAN_LIB_DIRS "${CONAN_LIB_DIRS}")
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -L${CONAN_LIB_DIRS}")
-
-#
-# create makefile
-#
-file (WRITE Makefile "# auto-generated makefile
-
-.PHONY: all cmake build run
-
-rom=donkey-kong.nes
-config=config.yaml
-
-all: cmake build run
-
-cmake:
-\tcmake . -B\"${CMAKE_BINARY_DIR}\"
-
-build:
-\tcmake --build \"${CMAKE_BINARY_DIR}\"
-
-run:
-\t\"${CMAKE_BINARY_DIR}/${PROJECT_NAME}/${PROJECT_NAME}${CMAKE_EXECUTABLE_SUFFIX}\" $(rom) $(config)
-
-clean:
-\tcmake --build \"${CMAKE_BINARY_DIR}\" --target clean\"
-
-cleanAll:
-\trm -rf build CMakeFiles Makefile
-")
