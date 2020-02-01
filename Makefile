@@ -1,14 +1,19 @@
-.PHONY: all cmake build run
-
 rom=donkey-kong.nes
 config=config.yaml
 
-all: cmake build run
+all: build compile run
 
-cmake:
-	cmake . -Bbuild
-
+.ONESHELL:
 build:
+	@set -e
+	mkdir -p build && cd build
+
+	conan remote add bincrafters https://api.bintray.com/conan/bincrafters/public-conan 2>/dev/null || true
+	conan install .. --build=missing
+	
+	cmake .. -B.
+
+compile:
 	cmake --build build
 
 run:
