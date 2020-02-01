@@ -3,7 +3,10 @@
 rom=donkey-kong.nes
 config=config.yaml
 
-all: build run
+all: cmake build run
+
+cmake:
+	cmake . -Bbuild
 
 build:
 	cmake --build build

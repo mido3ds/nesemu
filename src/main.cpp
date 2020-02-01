@@ -27,9 +27,12 @@
 #include <sstream>
 #include <unordered_map>
 #include <cctype>
+
 #include <SDL2/SDL.h>
 #include <yaml-cpp/yaml.h>
+
 #include "Logger.h"
+#include "disassembler.h"
 
 using namespace std;
 
