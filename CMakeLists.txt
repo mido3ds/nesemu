@@ -14,12 +14,13 @@ else()
 endif()
 
 add_definitions("-std=c++11")
+include_directories(include)
 
 #
 # Add files
 #
-file (GLOB_RECURSE PROJECT_HEADERS src/*.hpp
-                                   src/*.h)
+file (GLOB_RECURSE PROJECT_HEADERS "include/*.hpp"
+                                   "include/*.h")
 file (GLOB_RECURSE PROJECT_SOURCES src/*.cpp
                                    src/*.cxx
                                    src/*.cc
