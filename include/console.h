@@ -4,8 +4,7 @@
 #include "renderer.h"
 
 class Console {
-protected:
-
+public:
     struct {
         uint16_t pc; // program counter
         uint8_t sp; // stack pointer
@@ -155,8 +154,6 @@ protected:
         // bitset indicates the state of 0x2006 register
         uint8_t state = EMPTY; 
     } temp0x2006; 
-
-public:
 
     Console();
 
