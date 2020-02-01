@@ -145,11 +145,12 @@ protected:
 
         // possible states, multiple ones could be combined
         static constexpr uint8_t 
-            EMPTY=0,  // addr is not yet initialized
-            LSN=0b1, // leaset significant nibble (4 bits) has been loaded
-            FULL=0b10, // most signifcant nibble (4 bits) has been loaded
-            CAN_READ=0b100, CAN_WRITE=0b1000, 
-            READ_BUFFERED=0b10000; // you can only read colr-palette
+            EMPTY=0x00,  // addr is not yet initialized
+            LSN=0x01, // leaset significant nibble (4 bits) has been loaded
+            FULL=0x02, // most signifcant nibble (4 bits) has been loaded
+            CAN_READ=0x04, 
+            CAN_WRITE=0x08, 
+            READ_BUFFERED=0x10; // you can only read colr-palette
 
         // bitset indicates the state of 0x2006 register
         uint8_t state = EMPTY; 

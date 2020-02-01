@@ -140,7 +140,7 @@ Console::Console() {
 
     /*BIT*/ {
         auto bit = [this](uint8_t v) {
-            regs.flags.bits.z = v & regs.a == 0;
+            regs.flags.bits.z = (v & regs.a) == 0;
             regs.flags.bits.v = v >> 6;
             regs.flags.bits.n = v >> 7;
         };
@@ -520,7 +520,7 @@ Console::Console() {
 
     /*LSR*/ {
         auto lsr = [this](uint8_t v) -> uint8_t {
-            regs.flags.bits.c = v & 0b1;
+            regs.flags.bits.c = v & 1;
             
             v >>= 1;
 
@@ -551,7 +551,9 @@ Console::Console() {
     }
 
     /*NOP*/ {
-        instrucSet[0xEA] = {[](){}, "NOP", AddressMode::Implicit, 2};
+        for (auto& adr: vector<uint8_t>{0xEA ,0x1C ,0x3C ,0x5C ,0x7C ,0xDC ,0xFC}) {
+            instrucSet[adr] = {[](){}, "NOP", AddressMode::Implicit, 2};
+        }
     }
 
     /*ORA*/ {
@@ -648,7 +650,7 @@ Console::Console() {
     /*ROR*/ {
         auto ror = [this](uint8_t v) -> uint8_t {
             uint8_t oldCarry = regs.flags.bits.c;
-            regs.flags.bits.c = v & 0b1;
+            regs.flags.bits.c = v & 1;
             
             v >>= 1;
             v |= oldCarry << 7;
