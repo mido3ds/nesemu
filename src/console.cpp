@@ -92,7 +92,7 @@ Console::Console() {
         };
         instrucSet[0x0A] = {[this,&asl]() {
             regs.a = asl(regs.a);
-        }, "ASL A", AddressMode::Implicit, 2};
+        }, "ASL", AddressMode::Accumulator, 2};
         instrucSet[0x06] = {[this,&asl]() {
             auto addr = zeroPageAddress(fetch());
             write(addr, asl(read(addr)));
@@ -531,7 +531,7 @@ Console::Console() {
         };
         instrucSet[0x4A] = {[this,&lsr]() {
             regs.a = lsr(regs.a);
-        }, "LSR A", AddressMode::Implicit, 2};
+        }, "LSR", AddressMode::Accumulator, 2};
         instrucSet[0x46] = {[this,&lsr]() {
             auto addr = read(zeroPageAddress(fetch()));
             write(addr, lsr(addr));
@@ -628,7 +628,7 @@ Console::Console() {
         };
         instrucSet[0x2A] = {[this,&rol]() {
             regs.a = rol(regs.a);
-        }, "ROL A", AddressMode::Implicit, 2};
+        }, "ROL", AddressMode::Accumulator, 2};
         instrucSet[0x26] = {[this,&rol]() {
             auto addr = read(zeroPageAddress(fetch()));
             write(addr, rol(addr));
@@ -662,7 +662,7 @@ Console::Console() {
         };
         instrucSet[0x6A] = {[this,&ror]() {
             regs.a = ror(regs.a);
-        }, "ROR A", AddressMode::Implicit, 2};
+        }, "ROR", AddressMode::Accumulator, 2};
         instrucSet[0x66] = {[this,&ror]() {
             auto addr = read(zeroPageAddress(fetch()));
             write(addr, ror(addr));
