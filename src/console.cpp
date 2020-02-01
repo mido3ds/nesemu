@@ -8,7 +8,7 @@ Console::Console() {
     logInfo("filling instruction set data");
     
     instrucSet.fill({[this]() {
-        logWarning("invalid/unsupported opcode(0x%02x) called", read(regs.pc-1));
+        logWarning("invalid/unsupported opcode(0x%02X) called", read(regs.pc-1));
     },"???", AddressMode::Implicit, 0});
 
     /*ADC*/ {
