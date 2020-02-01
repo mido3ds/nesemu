@@ -1,12 +1,4 @@
-#ifndef __Logger_h__
-#define __Logger_h__
-
-#include <ctime>
-#include <cstdarg>
-#include <cstdio>
-#include <string>
-
-using std::string;
+#include "logger.h"
 
 char* getGMTDateTime() {
     time_t rawTime;
@@ -47,5 +39,3 @@ void logError(string format, ...) {
     vfprintf (stderr, format.c_str(), args);
     va_end (args);
 }
-
-#endif  /* __Logger_h__ */
