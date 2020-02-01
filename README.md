@@ -8,10 +8,10 @@ NES emulator in modern c++
 ## After clone:
 - install libjack-dev, if you are on ubuntu/debian run `$ sudo apt install -y libjack-dev`
 - install latest version of cmake and conan
-- `$ ./init.sh`
+- `$ make build`
 
-## Build:
-`$ make build`
+## Compile:
+`$ make compile`
 
 ## Run:
 `$ make run [rom=/path/to/rom.ines] [config=/path/to/config.yaml]`
