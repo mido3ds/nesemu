@@ -1681,9 +1681,9 @@ public:
         }
 
         auto& inst = instrucSet[regs.pc];
-        regs.pc += inst.bytes; //TODO: is it fetch->increment->execute or fetch->execute->increment?
-        cycles += inst.cycles;
         inst.exec();
+        regs.pc += inst.bytes; 
+        cycles += inst.cycles;
     }
 };
 
