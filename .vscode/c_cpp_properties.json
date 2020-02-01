@@ -1,19 +1,22 @@
 {
+    "env": {
+        "myDefaultIncludePath": [
+            "${workspaceFolder}/**"
+        ],
+        "myCompilerPath": "/usr/local/bin/gcc-7"
+    },
     "configurations": [
         {
-            "name": "MinGW",
-            "compilerPath": "C:\\Users\\Mahmoud\\mingw\\bin\\g++.exe",
+            "name": "Linux|Mac",
             "includePath": [
-                "${workspaceFolder}",
-                "C:\\Program Files (x86)\\Microsoft Visual Studio 14.0\\VC\\include",
-                "C:\\Users\\Mahmoud\\mingw\\include"
+                "${myDefaultIncludePath}"
             ],
             "defines": [
                 "_DEBUG",
                 "UNICODE",
                 "_UNICODE"
             ],
-            "intelliSenseMode": "clang-x64",
+            "intelliSenseMode": "gcc-x64",
             "browse": {
                 "path": [
                     "${workspaceFolder}"
@@ -22,7 +25,8 @@
                 "databaseFilename": ""
             },
             "cStandard": "c11",
-            "cppStandard": "c++11"
+            "cppStandard": "c++17",
+            "configurationProvider": "vector-of-bool.cmake-tools"
         }
     ],
     "version": 4
