@@ -309,8 +309,6 @@ struct {
 
         windowSize.w = config["window"]["width"] ? config["window"]["width"].as<int>() : windowSize.w;
         windowSize.h = config["window"]["height"] ? config["window"]["height"].as<int>() : windowSize.h;
-
-        logInfo("done loading config");
     }
 } config;
 
@@ -1564,54 +1562,47 @@ public:
 
     void reset() {
         logInfo("start resetting");
-        cycles = 0;
 
-        /*https://wiki.nesdev.com/w/index.php/CPU_ALL#After_reset*/
-        regs.sp -= 3;
-        regs.flags.bits.i = 1;
-        vram[0x4015] = 0;
+        memset(&regs, 0, sizeof regs);
         regs.pc = read16(RH);
+        regs.sp = 0xFD;
 
-        logInfo("finished resetting");
+        vram[0x4015] = 0;
+        cycles += 8;
     }
 
     bool powerOn() {
-        logInfo("start powering on");
+        return _powerOnCPU() && _powerOnPPU() && _powerOnAPU();
+    }
+
+    inline bool _powerOnCPU() {
+        logInfo("start powering on CPU");
+
+        reset();
+
         cycles = 0;
         
-        logInfo("zero the memory and regs");
-        memory.fill(0);
-        memset(&regs, 0, sizeof regs);
-
         // https://wiki.nesdev.com/w/index.php/CPU_ALL#At_power-up
-        logInfo("set flags to 0x34");
         regs.flags.byte = 0x34;
-
-        logInfo("set sp to 0xFD");
-        regs.sp = 0xFD;
-
-        auto rh = read16(RH);
-        logInfo("set pc to RH value which is %d", rh);
-        regs.pc = rh;
-
-        //TODO: All 15 bits of noise channel LFSR = $0000[4]. 
-        //The first time the LFSR is clocked from the all-0s state, it will shift in a 1.
-
-        if (!powerOnPPU()) {
-            return false;
-        }
-
-        logInfo("finished powering on");
 
         return true;
     }
 
-    inline bool powerOnPPU() {
+    inline bool _powerOnPPU() {
         logInfo("start powering on ppu");
 
         //TODO
 
-        logInfo("finished powering on ppu");
+        return true;
+    }
+
+    inline bool _powerOnAPU() {
+        logInfo("start powering on APU");
+
+        //TODO
+
+        //TODO: All 15 bits of noise channel LFSR = $0000[4]. 
+        //The first time the LFSR is clocked from the all-0s state, it will shift in a 1.
 
         return true;
     }
@@ -1693,10 +1684,6 @@ public:
         return colorPalatte[palatte];
     }
 
-    void onePPUCycle(Renderer const* renderer) {
-        // TODO
-    }
-
     void oneCPUCycle() {
         // TODO
         if (cycles > 0) {
@@ -1707,6 +1694,14 @@ public:
         auto& inst = instrucSet[fetch()];
         inst.exec();
         cycles += inst.cycles;
+    }
+
+    void onePPUCycle(Renderer const* renderer) {
+        // TODO
+    }
+
+    void oneAPUCycle() {
+        // TODO
     }
 };
 
@@ -1744,6 +1739,8 @@ public:
     }
 
     bool loop(NES6502* dev) {
+        logInfo("start executing");
+
         SDL_Event event;
         
         while (!quit) {
