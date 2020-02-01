@@ -16,7 +16,7 @@ unique_ptr<char> readBinaryFile(string path, size_t* size) {
 }
 
 // nes color palatte -> RGB color
-Color palatteToColor(const uint8_t palatte) {
+Color Color::palatteToColor(const uint8_t palatte) {
     if (palatte > 0x3F) {
         logError("invalid palatte color(0x%02x), returning default color", palatte);
         return DEFAULT_COLOR;
