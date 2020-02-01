@@ -707,14 +707,13 @@ public:
 
         /*BRK*/ {
             instrucSet[0x00] = {[this]() {
-                if (regs.flags.bits.i == 0) return;
+                if (regs.flags.bits.i == 1) return;
 
                 push(regs.pc);
                 push(regs.flags.byte);
                 regs.pc = read16(IRQ); 
                 regs.flags.bits.b = 1;
-
-                logInfo("program called BRK");
+                regs.flags.bits.i = 1;
             }, 1, 7};
         }
 
@@ -1563,46 +1562,44 @@ public:
     void reset() {
         logInfo("start resetting");
 
-        memset(&regs, 0, sizeof regs);
         regs.pc = read16(RH);
         regs.sp = 0xFD;
+        regs.flags.byte = 0;
+        regs.a = regs.x = regs.y = 0;
 
         vram[0x4015] = 0;
         cycles += 8;
     }
 
     bool powerOn() {
-        return _powerOnCPU() && _powerOnPPU() && _powerOnAPU();
+        return _powerOnCPU() && _powerOnPPU();
     }
 
+    // https://wiki.nesdev.com/w/index.php/CPU_power_up_state#At_power-up
     inline bool _powerOnCPU() {
         logInfo("start powering on CPU");
 
-        reset();
+        regs.pc = read16(RH);
+        regs.sp = 0xFD;
+        regs.flags.byte = 0x34; // IRQ disabled
+        regs.a = regs.x = regs.y = 0;
 
+        memory.fill(0);
         cycles = 0;
-        
-        // https://wiki.nesdev.com/w/index.php/CPU_ALL#At_power-up
-        regs.flags.byte = 0x34;
+
+        // TODO: All 15 bits of noise channel LFSR = $0000[4]. 
+        //The first time the LFSR is clocked from the all-0s state, it will shift in a 1.
+
+        // TODO: 2A03G: APU Frame Counter reset. 
+        // (but 2A03letterless: APU frame counter powers up at a value equivalent to 15)
 
         return true;
     }
 
+    // https://wiki.nesdev.com/w/index.php/PPU_power_up_state
     inline bool _powerOnPPU() {
         logInfo("start powering on ppu");
-
-        //TODO
-
-        return true;
-    }
-
-    inline bool _powerOnAPU() {
-        logInfo("start powering on APU");
-
-        //TODO
-
-        //TODO: All 15 bits of noise channel LFSR = $0000[4]. 
-        //The first time the LFSR is clocked from the all-0s state, it will shift in a 1.
+        // TODO: set all ppu state
 
         return true;
     }
@@ -1805,10 +1802,7 @@ int main(int argc, char const *argv[]) {
     Window w(ss.str());
 
     NES6502 dev;
-    if (!dev.setROM(argv[1])) {
-        return 1;
-    }
-    if (!dev.powerOn()) {
+    if (!dev.powerOn() || !dev.setROM(argv[1])) {
         return 1;
     }
 
