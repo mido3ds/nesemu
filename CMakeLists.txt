@@ -8,9 +8,9 @@ set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 set (CMAKE_VERBOSE_MAKEFILE 0) # 1 should be used for debugging
 set (CMAKE_SUPPRESS_REGENERATION TRUE) # Suppresses ZERO_CHECK
 if(MSVC)
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /W4")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /W4")
 else()
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Wpedantic -std=c++11")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Wpedantic -std=c++11 -g")
 endif()
 
 add_definitions("-std=c++11")
@@ -42,12 +42,14 @@ set_target_properties (${PROJECT_NAME} PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${PROJECT_NAME})
 
 #
-# setup conan
+# SDL2
 #
-include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
-conan_basic_setup()
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${PROJECT_SOURCE_DIR}/cmake")
+find_package(SDL2 REQUIRED)
+find_package(SDL2_ttf REQUIRED)
 
-target_link_libraries(${PROJECT_NAME} ${CONAN_LIBS})
+include_directories(${SDL2_INCLUDE_DIR}
+                    ${SDL2_TTF_INCLUDE_DIR})
+target_link_libraries(${PROJECT_NAME} ${SDL2_LIBRARY}
+                             ${SDL2_TTF_LIBRARIES})
 
-string(REPLACE ";" " -L" CONAN_LIB_DIRS "${CONAN_LIB_DIRS}")
-set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -L${CONAN_LIB_DIRS}")
