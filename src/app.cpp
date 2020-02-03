@@ -33,7 +33,7 @@ int App::init(string title, Console* dev) {
     }
 
     mainFont = TTF_OpenFont(Config::fontPath, 13);
-    if (!mainFont) {
+    if (mainFont == nullptr) {
         logError("cant load main font");
         return 1;
     }
@@ -44,6 +44,10 @@ int App::init(string title, Console* dev) {
 App::~App() {
     if (window) {
         SDL_DestroyWindow(window);
+    }
+
+    if (mainFont) {
+        TTF_CloseFont(mainFont);
     }
 
     TTF_Quit();
