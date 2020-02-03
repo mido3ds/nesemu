@@ -1,12 +1,11 @@
 #pragma once
 
 #include <SDL2/SDL.h>
-#include <yaml-cpp/yaml.h>
 
 #include "common.h"
 
-struct Config {
-    SDL_Scancode 
+namespace Config {
+    constexpr SDL_Scancode 
         up = SDL_SCANCODE_UP, 
         down = SDL_SCANCODE_DOWN, 
         left = SDL_SCANCODE_LEFT, 
@@ -17,12 +16,14 @@ struct Config {
         exit = SDL_SCANCODE_ESCAPE, 
         reset = SDL_SCANCODE_BACKSPACE, 
         start = SDL_SCANCODE_RETURN, 
-        select = SDL_SCANCODE_TAB;
+        select = SDL_SCANCODE_TAB,
+        debug = SDL_SCANCODE_D, 
+        showMem = SDL_SCANCODE_M;
 
-    VideoSystem sys = NTSC;
+    constexpr VideoSystem sys = NTSC;
 
-    SDL_Rect windowSize = {0, 0, NTSC.resolution.width * 3, NTSC.resolution.height * 3}, 
-            resolution = {0, 0, NTSC.resolution.width, NTSC.resolution.height};
+    constexpr SDL_Rect resolution{0, 0, NTSC.resolution.width, NTSC.resolution.height};
+    constexpr SDL_Rect totalWindSize{0, 0, resolution.w * 3, resolution.h * 3};
 
-    static Config fromFile(string path);
-};
+    constexpr char* fontPath = "zig.ttf";
+}

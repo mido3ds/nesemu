@@ -1,5 +1,0 @@
-[requires]
-sdl2/2.0.10@bincrafters/stable
-
-[generators]
-cmake
