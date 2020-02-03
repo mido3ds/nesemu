@@ -1,6 +1,5 @@
 [requires]
 sdl2/2.0.10@bincrafters/stable
-yaml-cpp/0.6.2@bincrafters/stable
 
 [generators]
 cmake

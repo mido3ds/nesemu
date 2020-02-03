@@ -1,23 +1,20 @@
 rom=donkey-kong.nes
-config=config.yaml
 
 all: build compile run
 
-.ONESHELL:
-build:
+install-libraries:
 	@set -e
-	mkdir -p build && cd build
+	apt update 
+	apt install -y libsdl2-dev libsdl2-ttf-dev
 
-	conan remote add bincrafters https://api.bintray.com/conan/bincrafters/public-conan 2>/dev/null || true
-	conan install .. --build=missing
-	
-	cmake .. -B.
+build:
+	cmake . -Bbuild
 
 compile:
 	cmake --build build
 
 run:
-	./build/NesEmu/NesEmu $(rom) $(config)
+	./build/NesEmu/NesEmu $(rom)
 
 clean:
 	cmake --build build --target clean 
