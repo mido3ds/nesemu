@@ -1,7 +1,7 @@
 #include "console.h"
 #include "logger.h"
 
-Console::Console() {
+int Console::init() {
     logInfo("started building Console device");
 
     // 6502 instruction set reference: http://obelisk.me.uk/6502/reference.html
@@ -847,9 +847,10 @@ Console::Console() {
     }
 
     logInfo("finished building Console device");
+    return 0;
 }
 
-bool Console::setROM(string romPath) {
+int Console::loadROM(string romPath) {
     logInfo("using rom: %s", romPath.c_str());
     rom = ROM::fromFile(romPath);
     if (!rom.buffer) {
@@ -865,7 +866,7 @@ bool Console::setROM(string romPath) {
     logInfo("copied rom");
     // TODO
 
-    return true;
+    return 0;
 }
 
 template<typename T>
@@ -963,7 +964,7 @@ uint8_t Console::readPPUStatusRegister() {
     return old;
 }
 
-void Console::reset() {
+int Console::reset() {
     logInfo("start resetting");
 
     regs.pc = read16(RH);
@@ -973,13 +974,12 @@ void Console::reset() {
 
     vram[0x4015] = 0;
     cycles += 8;
+
+    return 0;
 }
 
-bool Console::powerOn() {
-    return _powerOnCPU() && _powerOnPPU();
-}
-
-bool Console::_powerOnCPU() {
+int Console::powerOn() {
+    // https://wiki.nesdev.com/w/index.php/CPU_power_up_state#At_power-up
     logInfo("start powering on CPU");
 
     regs.pc = read16(RH);
@@ -996,31 +996,32 @@ bool Console::_powerOnCPU() {
     // TODO: 2A03G: APU Frame Counter reset. 
     // (but 2A03letterless: APU frame counter powers up at a value equivalent to 15)
 
-    return true;
-}
-
-bool Console::_powerOnPPU() {
+    // https://wiki.nesdev.com/w/index.php/PPU_power_up_state
     logInfo("start powering on ppu");
     // TODO: set all ppu state
 
-    return true;
+    return 0;
 }
 
-void Console::oneCPUCycle() {
+int Console::oneCPUCycle() {
     if (cycles > 0) {
         cycles--;
-        return;
+        return 0;
     }
 
     auto& inst = instrucSet[fetch()];
     inst.exec();
     cycles += inst.cycles;
+
+    return 0;
 }
 
-void Console::onePPUCycle(Renderer const* renderer) {
+int Console::onePPUCycle(Renderer* renderer) {
     // TODO
+    return 0;
 }
 
-void Console::oneAPUCycle() {
+int Console::oneAPUCycle() {
     // TODO
+    return 0;
 }

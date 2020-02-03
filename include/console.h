@@ -155,8 +155,6 @@ public:
         uint8_t state = EMPTY; 
     } temp0x2006; 
 
-    Console();
-
     struct JoyPad {
         bool a; 
         bool b;
@@ -202,8 +200,6 @@ public:
         return absoluteAddress(read(bb), read(bb+1)) + i;
     }
 
-    bool setROM(string romPath);
-
     template<typename T>
     T _read(uint16_t address);
 
@@ -247,19 +243,17 @@ public:
 
     uint8_t readPPUStatusRegister();
 
-    void reset();
+    int init();
 
-    bool powerOn();
+    int loadROM(string romPath);
 
-    // https://wiki.nesdev.com/w/index.php/CPU_power_up_state#At_power-up
-    bool _powerOnCPU();
+    int reset();
 
-    // https://wiki.nesdev.com/w/index.php/PPU_power_up_state
-    bool _powerOnPPU();
+    int powerOn();
 
-    void oneCPUCycle();
+    int oneCPUCycle();
 
-    void onePPUCycle(Renderer const* renderer);
+    int onePPUCycle(Renderer* renderer);
 
-    void oneAPUCycle();
+    int oneAPUCycle();
 };
