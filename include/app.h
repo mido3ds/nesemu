@@ -7,13 +7,15 @@
 
 class App {
 protected:
-    Console* dev;
-    SDL_Window* window = nullptr;
-    Renderer renderer;
-    TTF_Font* mainFont;
+    Console* dev = nullptr;
+    SDL_Window *mainWind = nullptr, *debugWind = nullptr, *memWind = nullptr;
+    Renderer mainRenderer, debugRenderer, memRenderer;
+    TTF_Font* mainFont = nullptr;
 
-    bool quit = false, pause = false;
+    bool quit = false, pause = false, debugging = true, showMem = true;
 
+    void toggleDebugger();
+    void toggleMemWind();
 public:
     int init(string title, Console* dev);
 
