@@ -9,7 +9,7 @@
             "request": "launch",
             "name": "Debug",
             "program": "${workspaceFolder}/build/NesEmu/NesEmu",
-            "args": ["donkey-kong.nes", "config.yaml"],
+            "args": ["donkey-kong.nes"],
             "cwd": "${workspaceFolder}"
         }
     ]
