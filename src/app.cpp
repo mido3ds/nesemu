@@ -113,100 +113,124 @@ void App::toggleMemWind() {
     showMem = !showMem;
 }
 
-int App::mainLoop() {
+int App::debuggerTick() {
+    debugRenderer.clear({0,0,255},0);
+    for (int i = 0; i < Config::resolution.w; i++) {
+        debugRenderer.pixel(i, j, {255,255,255}, 255);
+    }
+    debugRenderer.endPixels();
+
+    j++;
+    j %= Config::mainWind.h;
+
+    debugRenderer.text("fuck youuuu", 0, 0, 1, 1, mainFont, {255,0,0});
+    debugRenderer.text("fuck you again", 100, 100, 3, 3, mainFont, {255,0,0});
+
+    debugRenderer.show();
+
+    return 0;
+}
+
+int App::memTick() {
+    memRenderer.clear({0, 255, 0}, 255);
+    memRenderer.endPixels();
+    memRenderer.show();
+
+    return 0;
+}
+
+int App::mainTick() {
     int err;
+    SDL_Event event;
 
-    logInfo("start executing");
-    int j = 0;
-
-    while (!quit) {
-        SDL_Event event; 
-        while (SDL_PollEvent(&event)) {
-            switch (event.type) {
-            case SDL_QUIT:
-                logInfo("exit");
-                return 0;
-            case SDL_KEYUP:
-                switch (event.key.keysym.sym) {
-                case Config::reset:
-                    err = dev->reset();
-                    if (err != 0) {
-                        return err;
-                    }
-                    break;
-                case Config::exit:
-                    logInfo("exit");
-                    return 0;
-                case Config::pause:
-                    if (pause) { logInfo("pause"); }
-                    else       { logInfo("unpause"); }
-                    
-                    pause = !pause;
-                    break;
-                case Config::debug:
-                    toggleDebugger();
-                    break;
-                case Config::showMem:
-                    toggleMemWind();
-                    break;
+    while (SDL_PollEvent(&event)) {
+        switch (event.type) {
+        case SDL_QUIT:
+            quit = true;
+            return 0;
+        case SDL_KEYUP:
+            switch (event.key.keysym.sym) {
+            case Config::reset:
+                err = dev->reset();
+                if (err != 0) {
+                    return err;
                 }
+                break;
+            case Config::exit:
+                quit = true;
+                return 0;
+            case Config::pause:
+                if (pause) { logInfo("pause"); }
+                else       { logInfo("unpause"); }
+                
+                pause = !pause;
+                break;
+            case Config::debug:
+                toggleDebugger();
+                break;
+            case Config::showMem:
+                toggleMemWind();
+                break;
             }
         }
-        if (pause) { continue; }
-
-        auto keyb = SDL_GetKeyboardState(NULL);
-        dev->joypad0.up      = keyb[Config::up];
-        dev->joypad0.down    = keyb[Config::down];
-        dev->joypad0.left    = keyb[Config::left];
-        dev->joypad0.right   = keyb[Config::right];
-        dev->joypad0.a       = keyb[Config::a];
-        dev->joypad0.b       = keyb[Config::b];
-        dev->joypad0.start   = keyb[Config::start];
-        dev->joypad0.select  = keyb[Config::select];
-
-        err = dev->oneCPUCycle();
-        if (err != 0) {
-            return err;
-        }
-
-        err = dev->onePPUCycle(&mainRenderer);
-        if (err != 0) {
-            return err;
-        }
-
-        mainRenderer.clear({0,0,0},0);
-        for (int i = 0; i < Config::resolution.w; i++) {
-            mainRenderer.pixel(i, j, {255,255,255}, 255);
-        }
-        mainRenderer.endPixels();
-
-        j++;
-        j %= Config::mainWind.h;
-
-        mainRenderer.text("fuck youuuu", 0, 0, 1, 1, mainFont, {255,0,0});
-        mainRenderer.text("fuck you again", 100, 100, 3, 3, mainFont, {255,0,0});
-
-        mainRenderer.show();
-
-        debugRenderer.clear({0,0,255},0);
-        for (int i = 0; i < Config::resolution.w; i++) {
-            debugRenderer.pixel(i, j, {255,255,255}, 255);
-        }
-        debugRenderer.endPixels();
-
-        j++;
-        j %= Config::mainWind.h;
-
-        debugRenderer.text("fuck youuuu", 0, 0, 1, 1, mainFont, {255,0,0});
-        debugRenderer.text("fuck you again", 100, 100, 3, 3, mainFont, {255,0,0});
-
-        debugRenderer.show();
-
-        memRenderer.clear({0, 255, 0}, 255);
-        memRenderer.endPixels();
-        memRenderer.show();
     }
 
-    // impossible to reach
-    return 1;
+    auto keyb = SDL_GetKeyboardState(NULL);
+    dev->joypad0.up      = keyb[Config::up];
+    dev->joypad0.down    = keyb[Config::down];
+    dev->joypad0.left    = keyb[Config::left];
+    dev->joypad0.right   = keyb[Config::right];
+    dev->joypad0.a       = keyb[Config::a];
+    dev->joypad0.b       = keyb[Config::b];
+    dev->joypad0.start   = keyb[Config::start];
+    dev->joypad0.select  = keyb[Config::select];
+
+    err = dev->oneCPUCycle();
+    if (err != 0) {
+        return err;
+    }
+
+    err = dev->onePPUCycle(&mainRenderer);
+    if (err != 0) {
+        return err;
+    }
+
+    mainRenderer.clear({0,0,0},0);
+    for (int i = 0; i < Config::resolution.w; i++) {
+        mainRenderer.pixel(i, j, {255,255,255}, 255);
+    }
+    mainRenderer.endPixels();
+
+    j++;
+    j %= Config::mainWind.h;
+
+    mainRenderer.text("fuck youuuu", 0, 0, 1, 1, mainFont, {255,0,0});
+    mainRenderer.text("fuck you again", 100, 100, 3, 3, mainFont, {255,0,0});
+
+    mainRenderer.show();
+    return 0;
+}
+
+
+int App::mainLoop() {
+    logInfo("start executing");
+    int err;
+
+    while (!quit) {
+        if (!pause) {
+            if ((err = mainTick()) != 0) {
+                return err;
+            }
+
+            if ((err = debuggerTick()) != 0) {
+                return err;
+            }
+
+            if ((err = memTick()) != 0) {
+                return err;
+            }
+        }
+    }
+
+    return 0;
 }
