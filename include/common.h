@@ -49,21 +49,7 @@ struct Region {
 struct Mirror {
     Region source, dest;
 
-    vector<uint16_t> getAdresses(const uint16_t address) const {
-        if (source.contains(address)) {
-            uint16_t relativeAdress = address - source.start;
-            uint16_t stripe = source.size();
-            uint16_t num = dest.size()/stripe;
-
-            vector<uint16_t> adresses(num);
-            for (int i = 0; i < num; i++) {
-                adresses[i] = dest.start + relativeAdress + stripe * i;
-            }
-            return adresses;
-        }
-
-        return vector<uint16_t>();
-    }
+    vector<uint16_t> getAdresses(const uint16_t address) const;
 };
 
 enum class SpriteType : uint8_t {S8x8 = 0, S8x16 = 1};

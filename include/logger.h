@@ -8,8 +8,6 @@
 
 using std::string;
 
-char* getGMTDateTime();
-
 void logInfo(string format, ...);
 
 void logWarning(string format, ...);
