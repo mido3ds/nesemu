@@ -31,4 +31,5 @@ namespace Config {
     constexpr SDL_Rect memWind{0, 0, mainWind.w, 100}, memWindPos{327, 44};
 
     constexpr char* fontPath = "zig.ttf";
+    constexpr int fontSize = 13;
 }

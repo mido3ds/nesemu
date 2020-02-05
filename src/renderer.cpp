@@ -57,10 +57,12 @@ void Renderer::pixel(int x, int y, Color c, uint8_t a) {
     endedPixels = false;
 }
 
-void Renderer::clear(Color c, uint8_t a) {
+void Renderer::allPixels(Color c, uint8_t a) {
     SDL_SetRenderTarget(renderer, backBuffer);
     SDL_SetRenderDrawColor(renderer, c.r, c.g, c.b, a);
     SDL_RenderClear(renderer);
+
+    endedPixels = true;
 }
 
 void Renderer::endPixels() {
@@ -71,7 +73,7 @@ void Renderer::endPixels() {
     endedPixels = true;
 }
 
-int Renderer::text(string s, int x, int y, int scaleW, int scaleH, TTF_Font* font, Color c) {
+int Renderer::text(string s, int x, int y, double scaleW, double scaleH, TTF_Font* font, Color c) {
     if (!endedPixels) {
         logWarning("trying to type text with render without finalising pixels buffer");
     }
@@ -108,7 +110,7 @@ void Renderer::show() {
     SDL_SetRenderTarget(renderer, NULL);
     SDL_RenderPresent(renderer);
 
-    // clear the default target
+    // allPixels the default target
     SDL_SetRenderTarget(renderer, NULL);
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);
     SDL_RenderClear(renderer);
