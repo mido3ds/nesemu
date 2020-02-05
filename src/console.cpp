@@ -850,21 +850,27 @@ int Console::init() {
     return 0;
 }
 
-int Console::loadROM(string romPath) {
-    logInfo("using rom: %s", romPath.c_str());
-    rom = ROM::fromFile(romPath);
+int Console::loadROM(ROM const& rom) {
+    logInfo("loading rom from %s", rom.path.c_str());
+
     if (!rom.buffer) {
-        logError("couldn't read rom in path: %s", romPath.c_str());
-        return false;
+        logError("couldn't read rom in path: %s", rom.path.c_str());
+        return 1;
     }
     if (rom.size == 0) {
         logError("rom is empty");
-        return false;
+        return 1;
     }
 
-    memcpy(&memory[EX_ROM.start], rom.buffer.get(), rom.size);
+    if (EX_ROM.start + rom.size >= MEM_SIZE) {
+        // TODO: fix 
+        logWarning("rom is bigger than its place in memory, copying part of it");
+        memcpy(&memory[EX_ROM.start], rom.buffer.get(), MEM_SIZE - EX_ROM.start + 1);
+    } else {
+        memcpy(&memory[EX_ROM.start], rom.buffer.get(), rom.size);
+    }
+
     logInfo("copied rom");
-    // TODO
 
     return 0;
 }
