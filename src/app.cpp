@@ -1,5 +1,6 @@
-#include <SDL2/SDL_ttf.h>
-#include <unistd.h>
+#include <chrono>
+#include <thread>
+#include <sstream>
 
 #include "app.h"
 #include "logger.h"
@@ -37,12 +38,13 @@ int App::init(string title, Console* dev) {
         "Debugger",
         Config::debugWindPos.x, Config::debugWindPos.y,
         Config::debugWind.w, Config::debugWind.h,
-        SDL_WINDOW_SHOWN
+        SDL_WINDOW_HIDDEN
     );
     if (debugWind == nullptr) {
         logError("null debugWind");
         return 1;
     }
+    if (debugging) { SDL_ShowWindow(debugWind); }
 
     err = debugRenderer.init(debugWind, Config::debugWind, Config::debugWind);
     if (err != 0) {
@@ -53,19 +55,20 @@ int App::init(string title, Console* dev) {
         "Memory",
         Config::memWindPos.x, Config::memWindPos.y,
         Config::memWind.w, Config::memWind.h,
-        SDL_WINDOW_SHOWN
+        SDL_WINDOW_HIDDEN
     );
     if (memWind == nullptr) {
         logError("null memWind");
         return 1;
     }
+    if (showMem) { SDL_ShowWindow(memWind); }
 
     err = memRenderer.init(memWind, Config::memWind, Config::memWind);
     if (err != 0) {
         return err;
     }
 
-    mainFont = TTF_OpenFont(Config::fontPath, 13);
+    mainFont = TTF_OpenFont(Config::fontPath, Config::fontSize);
     if (mainFont == nullptr) {
         logError("cant load main font");
         return 1;
@@ -114,27 +117,21 @@ void App::toggleMemWind() {
 }
 
 int App::debuggerTick() {
-    debugRenderer.clear({0,0,255},0);
-    for (int i = 0; i < Config::resolution.w; i++) {
-        debugRenderer.pixel(i, j, {255,255,255}, 255);
-    }
+    if (!debugging) { return 0; }
+
+    debugRenderer.allPixels({0,0,0},0);
     debugRenderer.endPixels();
 
-    j++;
-    j %= Config::mainWind.h;
-
-    debugRenderer.text("fuck youuuu", 0, 0, 1, 1, mainFont, {255,0,0});
-    debugRenderer.text("fuck you again", 100, 100, 3, 3, mainFont, {255,0,0});
-
+    stringstream ss;
+    ss << "FPS: " << fps;
+    debugRenderer.text(ss.str(), 0,0,1,1, mainFont,{255,0,0});
     debugRenderer.show();
 
     return 0;
 }
 
 int App::memTick() {
-    memRenderer.clear({0, 255, 0}, 255);
-    memRenderer.endPixels();
-    memRenderer.show();
+    if (!showMem) { return 0; }
 
     return 0;
 }
@@ -174,6 +171,7 @@ int App::mainTick() {
             }
         }
     }
+    if (pause) { return 0; }
 
     auto keyb = SDL_GetKeyboardState(NULL);
     dev->joypad0.up      = keyb[Config::up];
@@ -195,41 +193,40 @@ int App::mainTick() {
         return err;
     }
 
-    mainRenderer.clear({0,0,0},0);
-    for (int i = 0; i < Config::resolution.w; i++) {
-        mainRenderer.pixel(i, j, {255,255,255}, 255);
-    }
-    mainRenderer.endPixels();
-
-    j++;
-    j %= Config::mainWind.h;
-
-    mainRenderer.text("fuck youuuu", 0, 0, 1, 1, mainFont, {255,0,0});
-    mainRenderer.text("fuck you again", 100, 100, 3, 3, mainFont, {255,0,0});
-
-    mainRenderer.show();
     return 0;
 }
 
-
 int App::mainLoop() {
+    using namespace chrono;
+
     logInfo("start executing");
     int err;
 
     while (!quit) {
-        if (!pause) {
-            if ((err = mainTick()) != 0) {
-                return err;
-            }
+        auto t1 = high_resolution_clock::now();
 
-            if ((err = debuggerTick()) != 0) {
-                return err;
-            }
-
-            if ((err = memTick()) != 0) {
-                return err;
-            }
+        if ((err = mainTick()) != 0) {
+            return err;
         }
+
+        if ((err = debuggerTick()) != 0) {
+            return err;
+        }
+
+        if ((err = memTick()) != 0) {
+            return err;
+        }
+
+        auto t2 = high_resolution_clock::now();
+        auto duration = duration_cast<chrono::milliseconds>(t2 - t1).count();
+
+        if (duration < Config::sys.timePerFrame) {
+            this_thread::sleep_for(chrono::microseconds(int(Config::sys.timePerFrame - duration) * 1000));
+        }
+
+        t2 = high_resolution_clock::now();
+        duration = duration_cast<chrono::milliseconds>(t2 - t1).count();
+        fps = 1000.0/duration;
     }
 
     return 0;

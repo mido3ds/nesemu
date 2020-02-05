@@ -11,9 +11,9 @@ protected:
     SDL_Window *mainWind = nullptr, *debugWind = nullptr, *memWind = nullptr;
     Renderer mainRenderer, debugRenderer, memRenderer;
     TTF_Font* mainFont = nullptr;
-    int j = 0;
-    
+
     bool quit = false, pause = false, debugging = true, showMem = true;
+    double fps;
 
     void toggleDebugger();
     void toggleMemWind();
