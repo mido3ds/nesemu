@@ -28,7 +28,7 @@ int main(int argc, char** argv) {
         return err;
     }
 
-    err = dev.loadROM(argv[1]);
+    err = dev.loadROM(ROM::fromFile(argv[1]));
     if (err != 0) {
         return err;
     }

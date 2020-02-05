@@ -26,7 +26,6 @@ public:
         } flags; // processor status
     } regs;
 
-    ROM rom;
     array<uint8_t, MEM_SIZE> memory;
     array<uint8_t, MEM_SIZE> vram;
     array<uint8_t, 256> sprram; // sprite ram
@@ -245,7 +244,7 @@ public:
 
     int init();
 
-    int loadROM(string romPath);
+    int loadROM(ROM const& rom);
 
     int reset();
 
