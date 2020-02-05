@@ -73,7 +73,12 @@ void Renderer::endPixels() {
     endedPixels = true;
 }
 
-int Renderer::text(string s, int x, int y, double scaleW, double scaleH, TTF_Font* font, Color c) {
+int Renderer::text(string s, int x, int y, double scaleW, double scaleH, TTF_Font* font, Color c, int* newW, int* newH) {
+    if (!font) {
+        logError("null font");
+        return 1;
+    }
+
     if (!endedPixels) {
         logWarning("trying to type text with render without finalising pixels buffer");
     }
@@ -93,16 +98,30 @@ int Renderer::text(string s, int x, int y, double scaleW, double scaleH, TTF_Fon
 
     int texW = 0;
     int texH = 0;
-    SDL_QueryTexture(texture, NULL, NULL, &texW, &texH);
+    if (SDL_QueryTexture(texture, NULL, NULL, &texW, &texH) == -1) {
+        logError("SDL_QueryTexture failed");
+        return 1;
+    }
     SDL_Rect dstrect = {x, y, texW*scaleW, texH*scaleH};
 
     // copy texture to renderer
-    SDL_SetRenderTarget(renderer, NULL);
-    SDL_RenderCopy(renderer, texture, NULL, &dstrect);
+    if (SDL_SetRenderTarget(renderer, NULL) == -1) { 
+        logError("rendertarget failed");
+        return 1;
+    }
+
+    if (SDL_RenderCopy(renderer, texture, NULL, &dstrect) == -1) {
+        logError("rendercopy faield");
+        return 1;
+    }
 
     // cleanup
     SDL_DestroyTexture(texture);
     SDL_FreeSurface(surface);
+
+    if (newW) { *newW = texW*scaleW; }
+    if (newH) { *newH = texH*scaleH; }
+    return 0;
 }
 
 void Renderer::show() {
