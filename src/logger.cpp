@@ -1,6 +1,11 @@
 #include "logger.h"
 
-char* getGMTDateTime() {
+#define RED     "\033[0;31m"
+#define GREEN   "\033[0;32m"
+#define YELLOW  "\033[0;33m"
+#define RESET   "\033[0m"
+
+static char* getGMTDateTime() {
     time_t rawTime;
     tm* ptm;
     char* result;
@@ -14,7 +19,7 @@ char* getGMTDateTime() {
 }
 
 void logInfo(string format, ...) {
-    format = string("[INFO][") + string(getGMTDateTime()) + "]: " + format + '\n';
+    format = GREEN"[INFO] "RESET + format + '\n';
 
     va_list args;
     va_start (args, format);
@@ -23,7 +28,7 @@ void logInfo(string format, ...) {
 }
 
 void logWarning(string format, ...) {
-    format = string("[WARNING][") + string(getGMTDateTime()) + "]: " + format + '\n';
+    format = YELLOW"[WARNING] " + format + RESET"\n";
 
     va_list args;
     va_start (args, format);
@@ -32,7 +37,7 @@ void logWarning(string format, ...) {
 }
 
 void logError(string format, ...) {
-    format = string("[ERROR][") + string(getGMTDateTime()) + "]: " + format + '\n';
+    format = RED"[ERROR] " + format + RESET"\n";
 
     va_list args;
     va_start (args, format);
