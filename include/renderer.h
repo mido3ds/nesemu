@@ -22,7 +22,7 @@ public:
     // copy pixels buffer, must be called before any Renderer#text or Renderer#show
     void endPixels();
 
-    int text(string s, int x, int y, double scaleW, double scaleH, TTF_Font* font, Color c);
+    int text(string s, int x, int y, double scaleW, double scaleH, TTF_Font* font, Color c, int* newW, int* newH);
 
     // present the renderer on its window
     void show();

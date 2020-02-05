@@ -42,8 +42,8 @@ typedef array<Instruction, UINT8_MAX+1> InstructionSet;
 struct Region {
     uint16_t start, end;
 
-    constexpr bool contains(uint16_t addr) {return addr <= end && addr >= start;}  
-    constexpr uint16_t size() {return (end + 1) - start;}
+    constexpr bool contains(uint16_t addr) const {return addr <= end && addr >= start;}  
+    constexpr uint16_t size() const {return (end + 1) - start;}
 };
 
 struct Mirror {

@@ -1,6 +1,6 @@
 #include <chrono>
-#include <thread>
 #include <sstream>
+#include <unistd.h>
 
 #include "app.h"
 #include "logger.h"
@@ -116,17 +116,66 @@ void App::toggleMemWind() {
     showMem = !showMem;
 }
 
+static string hex8(uint8_t v) {
+    char buffer[10] = {0};
+    sprintf(buffer, "%02X", v);
+    return buffer;
+}
+
+static string hex16(uint16_t v) {
+    char buffer[10] = {0};
+    sprintf(buffer, "%04X", v);
+    return buffer;
+}
+
 int App::debuggerTick() {
     if (!debugging) { return 0; }
 
     debugRenderer.allPixels({0,0,0},0);
     debugRenderer.endPixels();
 
-    stringstream ss;
-    ss << "FPS: " << fps;
-    debugRenderer.text(ss.str(), 0,0,1,1, mainFont,{255,0,0});
-    debugRenderer.show();
+    const int h = Config::fontSize+1, 
+        w = Config::debugWind.w/2;
+    int i = 0;
 
+    // fps
+    debugRenderer.text("FPS: "+to_string(int(fps)), 10,(i++)*h,1,1, mainFont,{255,0,0}, 0, 0);
+    i++;
+
+    // regs
+    Color c{255,255,0};
+    debugRenderer.text("SP: $" + hex8(dev->regs.sp), 10,(i)*h,1,1, mainFont,c, 0, 0);
+    debugRenderer.text("A: $" + hex8(dev->regs.a), 10+w,(i++)*h,1,1, mainFont,c, 0, 0);
+
+    debugRenderer.text("X: $" + hex8(dev->regs.x), 10,(i)*h,1,1, mainFont,c, 0, 0);
+    debugRenderer.text("Y: $" + hex8(dev->regs.y), 10+w,(i++)*h,1,1, mainFont,c, 0, 0);
+    i++;
+
+    debugRenderer.text("C: " + to_string(dev->regs.flags.bits.c), 10,(i)*h,1,1, mainFont,c, 0, 0);
+    debugRenderer.text("Z: " + to_string(dev->regs.flags.bits.z), 10+w*2.0/3,(i)*h,1,1, mainFont,c, 0, 0);
+    debugRenderer.text("I: " + to_string(dev->regs.flags.bits.i), 10+w*4.0/3,(i++)*h,1,1, mainFont,c, 0, 0);
+
+    debugRenderer.text("D: " + to_string(dev->regs.flags.bits.d), 10,(i)*h,1,1, mainFont,c, 0, 0);
+    debugRenderer.text("B: " + to_string(dev->regs.flags.bits.b), 10+w*2.0/3,(i)*h,1,1, mainFont,c, 0, 0);
+    debugRenderer.text("V: " + to_string(dev->regs.flags.bits.v), 10+w*4.0/3,(i++)*h,1,1, mainFont,c, 0, 0);
+
+    debugRenderer.text("N: " + to_string(dev->regs.flags.bits.n), 10,(i++)*h,1,1, mainFont,c, 0, 0);
+    i++;
+    
+    // assembly
+    const int n = 18;
+    int j = 1;
+    for (auto& s: dev->getAssembly(dev->regs.pc, n)) {
+        c = {r:255, g:255, b:255};
+        if (j++ == n+1) {
+            c.g = c.b = 0;
+        }
+
+        debugRenderer.text(s, 10,(i++)*h,1,1, mainFont,c, 0, 0);
+    }
+
+    debugRenderer.show();
+    
     return 0;
 }
 
@@ -216,16 +265,12 @@ int App::mainLoop() {
         if ((err = memTick()) != 0) {
             return err;
         }
+        
+        usleep(1); // guard window from overdrawing
 
         auto t2 = high_resolution_clock::now();
         auto duration = duration_cast<chrono::milliseconds>(t2 - t1).count();
 
-        if (duration < Config::sys.timePerFrame) {
-            this_thread::sleep_for(chrono::microseconds(int(Config::sys.timePerFrame - duration) * 1000));
-        }
-
-        t2 = high_resolution_clock::now();
-        duration = duration_cast<chrono::milliseconds>(t2 - t1).count();
         fps = 1000.0/duration;
     }
 
