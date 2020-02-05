@@ -217,6 +217,9 @@ int App::mainTick() {
             case Config::showMem:
                 toggleMemWind();
                 break;
+            case Config::toggleStepping:
+                stepping = !stepping;
+                break;
             }
         }
     }
@@ -232,14 +235,16 @@ int App::mainTick() {
     dev->joypad0.start   = keyb[Config::start];
     dev->joypad0.select  = keyb[Config::select];
 
-    err = dev->oneCPUCycle();
-    if (err != 0) {
-        return err;
-    }
+    if (!stepping || keyb[Config::nextInstr]) {
+        err = dev->oneCPUCycle();
+        if (err != 0) {
+            return err;
+        }
 
-    err = dev->onePPUCycle(&mainRenderer);
-    if (err != 0) {
-        return err;
+        err = dev->onePPUCycle(&mainRenderer);
+        if (err != 0) {
+            return err;
+        }
     }
 
     return 0;

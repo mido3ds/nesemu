@@ -12,7 +12,9 @@ protected:
     Renderer mainRenderer, debugRenderer, memRenderer;
     TTF_Font* mainFont = nullptr;
 
-    bool quit = false, pause = false, debugging = true, showMem = true;
+    bool quit = false, pause = false, 
+        debugging = true, showMem = true,
+        stepping = true;
     double fps;
 
     void toggleDebugger();

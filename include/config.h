@@ -5,6 +5,7 @@
 #include "common.h"
 
 namespace Config {
+    // read keyboard state
     constexpr SDL_Scancode 
         up = SDL_SCANCODE_UP, 
         down = SDL_SCANCODE_DOWN, 
@@ -13,14 +14,20 @@ namespace Config {
         a = SDL_SCANCODE_A, 
         b = SDL_SCANCODE_S, 
         start = SDL_SCANCODE_RETURN, 
-        select = SDL_SCANCODE_TAB;
+        select = SDL_SCANCODE_TAB,
+
+        // debugging
+        nextInstr = SDL_SCANCODE_F10;
     
     constexpr SDL_Keycode
         pause = SDLK_p,
         exit = SDLK_ESCAPE, 
         reset = SDLK_r, 
+
+        // debugging
         debug = SDLK_d, 
-        showMem = SDLK_m;
+        showMem = SDLK_m,
+        toggleStepping = SDLK_F5;
 
     constexpr VideoSystem sys = NTSC;
 
