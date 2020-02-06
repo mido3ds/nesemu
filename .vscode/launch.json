@@ -8,7 +8,7 @@
             "type": "lldb",
             "request": "launch",
             "name": "Debug",
-            "program": "${workspaceFolder}/build/NesEmu/NesEmu",
+            "program": "${workspaceFolder}/build/nesemu",
             "args": ["donkey-kong.nes"],
             "cwd": "${workspaceFolder}"
         }

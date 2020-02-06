@@ -7,8 +7,10 @@ NES emulator in modern c++
 - sdl2_ttf (>= 2.0.14)
 
 ## After clone:
-- install dependencies. If you have apt, run: `$ sudo make install-libraries`
-- build cmake: `$ make build`
+1. install dependencies. If you have apt, run: `$ sudo make install-libraries`
+1. build cmake in `Debug` mode: `$ make build type=Debug`
+    
+    or in `Release` mode: `$ make build type=Release`
 
 ## Compile:
 `$ make compile`

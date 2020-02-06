@@ -1,4 +1,5 @@
 rom=donkey-kong.nes
+type=Debug
 
 all: build compile run
 
@@ -8,16 +9,16 @@ install-libraries:
 	apt install -y libsdl2-dev libsdl2-ttf-dev
 
 build:
-	cmake . -Bbuild
+	cmake -D BUILD_TYPE=$(type) . -Bbuild
 
 compile:
 	cmake --build build -j 10
 
 run:
-	./build/NesEmu/NesEmu $(rom)
+	./build/nesemu $(rom)
 
 clean:
 	cmake --build build --target clean 
 
 cleanAll:
-	rm -rf build CMakeFiles 
+	rm -rf build* CMakeFiles 
