@@ -11,7 +11,7 @@ build:
 	cmake . -Bbuild
 
 compile:
-	cmake --build build
+	cmake --build build -j 10
 
 run:
 	./build/NesEmu/NesEmu $(rom)
