@@ -17,7 +17,9 @@ namespace Config {
         select = SDL_SCANCODE_TAB,
 
         // debugging
-        nextInstr = SDL_SCANCODE_F10;
+        nextInstr = SDL_SCANCODE_F10,
+        scrollMemDown = SDL_SCANCODE_J,
+        scrollMemUp = SDL_SCANCODE_K;
     
     constexpr SDL_Keycode
         pause = SDLK_p,
@@ -33,9 +35,9 @@ namespace Config {
 
     constexpr SDL_Rect resolution{0, 0, NTSC.resolution.width, NTSC.resolution.height};
     
-    constexpr SDL_Rect mainWind{0, 0, resolution.w * 3, resolution.h * 3}, mainWindPos{324, 182};
-    constexpr SDL_Rect debugWind{0, 0, 230, mainWind.h}, debugWindPos{1100, 180};
-    constexpr SDL_Rect memWind{0, 0, mainWind.w, 100}, memWindPos{327, 44};
+    constexpr SDL_Rect mainWind{0, 0, resolution.w * 3, resolution.h * 3}; 
+    constexpr SDL_Rect debugWind{0, 0, 230, mainWind.h};
+    constexpr SDL_Rect memWind{0, 0, mainWind.w, 100};
 
     constexpr char* fontPath = "zig.ttf";
     constexpr int fontSize = 13;

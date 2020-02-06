@@ -6,7 +6,13 @@
 #include "logger.h"
 #include "config.h"
 
+#define MEM_WIDTH 16
+#define MEM_HEIGHT 46
+#define MEM_HPADDING 5
+#define MEM_VPADDING 5
+
 int App::init(string title, Console* dev) {
+    memBeggining = EX_ROM.start/MEM_WIDTH;
     int err;
 
     this->dev = dev;
@@ -20,7 +26,7 @@ int App::init(string title, Console* dev) {
 
     mainWind = SDL_CreateWindow(
         title.c_str(),
-        Config::mainWindPos.x, Config::mainWindPos.y,
+        SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
         Config::mainWind.w, Config::mainWind.h,
         SDL_WINDOW_SHOWN
     );
@@ -34,9 +40,11 @@ int App::init(string title, Console* dev) {
         return err;
     }
 
+    int x;
+    SDL_GetWindowPosition(mainWind, &x, 0);
     debugWind = SDL_CreateWindow(
         "Debugger",
-        Config::debugWindPos.x, Config::debugWindPos.y,
+        x+Config::mainWind.w+5, SDL_WINDOWPOS_CENTERED,
         Config::debugWind.w, Config::debugWind.h,
         SDL_WINDOW_HIDDEN
     );
@@ -47,23 +55,6 @@ int App::init(string title, Console* dev) {
     if (debugging) { SDL_ShowWindow(debugWind); }
 
     err = debugRenderer.init(debugWind, Config::debugWind, Config::debugWind);
-    if (err != 0) {
-        return err;
-    }
-
-    memWind = SDL_CreateWindow(
-        "Memory",
-        Config::memWindPos.x, Config::memWindPos.y,
-        Config::memWind.w, Config::memWind.h,
-        SDL_WINDOW_HIDDEN
-    );
-    if (memWind == nullptr) {
-        logError("null memWind");
-        return 1;
-    }
-    if (showMem) { SDL_ShowWindow(memWind); }
-
-    err = memRenderer.init(memWind, Config::memWind, Config::memWind);
     if (err != 0) {
         return err;
     }
@@ -82,12 +73,8 @@ App::~App() {
         TTF_CloseFont(mainFont);
     }
 
-    if (memWind) {
-        SDL_DestroyWindow(memWind);
-    }
-
     if (debugWind) {
-        SDL_DestroyWindow(memWind);
+        SDL_DestroyWindow(debugWind);
     }
 
     if (mainWind) {
@@ -105,15 +92,6 @@ void App::toggleDebugger() {
         SDL_ShowWindow(debugWind);
     }
     debugging = !debugging;
-}
-
-void App::toggleMemWind() {
-    if (showMem) {
-        SDL_HideWindow(memWind);
-    } else {
-        SDL_ShowWindow(memWind);
-    }
-    showMem = !showMem;
 }
 
 static string hex8(uint8_t v) {
@@ -139,7 +117,12 @@ int App::debuggerTick() {
     int i = 0;
 
     // fps
-    debugRenderer.text("FPS: "+to_string(int(fps)), 10,(i++)*h,1,1, mainFont,{255,0,0}, 0, 0);
+    debugRenderer.text("FPS: "+to_string(int(fps)), 10,(i)*h,1,1, mainFont,{255,0,0}, 0, 0);
+
+    // mem
+    debugRenderer.text("MEM ", 10+w,(i)*h,1,1, mainFont,{255,255,255}, 0, 0);
+    if (showMem) { debugRenderer.text("ON", 10+w+40,(i++)*h,1,1, mainFont,{0,255,0}, 0, 0); }
+    else { debugRenderer.text("OFF", 10+w+40,(i++)*h,1,1, mainFont,{255,0,0}, 0, 0); }
     i++;
 
     // regs
@@ -179,10 +162,26 @@ int App::debuggerTick() {
     return 0;
 }
 
-int App::memTick() {
-    if (!showMem) { return 0; }
+void App::renderMem() {
+    mainRenderer.allPixels({0,0,0},0);
+    mainRenderer.endPixels();
 
-    return 0;
+    for (int i = 0; i < MEM_WIDTH; i++) {
+        int x = MEM_HPADDING+53+i*30;
+        mainRenderer.text(hex8(i), x, MEM_VPADDING, 1, 1, mainFont, {255,255,255}, 0, 0);
+    }
+
+    for (int j = 0; j < MEM_HEIGHT; j++) {
+        int y = MEM_VPADDING+(j+1)*(Config::fontSize+1);
+        mainRenderer.text(hex16((memBeggining+j)*MEM_WIDTH), MEM_HPADDING, y, 1, 1, mainFont, {255,255,255}, 0, 0);
+
+        for (int i = 0; i < MEM_WIDTH; i++) {
+            int x = MEM_HPADDING+53+i*30;
+            mainRenderer.text(hex8(dev->memory[(memBeggining+j)*MEM_WIDTH+i]), x, y, 1, 1, mainFont, {255,255,0}, 0, 0);
+        }
+    }
+
+    mainRenderer.show();
 }
 
 int App::mainTick() {
@@ -215,7 +214,7 @@ int App::mainTick() {
                 toggleDebugger();
                 break;
             case Config::showMem:
-                toggleMemWind();
+                showMem = !showMem;
                 break;
             case Config::toggleStepping:
                 stepping = !stepping;
@@ -245,6 +244,27 @@ int App::mainTick() {
         if (err != 0) {
             return err;
         }
+
+        err = dev->oneAPUCycle();
+        if (err != 0) {
+            return err;
+        }
+    }
+
+    if (showMem) { 
+        int scrolMultiplier = keyb[SDL_SCANCODE_LCTRL] || keyb[SDL_SCANCODE_RCTRL] ? MEM_HEIGHT:1;
+
+        if (keyb[Config::scrollMemDown]) {
+            if ((memBeggining+scrolMultiplier+MEM_HEIGHT)*MEM_WIDTH < MEM_SIZE) {
+                memBeggining += scrolMultiplier;
+            }
+        } else if (keyb[Config::scrollMemUp]) {
+            if (memBeggining >= scrolMultiplier) {
+                memBeggining -= scrolMultiplier;
+            }
+        }
+
+        renderMem(); 
     }
 
     return 0;
@@ -264,10 +284,6 @@ int App::mainLoop() {
         }
 
         if ((err = debuggerTick()) != 0) {
-            return err;
-        }
-
-        if ((err = memTick()) != 0) {
             return err;
         }
         
