@@ -62,7 +62,7 @@ void Renderer::allPixels(Color c, uint8_t a) {
     SDL_SetRenderDrawColor(renderer, c.r, c.g, c.b, a);
     SDL_RenderClear(renderer);
 
-    endedPixels = true;
+    endedPixels = false;
 }
 
 void Renderer::endPixels() {
@@ -128,9 +128,4 @@ void Renderer::show() {
     // show default target
     SDL_SetRenderTarget(renderer, NULL);
     SDL_RenderPresent(renderer);
-
-    // allPixels the default target
-    SDL_SetRenderTarget(renderer, NULL);
-    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);
-    SDL_RenderClear(renderer);
 }
