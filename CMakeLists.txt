@@ -1,54 +1,44 @@
-cmake_minimum_required (VERSION 2.8.11)
-project (NesEmu)
+cmake_minimum_required(VERSION 2.8.11)
+project(nesemu)
 
-#
-# CMake setup
-#
-set_property(GLOBAL PROPERTY USE_FOLDERS ON)
-set (CMAKE_VERBOSE_MAKEFILE 0) # 1 should be used for debugging
-set (CMAKE_SUPPRESS_REGENERATION TRUE) # Suppresses ZERO_CHECK
-if(MSVC)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /W4")
-else()
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Wpedantic -std=c++14 -g")
-endif()
-
-include_directories(include)
-
-#
-# Add files
-#
-file (GLOB_RECURSE PROJECT_HEADERS "include/*.hpp"
-                                   "include/*.h")
-file (GLOB_RECURSE PROJECT_SOURCES src/*.cpp
-                                   src/*.cxx
-                                   src/*.cc
-                                   src/*.c)
-file (GLOB         PROJECT_CONFIGS CMakeLists.txt)
-
-#
-# Organizing files
-#
-source_group ("headers" FILES ${PROJECT_HEADERS})
-source_group ("sources" FILES ${PROJECT_SOURCES})
-
-#
-# Set executable and target link libraries
-#
-add_executable (${PROJECT_NAME} ${PROJECT_SOURCES} ${PROJECT_HEADERS}
-                                ${PROJECT_CONFIGS} ${VENDORS_SOURCES})
-set_target_properties (${PROJECT_NAME} PROPERTIES
-    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${PROJECT_NAME})
-
-#
-# SDL2
-#
+# include /cmake files
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${PROJECT_SOURCE_DIR}/cmake")
-find_package(SDL2 REQUIRED)
-find_package(SDL2_ttf REQUIRED)
 
-include_directories(${SDL2_INCLUDE_DIR}
-                    ${SDL2_TTF_INCLUDE_DIR})
-target_link_libraries(${PROJECT_NAME} ${SDL2_LIBRARY}
-                             ${SDL2_TTF_LIBRARIES})
+## executable target
+add_executable(nesemu)
 
+## sources
+    file(GLOB_RECURSE PROJECT_SOURCES src/*.cpp src/*.cxx src/*.cc src/*.c)
+    target_sources(nesemu PRIVATE ${PROJECT_SOURCES})
+#
+
+## headers
+    target_include_directories(nesemu PRIVATE include/)
+
+    # make headers available for IDEs
+    file(GLOB_RECURSE PROJECT_HEADERS include/*.hpp include/*.h)
+    target_sources(nesemu PRIVATE ${PROJECT_HEADERS})
+#
+
+## dependecies
+    # SDL2
+    find_package(SDL2 REQUIRED)
+    target_include_directories(nesemu PRIVATE "${SDL2_INCLUDE_DIR}")
+    target_link_libraries(nesemu      PRIVATE ${SDL2_LIBRARY})
+
+    # SDL2_ttf
+    find_package(SDL2_ttf REQUIRED)
+    target_include_directories(nesemu PRIVATE "${SDL2_TTF_INCLUDE_DIR}")
+    target_link_libraries(nesemu      PRIVATE ${SDL2_TTF_LIBRARIES})
+#
+
+## compiler options
+    set_target_properties(nesemu PROPERTIES
+        CXX_STANDARD 14
+        CXX_STANDARD_REQUIRED YES
+        CXX_EXTENSIONS NO
+    )
+
+    set(BUILD_TYPE "Debug" CACHE STRING "build type")
+    set(CMAKE_BUILD_TYPE ${BUILD_TYPE})
+#
