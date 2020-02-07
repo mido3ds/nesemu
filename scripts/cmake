@@ -1,9 +1,0 @@
-#!/bin/bash
-set -ex
-mkdir -p ${BUILD_DIR-build}
-
-cmake \
-    -D BUILD_TYPE=${BUILD_TYPE-Debug}\
-    -D GIT_SUBMODULE=${GIT_SUBMODULE-TRUE}\
-    -D ENABLE_BUILD_TESTS=${ENABLE_BUILD_TESTS-TRUE}\
-    -S . -B${BUILD_DIR-build}

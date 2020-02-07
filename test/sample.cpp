@@ -1,13 +1,11 @@
-#define CATCH_CONFIG_MAIN
 #include "catch2/catch.hpp"
 
-unsigned int Factorial( unsigned int number ) {
-    return number <= 1 ? number : Factorial(number-1)*number;
-}
+#include "console.h"
 
-TEST_CASE( "Factorials are computed", "[factorial]" ) {
-    REQUIRE( Factorial(1) == 2 );
-    REQUIRE( Factorial(2) == 2 );
-    REQUIRE( Factorial(3) == 6 );
-    REQUIRE( Factorial(10) == 3628800 );
+TEST_CASE("hello-test") {
+    Console dev;
+    REQUIRE(dev.init() == 0);
+    REQUIRE(dev.instrucSet[0x69].name == "ADC");
+    REQUIRE(dev.instrucSet[0x69].mode == AddressMode::Immediate);
+    REQUIRE(dev.instrucSet[0x69].cycles == 2);
 }
