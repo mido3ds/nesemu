@@ -1,0 +1,7 @@
+#!/bin/bash
+
+set -ex
+
+cmake\
+    --build ${BUILD_DIR-build}\
+    --target clean

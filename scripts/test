@@ -1,0 +1,26 @@
+#!/bin/bash
+set -e 
+
+if [[ -z "$1" ]]; then
+    set -x
+
+    cmake\
+        --build ${BUILD_DIR-build}\
+        -j ${JOBS-3}\
+        --target all
+
+    cmake\
+        --build ${BUILD_DIR-build}\
+        --target test
+else
+    testname=$1
+    shift 
+
+    set -x
+
+    cmake\
+        --build ${BUILD_DIR-build}\
+        --target ${testname}
+
+    ${BUILD_DIR-build}/${testname} $@
+fi
