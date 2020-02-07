@@ -1,0 +1,5 @@
+#!/bin/bash
+set -ex
+
+apt update 
+apt install -y libsdl2-dev libsdl2-ttf-dev
