@@ -1,9 +1,0 @@
-#!/bin/bash
-set -ex
-
-cmake\
-    --build ${BUILD_DIR-build}\
-    -j ${JOBS-10}\
-    --target nesemu
-
-${BUILD_DIR-build}/nesemu ${ROM-donkey-kong.nes}
