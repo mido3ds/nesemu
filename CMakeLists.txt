@@ -1,25 +1,9 @@
 cmake_minimum_required(VERSION 3.9)
-project(nesemu LANGUAGES CXX VERSION 0.0.1)
+project(NESemu LANGUAGES CXX VERSION 0.0.1)
 
 # vars
 set(BUILD_TYPE "Debug" CACHE STRING "Build type [Release-Debug]")
-option(GIT_SUBMODULE "Check submodules during build" ON)
 option(BUILD_TESTS "Enable testing" ON)
-
-# submodules
-find_package(Git QUIET)
-if(GIT_FOUND AND EXISTS "${PROJECT_SOURCE_DIR}/.git")
-    # Update submodules as needed
-    if(GIT_SUBMODULE)
-        message(STATUS "Submodule update")
-        execute_process(COMMAND ${GIT_EXECUTABLE} submodule update --init --recursive
-                        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-                        RESULT_VARIABLE GIT_SUBMOD_RESULT)
-        if(NOT GIT_SUBMOD_RESULT EQUAL "0")
-            message(FATAL_ERROR "git submodule update --init failed with ${GIT_SUBMOD_RESULT}, please checkout submodules")
-        endif()
-    endif()
-endif()
 
 ## compiler options
     set(CMAKE_CXX_STANDARD 14)
@@ -27,17 +11,10 @@ endif()
     set(CMAKE_CXX_EXTENSIONS NO)
 
     set(CMAKE_BUILD_TYPE ${BUILD_TYPE})
-
-    # link time optimization
-    include(CheckIPOSupported)
-    check_ipo_supported(RESULT result)
-    if(result)
-        set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
-    endif()
 #
 
 ## library
-    add_library(libnesemu)
+    add_library(libnesemu STATIC)
     set_target_properties(libnesemu PROPERTIES OUTPUT_NAME nesemu)
 
     ## sources
@@ -57,18 +34,28 @@ endif()
     #
 
     ## dependecies
-        # include cmake/FindSDL2*.cmake files
-        set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${PROJECT_SOURCE_DIR}/cmake")
-        
         # SDL2
+        add_subdirectory(vendors/SDL2)
         find_package(SDL2 REQUIRED)
-        target_include_directories(libnesemu PUBLIC "${SDL2_INCLUDE_DIR}")
-        target_link_libraries(libnesemu      PUBLIC ${SDL2_LIBRARY})
+        target_link_libraries(libnesemu PUBLIC SDL2)
 
         # SDL2_ttf
-        find_package(SDL2_ttf REQUIRED)
-        target_include_directories(libnesemu PUBLIC "${SDL2_TTF_INCLUDE_DIR}")
-        target_link_libraries(libnesemu      PUBLIC ${SDL2_TTF_LIBRARIES})
+        include(ExternalProject)
+        find_program(MAKE_EXE NAMES gmake nmake make)
+        ExternalProject_Add(SDL2_ttf
+            SOURCE_DIR "${CMAKE_SOURCE_DIR}/vendors/SDL2_ttf/"
+            DOWNLOAD_COMMAND ""
+            BUILD_IN_SOURCE YES
+            WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/vendors/SDL2_ttf/"
+            CONFIGURE_COMMAND ""
+            BUILD_COMMAND ./configure
+            COMMAND ${MAKE_EXE}
+            INSTALL_COMMAND ""
+            BUILD_BYPRODUCTS "${CMAKE_SOURCE_DIR}/vendors/SDL2_ttf/.libs/libSDL2_ttf.so"
+        )
+
+        target_link_libraries(libnesemu PUBLIC "${CMAKE_SOURCE_DIR}/vendors/SDL2_ttf/.libs/libSDL2_ttf.so")
+        target_sources(libnesemu PUBLIC "${CMAKE_SOURCE_DIR}/vendors/SDL2_ttf/SDL_ttf.h")
     #
 #
 
@@ -112,7 +99,7 @@ endif()
             target_link_libraries(test libnesemu)
 
             # Catch2
-            add_subdirectory(extern/Catch2)
+            add_subdirectory(vendors/Catch2)
             target_link_libraries(test Catch2::Catch2)
         #
     endif()
