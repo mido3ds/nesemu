@@ -118,8 +118,9 @@ int Console::init() {
 
     /*BCC*/ {
         instrucSet[0x90] = {[this]() {
+            auto fetched = (int8_t)fetch();
             if (!regs.flags.bits.c) {
-                regs.pc += (int8_t)fetch();
+                regs.pc += fetched;
                 cycles++;
             }
         }, "BCC", AddressMode::Implicit, 2};
@@ -127,8 +128,9 @@ int Console::init() {
 
     /*BCS*/ {
         instrucSet[0xB0] = {[this]() {
+            auto fetched = (int8_t)fetch();
             if (regs.flags.bits.c) {
-                regs.pc += (int8_t)fetch();
+                regs.pc += fetched;
                 cycles++;
             }
         }, "BCS", AddressMode::Implicit, 2};
@@ -136,8 +138,9 @@ int Console::init() {
 
     /*BEQ*/ {
         instrucSet[0xF0] = {[this]() {
+            auto fetched = (int8_t)fetch();
             if (regs.flags.bits.z) {
-                regs.pc += (int8_t)fetch();
+                regs.pc += fetched;
                 cycles++;
             }
         }, "BEQ", AddressMode::Implicit, 2};
@@ -159,8 +162,9 @@ int Console::init() {
 
     /*BMI*/ {
         instrucSet[0x30] = {[this]() {
+            auto fetched = (int8_t)fetch();
             if (regs.flags.bits.n) {
-                regs.pc += (int8_t)fetch();
+                regs.pc += fetched;
                 cycles++;
             }
         }, "BMI", AddressMode::Implicit, 2};
@@ -168,8 +172,9 @@ int Console::init() {
 
     /*BNE*/ {
         instrucSet[0xD0] = {[this]() {
+            auto fetched = (int8_t)fetch();
             if (!regs.flags.bits.z) {
-                regs.pc += (int8_t)fetch();
+                regs.pc += fetched;
                 cycles++;
             }
         }, "BNE", AddressMode::Implicit, 2};
@@ -177,8 +182,9 @@ int Console::init() {
 
     /*BPL*/ {
         instrucSet[0x10] = {[this]() {
+            auto fetched = (int8_t)fetch();
             if (!regs.flags.bits.n) {
-                regs.pc += (int8_t)fetch();
+                regs.pc += fetched;
                 cycles++;
             }
         }, "BPL", AddressMode::Implicit, 2};
@@ -198,8 +204,9 @@ int Console::init() {
 
     /*BVC*/ {
         instrucSet[0x50] = {[this]() {
+            auto fetched = (int8_t)fetch();
             if (!regs.flags.bits.v) {
-                regs.pc += (int8_t)fetch();
+                regs.pc += fetched;
                 cycles++;
             }
         }, "BVC", AddressMode::Implicit, 2};
@@ -207,8 +214,9 @@ int Console::init() {
 
     /*BVS*/ {
         instrucSet[0x50] = {[this]() {
+            auto fetched = (int8_t)fetch();
             if (regs.flags.bits.v) {
-                regs.pc += (int8_t)fetch();
+                regs.pc += fetched;
                 cycles++;
             }
         }, "BVS", AddressMode::Implicit, 2};
@@ -880,9 +888,8 @@ int Console::loadROM(ROM const& rom) {
     return 0;
 }
 
-template<typename T>
-T Console::_read(uint16_t address) {
-    if (address == PPU_STS_REG) return (T) readPPUStatusRegister();
+uint8_t Console::read(uint16_t address) {
+    if (address == PPU_STS_REG) return readPPUStatusRegister();
     if (address == 0x2007) {
         if (temp0x2006.state & X2006Reg::CAN_READ 
         || (temp0x2006.state & X2006Reg::READ_BUFFERED && temp0x2006.addr >= IMG_PLT.start)) {
@@ -896,12 +903,11 @@ T Console::_read(uint16_t address) {
         }  
     }
 
-    return *((T*) (memory.data() + address));
+    return memory[address];
 }
 
-template<typename T>
-void Console::_write(uint16_t address, T value) {
-    *((T*) (memory.data() + address)) = value;
+void Console::write(uint16_t address, uint8_t value)  {
+    memory[address] = value;
 
     // apply mirroring 
     for (auto mirror: MEM_MIRRORS) {
@@ -912,7 +918,7 @@ void Console::_write(uint16_t address, T value) {
 
     if (address == 0x4014) {
         // DMA from memory -> sprram
-        memcpy(sprram.data(), memory.data() + 0x100 * value, sprram.size());
+        memcpy(sprram.data(), memory.data() + 0x100 * uint8_t(value), sprram.size());
     } else if (address == 0x2004) {
         sprram[sprramAddrReg] = value;
     } else if (address == 0x2006) {
@@ -926,27 +932,23 @@ void Console::_write(uint16_t address, T value) {
     }
 }
 
-template<typename T>
-void Console::_push(T v) {
-    _write<T>(STACK.start + regs.sp, v); // TODO: make it wrap around if stack is full
-    regs.sp -= sizeof(T);
+void Console::push(uint8_t v) {
+    write(STACK.end + regs.sp, v);
+    regs.sp--;
 }
 
-template<typename T>
-T Console::_pop() {
-    T v = _read<T>(STACK.end + regs.sp); // TODO: from start or end
-    regs.sp += sizeof(T);
+uint8_t Console::pop() {
+    uint8_t v = read(STACK.end + regs.sp);
+    regs.sp++;
     return v;
 }
 
-template<typename T>
-T Console::_readVRam(uint16_t address) {
-    return *((T*) (vram.data() + address));
+uint8_t Console::readVRam(uint16_t address) {
+    return vram[address];
 }
 
-template<typename T>
-void Console::_writeVRam(uint16_t address, T value) {
-    *((T*) (vram.data() + address)) = value;
+void Console::writeVRam(uint16_t address, uint8_t value) {
+    vram[address] = value;
 
     // apply mirroring 
     for (auto mirror: VRAM_MIRRORS) {
