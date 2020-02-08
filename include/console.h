@@ -199,44 +199,25 @@ public:
         return absoluteAddress(read(bb), read(bb+1)) + i;
     }
 
-    template<typename T>
-    T _read(uint16_t address);
+    // ram
+    uint8_t read(uint16_t address);
+    void write(uint16_t address, uint8_t value);
+    void push(uint8_t v);
+    uint8_t pop();
 
-    inline uint8_t read(uint16_t address) { return _read<uint8_t>(address); }
-    inline uint16_t read16(uint16_t address) { return _read<uint16_t>(address); }
+    // vram
+    uint8_t readVRam(uint16_t address);
+    void writeVRam(uint16_t address, uint8_t v);
 
-    inline uint8_t  fetch() { return _read<uint8_t>(regs.pc++); }
-    inline uint16_t fetch16() { return _read<uint16_t>(regs.pc++); }
+    // 16 bit helpers
+    inline uint16_t read16(uint16_t address) { return read(address) | read(address+1) << 8; }
+    inline uint16_t pop16() { return pop() | pop() << 8; }
+    inline uint16_t readVRam16(uint16_t address) { return readVRam(address) | readVRam(address+1) << 8; }
+    inline void write16(uint16_t address, uint16_t v) { write(address, v & 255); write(address+1, (v >> 8) & 255); }
+    inline void writeVRam16(uint16_t address, uint16_t v) { writeVRam(address, v & 255); writeVRam(address+1, (v >> 8) & 255); }
+    inline void push16(uint16_t v) { push(v & 255); push((v >> 8) & 255); }
 
-    template<typename T>
-    void _write(uint16_t address, T value);
-
-    inline void write(uint16_t address, uint8_t v) { _write<uint8_t>(address, v); }
-    inline void write16(uint16_t address, uint16_t v) { _write<uint16_t>(address, v); }
-
-    template<typename T>
-    void _push(T v);
-
-    inline void push(uint8_t v) { _push<uint8_t>(v); }
-    inline void push16(uint16_t v) { _push<uint16_t>(v); }
-
-    template<typename T>
-    T _pop();
-
-    inline uint8_t pop() { return _pop<uint8_t>(); }
-    inline uint16_t pop16() { return _pop<uint16_t>(); }
-
-    template<typename T>
-    T _readVRam(uint16_t address);
-
-    inline uint8_t readVRam(uint16_t address) { return _readVRam<uint8_t>(address); }
-    inline uint16_t readVRam16(uint16_t address) { return _readVRam<uint16_t>(address); }
-
-    template<typename T>
-    void _writeVRam(uint16_t address, T value);
-
-    inline void writeVRam(uint16_t address, uint8_t v) { _writeVRam<uint8_t>(address, v); }
-    inline void writeVRam16(uint16_t address, uint16_t v) { _writeVRam<uint16_t>(address, v); }
+    inline uint8_t fetch() { return read(regs.pc++); }
 
     uint16_t getSpriteAddr(SpriteInfo* inf, SpriteType type);
 
