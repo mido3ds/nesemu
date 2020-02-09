@@ -7,10 +7,17 @@
         {
             "type": "lldb",
             "request": "launch",
-            "name": "Debug",
+            "name": "nesemu",
             "program": "${workspaceFolder}/build/nesemu",
             "args": ["donkey-kong.nes"],
-            "cwd": "${workspaceFolder}"
+            "cwd": "${workspaceFolder}/build"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "test",
+            "program": "${workspaceFolder}/build/test",
+            "cwd": "${workspaceFolder}/build"
         }
     ]
 }

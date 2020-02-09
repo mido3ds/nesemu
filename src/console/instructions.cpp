@@ -39,60 +39,60 @@ int Console::init() {
             regs.flags.bits.z = regs.a == 0;
             regs.flags.bits.n = regs.a >> 7;
         };
-        instrucSet[0x69] = {[this,&adc]() {
+        instrucSet[0x69] = {[this,adc]() {
             adc(fetch());  
         }, "ADC", AddressMode::Immediate, 2};
-        instrucSet[0x65] = {[this,&adc]() {
+        instrucSet[0x65] = {[this,adc]() {
             adc(read(zeroPageAddress(fetch())));
         }, "ADC", AddressMode::ZeroPage, 3};
-        instrucSet[0x75] = {[this,&adc]() {
+        instrucSet[0x75] = {[this,adc]() {
             adc(read(indexedZeroPageAddress(fetch(), regs.x)));
         }, "ADC", AddressMode::ZeroPageX, 4};
-        instrucSet[0x6D] = {[this,&adc]() {
+        instrucSet[0x6D] = {[this,adc]() {
             adc(read(absoluteAddress(fetch(), fetch())));
         }, "ADC", AddressMode::Absolute, 4};
-        instrucSet[0x7D] = {[this,&adc]() {
+        instrucSet[0x7D] = {[this,adc]() {
             adc(read(indexedAbsoluteAddress(fetch(), fetch(), regs.x)));
         }, "ADC", AddressMode::AbsoluteX, 4};
-        instrucSet[0x79] = {[this,&adc]() {
+        instrucSet[0x79] = {[this,adc]() {
             adc(read(indexedAbsoluteAddress(fetch(), fetch(), regs.y)));
         }, "ADC", AddressMode::AbsoluteY, 4};
-        instrucSet[0x61] = {[this,&adc]() {
+        instrucSet[0x61] = {[this,adc]() {
             adc(read(indexedIndirectAddress(fetch(), regs.x)));
         }, "ADC", AddressMode::IndexedIndirect, 6};
-        instrucSet[0x71] = {[this,&adc]() {
+        instrucSet[0x71] = {[this,adc]() {
             adc(read(indirectIndexedAddress(fetch(), regs.y)));
         }, "ADC", AddressMode::IndirectIndexed, 5};
     }
 
     /*AND*/ {
         auto andd = [this](u8_t v) {
-            regs.a |= v;
+            regs.a = regs.a & v;
             regs.flags.bits.z = regs.a == 0;
             regs.flags.bits.n = regs.a >> 7;
         };
-        instrucSet[0x29] = {[this,&andd]() {
+        instrucSet[0x29] = {[this,andd]() {
             andd(fetch());
         }, "AND", AddressMode::Immediate, 2};
-        instrucSet[0x25] = {[this,&andd]() {
+        instrucSet[0x25] = {[this,andd]() {
             andd(read(zeroPageAddress(fetch())));
         }, "AND", AddressMode::ZeroPage, 3};
-        instrucSet[0x35] = {[this,&andd]() {
+        instrucSet[0x35] = {[this,andd]() {
             andd(read(indexedZeroPageAddress(fetch(), regs.x)));
         }, "AND", AddressMode::ZeroPageX, 4};
-        instrucSet[0x2D] = {[this,&andd]() {
+        instrucSet[0x2D] = {[this,andd]() {
             andd(read(absoluteAddress(fetch(), fetch())));
         }, "AND", AddressMode::Absolute, 4};
-        instrucSet[0x3D] = {[this,&andd]() {
+        instrucSet[0x3D] = {[this,andd]() {
             andd(read(indexedAbsoluteAddress(fetch(), fetch(), regs.x)));
         }, "AND", AddressMode::AbsoluteX, 4};
-        instrucSet[0x39] = {[this,&andd]() {
+        instrucSet[0x39] = {[this,andd]() {
             andd(read(indexedAbsoluteAddress(fetch(), fetch(), regs.y)));
         }, "AND", AddressMode::AbsoluteY, 4};
-        instrucSet[0x21] = {[this,&andd]() {
+        instrucSet[0x21] = {[this,andd]() {
             andd(read(indexedIndirectAddress(fetch(), regs.x)));
         }, "AND", AddressMode::IndexedIndirect, 6};
-        instrucSet[0x31] = {[this,&andd]() {
+        instrucSet[0x31] = {[this,andd]() {
             andd(read(indirectIndexedAddress(fetch(), regs.y)));
         }, "AND", AddressMode::IndirectIndexed, 5};
     }
@@ -106,22 +106,22 @@ int Console::init() {
 
             return v;
         };
-        instrucSet[0x0A] = {[this,&asl]() {
+        instrucSet[0x0A] = {[this,asl]() {
             regs.a = asl(regs.a);
         }, "ASL", AddressMode::Accumulator, 2};
-        instrucSet[0x06] = {[this,&asl]() {
+        instrucSet[0x06] = {[this,asl]() {
             auto addr = zeroPageAddress(fetch());
             write(addr, asl(read(addr)));
         }, "ASL", AddressMode::ZeroPage, 5};
-        instrucSet[0x16] = {[this,&asl]() {
+        instrucSet[0x16] = {[this,asl]() {
             auto addr = indexedZeroPageAddress(fetch(), regs.x);
             write(addr, asl(read(addr)));
         }, "ASL", AddressMode::ZeroPageX, 6};
-        instrucSet[0x0E] = {[this,&asl]() {
+        instrucSet[0x0E] = {[this,asl]() {
             auto addr = absoluteAddress(fetch(), fetch());
             write(addr, asl(read(addr)));
         }, "ASL", AddressMode::Absolute, 6};
-        instrucSet[0x1E] = {[this,&asl]() {
+        instrucSet[0x1E] = {[this,asl]() {
             auto addr = indexedAbsoluteAddress(fetch(), fetch(), regs.x);
             write(addr, asl(read(addr)));
         }, "ASL", AddressMode::AbsoluteX, 7};
@@ -154,10 +154,10 @@ int Console::init() {
             regs.flags.bits.v = v >> 6;
             regs.flags.bits.n = v >> 7;
         };
-        instrucSet[0x24] = {[this,&bit]() {
+        instrucSet[0x24] = {[this,bit]() {
             bit(read(zeroPageAddress(fetch())));
         }, "BIT", AddressMode::Implicit, 3};
-        instrucSet[0x2C] = {[this,&bit]() {
+        instrucSet[0x2C] = {[this,bit]() {
             bit(read(absoluteAddress(fetch(), fetch())));
         }, "BIT", AddressMode::Implicit, 4};
     }
@@ -240,28 +240,28 @@ int Console::init() {
             regs.flags.bits.z = result == 0;
             regs.flags.bits.n = result >> 7;
         };
-        instrucSet[0xC9] = {[this,&cmp]() {
+        instrucSet[0xC9] = {[this,cmp]() {
             cmp(fetch());  
         }, "CMP", AddressMode::Immediate, 2};
-        instrucSet[0xC5] = {[this,&cmp]() {
+        instrucSet[0xC5] = {[this,cmp]() {
             cmp(read(zeroPageAddress(fetch())));
         }, "CMP", AddressMode::ZeroPage, 3};
-        instrucSet[0xD5] = {[this,&cmp]() {
+        instrucSet[0xD5] = {[this,cmp]() {
             cmp(read(indexedZeroPageAddress(fetch(), regs.x)));
         }, "CMP", AddressMode::ZeroPageX, 4};
-        instrucSet[0xCD] = {[this,&cmp]() {
+        instrucSet[0xCD] = {[this,cmp]() {
             cmp(read(absoluteAddress(fetch(), fetch())));
         }, "CMP", AddressMode::Absolute, 4};
-        instrucSet[0xDD] = {[this,&cmp]() {
+        instrucSet[0xDD] = {[this,cmp]() {
             cmp(read(indexedAbsoluteAddress(fetch(), fetch(), regs.x)));
         }, "CMP", AddressMode::AbsoluteX, 4};
-        instrucSet[0xD9] = {[this,&cmp]() {
+        instrucSet[0xD9] = {[this,cmp]() {
             cmp(read(indexedAbsoluteAddress(fetch(), fetch(), regs.y)));
         }, "CMP", AddressMode::AbsoluteY, 4};
-        instrucSet[0xC1] = {[this,&cmp]() {
+        instrucSet[0xC1] = {[this,cmp]() {
             cmp(read(indexedIndirectAddress(fetch(), regs.x)));
         }, "CMP", AddressMode::IndexedIndirect, 6};
-        instrucSet[0xD1] = {[this,&cmp]() {
+        instrucSet[0xD1] = {[this,cmp]() {
             cmp(read(indirectIndexedAddress(fetch(), regs.y)));
         }, "CMP", AddressMode::IndirectIndexed, 5};
     }
@@ -273,13 +273,13 @@ int Console::init() {
             regs.flags.bits.z = result == 0;
             regs.flags.bits.n = result >> 7;
         };
-        instrucSet[0xE0] = {[this,&cpx]() {
+        instrucSet[0xE0] = {[this,cpx]() {
             cpx(fetch());  
         }, "CPX", AddressMode::Immediate, 2};
-        instrucSet[0xE4] = {[this,&cpx]() {
+        instrucSet[0xE4] = {[this,cpx]() {
             cpx(read(zeroPageAddress(fetch())));
         }, "CPX", AddressMode::ZeroPage, 3};
-        instrucSet[0xEC] = {[this,&cpx]() {
+        instrucSet[0xEC] = {[this,cpx]() {
             cpx(read(absoluteAddress(fetch(), fetch())));
         }, "CPX", AddressMode::Absolute, 4};
     }
@@ -291,13 +291,13 @@ int Console::init() {
             regs.flags.bits.z = result == 0;
             regs.flags.bits.n = result >> 7;
         };
-        instrucSet[0xC0] = {[this,&cpy]() {
+        instrucSet[0xC0] = {[this,cpy]() {
             cpy(fetch());  
         }, "CPY", AddressMode::Immediate, 2};
-        instrucSet[0xC4] = {[this,&cpy]() {
+        instrucSet[0xC4] = {[this,cpy]() {
             cpy(read(zeroPageAddress(fetch())));
         }, "CPY", AddressMode::ZeroPage, 3};
-        instrucSet[0xCC] = {[this,&cpy]() {
+        instrucSet[0xCC] = {[this,cpy]() {
             cpy(read(absoluteAddress(fetch(), fetch())));
         }, "CPY", AddressMode::Absolute, 4};
     }
@@ -311,19 +311,19 @@ int Console::init() {
 
             return v;
         };
-        instrucSet[0xC6] = {[this,&dec]() {
+        instrucSet[0xC6] = {[this,dec]() {
             auto addr = zeroPageAddress(fetch());
             write(addr, dec(read(addr)));
         }, "DEC", AddressMode::ZeroPage, 5};
-        instrucSet[0xD6] = {[this,&dec]() {
+        instrucSet[0xD6] = {[this,dec]() {
             auto addr = indexedZeroPageAddress(fetch(), regs.x);
             write(addr, dec(read(addr)));
         }, "DEC", AddressMode::ZeroPageX, 6};
-        instrucSet[0xCE] = {[this,&dec]() {
+        instrucSet[0xCE] = {[this,dec]() {
             auto addr = absoluteAddress(fetch(), fetch());
             write(addr, dec(read(addr)));
         }, "DEC", AddressMode::Absolute, 6};
-        instrucSet[0xDE] = {[this,&dec]() {
+        instrucSet[0xDE] = {[this,dec]() {
             auto addr = indexedAbsoluteAddress(fetch(), fetch(), regs.x);
             write(addr, dec(read(addr)));
         }, "DEC", AddressMode::AbsoluteX, 7};
@@ -352,28 +352,28 @@ int Console::init() {
             regs.flags.bits.z = regs.a == 0;
             regs.flags.bits.n = regs.a >> 7;
         };
-        instrucSet[0x49] = {[this,&eor]() {
+        instrucSet[0x49] = {[this,eor]() {
             eor(fetch());  
         }, "EOR", AddressMode::Immediate, 2};
-        instrucSet[0x45] = {[this,&eor]() {
+        instrucSet[0x45] = {[this,eor]() {
             eor(read(zeroPageAddress(fetch())));
         }, "EOR", AddressMode::ZeroPage, 3};
-        instrucSet[0x55] = {[this,&eor]() {
+        instrucSet[0x55] = {[this,eor]() {
             eor(read(indexedZeroPageAddress(fetch(), regs.x)));
         }, "EOR", AddressMode::ZeroPageX, 4};
-        instrucSet[0x4D] = {[this,&eor]() {
+        instrucSet[0x4D] = {[this,eor]() {
             eor(read(absoluteAddress(fetch(), fetch())));
         }, "EOR", AddressMode::Absolute, 4};
-        instrucSet[0x5D] = {[this,&eor]() {
+        instrucSet[0x5D] = {[this,eor]() {
             eor(read(indexedAbsoluteAddress(fetch(), fetch(), regs.x)));
         }, "EOR", AddressMode::AbsoluteX, 4};
-        instrucSet[0x59] = {[this,&eor]() {
+        instrucSet[0x59] = {[this,eor]() {
             eor(read(indexedAbsoluteAddress(fetch(), fetch(), regs.y)));
         }, "EOR", AddressMode::AbsoluteY, 4};
-        instrucSet[0x41] = {[this,&eor]() {
+        instrucSet[0x41] = {[this,eor]() {
             eor(read(indexedIndirectAddress(fetch(), regs.x)));
         }, "EOR", AddressMode::IndexedIndirect, 6};
-        instrucSet[0x51] = {[this,&eor]() {
+        instrucSet[0x51] = {[this,eor]() {
             eor(read(indirectIndexedAddress(fetch(), regs.y)));
         }, "EOR", AddressMode::IndirectIndexed, 5};
     }
@@ -387,19 +387,19 @@ int Console::init() {
 
             return v;
         };
-        instrucSet[0xE6] = {[this,&inc]() {
+        instrucSet[0xE6] = {[this,inc]() {
             auto addr = zeroPageAddress(fetch());
             write(addr, inc(read(addr)));
         }, "INC", AddressMode::ZeroPage, 5};
-        instrucSet[0xF6] = {[this,&inc]() {
+        instrucSet[0xF6] = {[this,inc]() {
             auto addr = indexedZeroPageAddress(fetch(), regs.x);
             write(addr, inc(read(addr)));
         }, "INC", AddressMode::ZeroPageX, 6};
-        instrucSet[0xEE] = {[this,&inc]() {
+        instrucSet[0xEE] = {[this,inc]() {
             auto addr = absoluteAddress(fetch(), fetch());
             write(addr, inc(read(addr)));
         }, "INC", AddressMode::Absolute, 6};
-        instrucSet[0xFE] = {[this,&inc]() {
+        instrucSet[0xFE] = {[this,inc]() {
             auto addr = indexedAbsoluteAddress(fetch(), fetch(), regs.x);
             write(addr, inc(read(addr)));
         }, "INC", AddressMode::AbsoluteX, 7};
@@ -444,28 +444,28 @@ int Console::init() {
             regs.flags.bits.z = regs.a == 0;
             regs.flags.bits.n = regs.a >> 7;
         };
-        instrucSet[0xA9] = {[this,&lda]() {
+        instrucSet[0xA9] = {[this,lda]() {
             lda(fetch());  
         }, "LDA", AddressMode::Immediate, 2};
-        instrucSet[0xA5] = {[this,&lda]() {
+        instrucSet[0xA5] = {[this,lda]() {
             lda(read(zeroPageAddress(fetch())));
         }, "LDA", AddressMode::ZeroPage, 3};
-        instrucSet[0xB5] = {[this,&lda]() {
+        instrucSet[0xB5] = {[this,lda]() {
             lda(read(indexedZeroPageAddress(fetch(), regs.x)));
         }, "LDA", AddressMode::ZeroPageX, 4};
-        instrucSet[0xAD] = {[this,&lda]() {
+        instrucSet[0xAD] = {[this,lda]() {
             lda(read(absoluteAddress(fetch(), fetch())));
         }, "LDA", AddressMode::Absolute, 4};
-        instrucSet[0xBD] = {[this,&lda]() {
+        instrucSet[0xBD] = {[this,lda]() {
             lda(read(indexedAbsoluteAddress(fetch(), fetch(), regs.x)));
         }, "LDA", AddressMode::AbsoluteX, 4};
-        instrucSet[0xB9] = {[this,&lda]() {
+        instrucSet[0xB9] = {[this,lda]() {
             lda(read(indexedAbsoluteAddress(fetch(), fetch(), regs.y)));
         }, "LDA", AddressMode::AbsoluteY, 4};
-        instrucSet[0xA1] = {[this,&lda]() {
+        instrucSet[0xA1] = {[this,lda]() {
             lda(read(indexedIndirectAddress(fetch(), regs.x)));
         }, "LDA", AddressMode::IndexedIndirect, 6};
-        instrucSet[0xB1] = {[this,&lda]() {
+        instrucSet[0xB1] = {[this,lda]() {
             lda(read(indirectIndexedAddress(fetch(), regs.y)));
         }, "LDA", AddressMode::IndirectIndexed, 5};
     }
@@ -477,19 +477,19 @@ int Console::init() {
             regs.flags.bits.z = regs.x == 0;
             regs.flags.bits.n = regs.x >> 7;
         };
-        instrucSet[0xA2] = {[this,&ldx]() {
+        instrucSet[0xA2] = {[this,ldx]() {
             ldx(fetch());  
         }, "LDX", AddressMode::Immediate, 2};
-        instrucSet[0xA6] = {[this,&ldx]() {
+        instrucSet[0xA6] = {[this,ldx]() {
             ldx(read(zeroPageAddress(fetch())));
         }, "LDX", AddressMode::ZeroPage, 3};
-        instrucSet[0xB6] = {[this,&ldx]() {
+        instrucSet[0xB6] = {[this,ldx]() {
             ldx(read(indexedZeroPageAddress(fetch(), regs.y)));
         }, "LDX", AddressMode::ZeroPageY, 4};
-        instrucSet[0xAE] = {[this,&ldx]() {
+        instrucSet[0xAE] = {[this,ldx]() {
             ldx(read(absoluteAddress(fetch(), fetch())));
         }, "LDX", AddressMode::Absolute, 4};
-        instrucSet[0xBE] = {[this,&ldx]() {
+        instrucSet[0xBE] = {[this,ldx]() {
             ldx(read(indexedAbsoluteAddress(fetch(), fetch(), regs.y)));
         }, "LDX", AddressMode::AbsoluteY, 4};
     }
@@ -501,19 +501,19 @@ int Console::init() {
             regs.flags.bits.z = regs.y == 0;
             regs.flags.bits.n = regs.y >> 7;
         };
-        instrucSet[0xA0] = {[this,&ldy]() {
+        instrucSet[0xA0] = {[this,ldy]() {
             ldy(fetch());  
         }, "LDY", AddressMode::Immediate, 2};
-        instrucSet[0xA4] = {[this,&ldy]() {
+        instrucSet[0xA4] = {[this,ldy]() {
             ldy(read(zeroPageAddress(fetch())));
         }, "LDY", AddressMode::ZeroPage, 3};
-        instrucSet[0xB4] = {[this,&ldy]() {
+        instrucSet[0xB4] = {[this,ldy]() {
             ldy(read(indexedZeroPageAddress(fetch(), regs.x)));
         }, "LDY", AddressMode::ZeroPageX, 4};
-        instrucSet[0xAC] = {[this,&ldy]() {
+        instrucSet[0xAC] = {[this,ldy]() {
             ldy(read(absoluteAddress(fetch(), fetch())));
         }, "LDY", AddressMode::Absolute, 4};
-        instrucSet[0xBC] = {[this,&ldy]() {
+        instrucSet[0xBC] = {[this,ldy]() {
             ldy(read(indexedAbsoluteAddress(fetch(), fetch(), regs.x)));
         }, "LDY", AddressMode::AbsoluteX, 4};
     }
@@ -529,22 +529,22 @@ int Console::init() {
 
             return v;
         };
-        instrucSet[0x4A] = {[this,&lsr]() {
+        instrucSet[0x4A] = {[this,lsr]() {
             regs.a = lsr(regs.a);
         }, "LSR", AddressMode::Accumulator, 2};
-        instrucSet[0x46] = {[this,&lsr]() {
+        instrucSet[0x46] = {[this,lsr]() {
             auto addr = read(zeroPageAddress(fetch()));
             write(addr, lsr(addr));
         }, "LSR", AddressMode::ZeroPage, 5};
-        instrucSet[0x56] = {[this,&lsr]() {
+        instrucSet[0x56] = {[this,lsr]() {
             auto addr = read(indexedZeroPageAddress(fetch(), regs.x));
             write(addr, lsr(addr));
         }, "LSR", AddressMode::ZeroPageX, 6};
-        instrucSet[0x4E] = {[this,&lsr]() {
+        instrucSet[0x4E] = {[this,lsr]() {
             auto addr = read(absoluteAddress(fetch(), fetch()));
             write(addr, lsr(addr));
         }, "LSR", AddressMode::Absolute, 6};
-        instrucSet[0x5E] = {[this,&lsr]() {
+        instrucSet[0x5E] = {[this,lsr]() {
             auto addr = read(indexedAbsoluteAddress(fetch(), fetch(), regs.x));
             write(addr, lsr(addr));
         }, "LSR", AddressMode::AbsoluteX, 7};
@@ -563,28 +563,28 @@ int Console::init() {
             regs.flags.bits.z = regs.a == 0;
             regs.flags.bits.n = regs.a >> 7;
         };
-        instrucSet[0x09] = {[this,&ora]() {
+        instrucSet[0x09] = {[this,ora]() {
             ora(fetch());  
         }, "ORA", AddressMode::Immediate, 2};
-        instrucSet[0x05] = {[this,&ora]() {
+        instrucSet[0x05] = {[this,ora]() {
             ora(read(zeroPageAddress(fetch())));
         }, "ORA", AddressMode::ZeroPage, 3};
-        instrucSet[0x15] = {[this,&ora]() {
+        instrucSet[0x15] = {[this,ora]() {
             ora(read(indexedZeroPageAddress(fetch(), regs.x)));
         }, "ORA", AddressMode::ZeroPageX, 4};
-        instrucSet[0x0D] = {[this,&ora]() {
+        instrucSet[0x0D] = {[this,ora]() {
             ora(read(absoluteAddress(fetch(), fetch())));
         }, "ORA", AddressMode::Absolute, 4};
-        instrucSet[0x1D] = {[this,&ora]() {
+        instrucSet[0x1D] = {[this,ora]() {
             ora(read(indexedAbsoluteAddress(fetch(), fetch(), regs.x)));
         }, "ORA", AddressMode::AbsoluteX, 4};
-        instrucSet[0x19] = {[this,&ora]() {
+        instrucSet[0x19] = {[this,ora]() {
             ora(read(indexedAbsoluteAddress(fetch(), fetch(), regs.y)));
         }, "ORA", AddressMode::AbsoluteY, 4};
-        instrucSet[0x01] = {[this,&ora]() {
+        instrucSet[0x01] = {[this,ora]() {
             ora(read(indexedIndirectAddress(fetch(), regs.x)));
         }, "ORA", AddressMode::IndexedIndirect, 6};
-        instrucSet[0x11] = {[this,&ora]() {
+        instrucSet[0x11] = {[this,ora]() {
             ora(read(indirectIndexedAddress(fetch(), regs.y)));
         }, "ORA", AddressMode::IndirectIndexed, 5};
     }
@@ -626,22 +626,22 @@ int Console::init() {
 
             return v;
         };
-        instrucSet[0x2A] = {[this,&rol]() {
+        instrucSet[0x2A] = {[this,rol]() {
             regs.a = rol(regs.a);
         }, "ROL", AddressMode::Accumulator, 2};
-        instrucSet[0x26] = {[this,&rol]() {
+        instrucSet[0x26] = {[this,rol]() {
             auto addr = read(zeroPageAddress(fetch()));
             write(addr, rol(addr));
         }, "ROL", AddressMode::ZeroPage, 5};
-        instrucSet[0x36] = {[this,&rol]() {
+        instrucSet[0x36] = {[this,rol]() {
             auto addr = read(indexedZeroPageAddress(fetch(), regs.x));
             write(addr, rol(addr));
         }, "ROL", AddressMode::ZeroPageX, 6};
-        instrucSet[0x2E] = {[this,&rol]() {
+        instrucSet[0x2E] = {[this,rol]() {
             auto addr = read(absoluteAddress(fetch(), fetch()));
             write(addr, rol(addr));
         }, "ROL", AddressMode::Absolute, 6};
-        instrucSet[0x3E] = {[this,&rol]() {
+        instrucSet[0x3E] = {[this,rol]() {
             auto addr = read(indexedAbsoluteAddress(fetch(), fetch(), regs.x));
             write(addr, rol(addr));
         }, "ROL", AddressMode::AbsoluteX, 7};
@@ -660,22 +660,22 @@ int Console::init() {
 
             return v;
         };
-        instrucSet[0x6A] = {[this,&ror]() {
+        instrucSet[0x6A] = {[this,ror]() {
             regs.a = ror(regs.a);
         }, "ROR", AddressMode::Accumulator, 2};
-        instrucSet[0x66] = {[this,&ror]() {
+        instrucSet[0x66] = {[this,ror]() {
             auto addr = read(zeroPageAddress(fetch()));
             write(addr, ror(addr));
         }, "ROR", AddressMode::ZeroPage, 5};
-        instrucSet[0x76] = {[this,&ror]() {
+        instrucSet[0x76] = {[this,ror]() {
             auto addr = read(indexedZeroPageAddress(fetch(), regs.x));
             write(addr, ror(addr));
         }, "ROR", AddressMode::ZeroPageX, 6};
-        instrucSet[0x6E] = {[this,&ror]() {
+        instrucSet[0x6E] = {[this,ror]() {
             auto addr = read(absoluteAddress(fetch(), fetch()));
             write(addr, ror(addr));
         }, "ROR", AddressMode::Absolute, 6};
-        instrucSet[0x7E] = {[this,&ror]() {
+        instrucSet[0x7E] = {[this,ror]() {
             auto addr = read(indexedAbsoluteAddress(fetch(), fetch(), regs.x));
             write(addr, ror(addr));
         }, "ROR", AddressMode::AbsoluteX, 7};
@@ -706,28 +706,28 @@ int Console::init() {
             regs.flags.bits.z = regs.a == 0;
             regs.flags.bits.n = regs.a >> 7;
         };
-        instrucSet[0xE9] = {[this,&sbc]() {
+        instrucSet[0xE9] = {[this,sbc]() {
             sbc(fetch());  
         }, "SBC", AddressMode::Immediate, 2};
-        instrucSet[0xE5] = {[this,&sbc]() {
+        instrucSet[0xE5] = {[this,sbc]() {
             sbc(read(zeroPageAddress(fetch())));
         }, "SBC", AddressMode::ZeroPage, 3};
-        instrucSet[0xF5] = {[this,&sbc]() {
+        instrucSet[0xF5] = {[this,sbc]() {
             sbc(read(indexedZeroPageAddress(fetch(), regs.x)));
         }, "SBC", AddressMode::ZeroPageX, 4};
-        instrucSet[0xED] = {[this,&sbc]() {
+        instrucSet[0xED] = {[this,sbc]() {
             sbc(read(absoluteAddress(fetch(), fetch())));
         }, "SBC", AddressMode::Absolute, 4};
-        instrucSet[0xFD] = {[this,&sbc]() {
+        instrucSet[0xFD] = {[this,sbc]() {
             sbc(read(indexedAbsoluteAddress(fetch(), fetch(), regs.x)));
         }, "SBC", AddressMode::AbsoluteX, 4};
-        instrucSet[0xF9] = {[this,&sbc]() {
+        instrucSet[0xF9] = {[this,sbc]() {
             sbc(read(indexedAbsoluteAddress(fetch(), fetch(), regs.y)));
         }, "SBC", AddressMode::AbsoluteY, 4};
-        instrucSet[0xE1] = {[this,&sbc]() {
+        instrucSet[0xE1] = {[this,sbc]() {
             sbc(read(indexedIndirectAddress(fetch(), regs.x)));
         }, "SBC", AddressMode::IndexedIndirect, 6};
-        instrucSet[0xF1] = {[this,&sbc]() {
+        instrucSet[0xF1] = {[this,sbc]() {
             sbc(read(indirectIndexedAddress(fetch(), regs.y)));
         }, "SBC", AddressMode::IndirectIndexed, 5};
     }

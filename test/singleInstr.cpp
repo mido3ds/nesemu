@@ -207,3 +207,31 @@ TEST_CASE("branch") {
         REQUIRE(dev.cpuCycles == dev.instrucSet[BEQ].cpuCycles);
     }
 }
+
+TEST_CASE("immediate-instructs") {
+    Console dev;
+    REQUIRE(dev.init() == 0);
+
+    memset(&dev.regs, 0, sizeof dev.regs);
+    dev.memory.fill(0);
+    dev.cpuCycles = 0;
+    dev.regs.pc = 0;
+
+    SECTION("AND") {
+        dev.regs.a = 0b01010101;
+        dev.memory[0] = 0x29;
+        dev.memory[1] = 0b00010001;
+        REQUIRE(dev.oneCPUCycle() == 0);
+        REQUIRE(dev.regs.a == (0b01010101 & 0b00010001));
+        REQUIRE(dev.regs.flags.bits.z == 0);
+    }
+
+    SECTION("AND-zero-a") {
+        dev.regs.a = 0b01010101;
+        dev.memory[0] = 0x29;
+        dev.memory[1] = 0b00000000;
+        REQUIRE(dev.oneCPUCycle() == 0);
+        REQUIRE(dev.regs.a == (0b01010101 & 0b00000000));
+        REQUIRE(dev.regs.flags.bits.z == 1);
+    }
+}
