@@ -84,12 +84,6 @@ TEST_CASE("memory-access") {
     }
 }
 
-uint8_t crossPagePenalty(uint16_t const& pc, int8_t const& fetched);
-TEST_CASE("cross-page-penalty") {
-    REQUIRE(crossPagePenalty(0x00FE +1, 0x01) == 1);
-    REQUIRE(crossPagePenalty(0x00F0 +1, 0x01) == 0);
-}
-
 TEST_CASE("branch") {
     Console dev;
     REQUIRE(dev.init() == 0);
