@@ -6,8 +6,15 @@
 #include "console.h"
 #include "logger.h"
 
-uint8_t crossPagePenalty(uint16_t const& pc, int8_t const& fetched) {
-    return (uint16_t(pc + fetched)>>8 == pc>>8) ? 0:1;
+static inline uint8_t crossPagePenalty(uint16_t const& oldpc, uint16_t const& newpc) {
+    // logInfo("newpc=%04X, oldpc=")
+    return (newpc>>8 == oldpc>>8) ? 0:1;
+}
+
+static inline void branch(uint16_t& pc, uint16_t& cycles, uint8_t const& fetched) {
+    const auto oldpc = pc;
+    pc += fetched;
+    cycles += 1 + crossPagePenalty(oldpc, pc);
 }
 
 int Console::init() {
@@ -123,33 +130,21 @@ int Console::init() {
     /*BCC*/ {
         instrucSet[0x90] = {[this]() {
             auto fetched = (int8_t)fetch();
-            if (!regs.flags.bits.c) {
-                auto penalty = crossPagePenalty(regs.pc, fetched);
-                regs.pc += fetched;
-                cycles += 1 + penalty;
-            }
+            if (!regs.flags.bits.c) { branch(regs.pc, cycles, fetched); }
         }, "BCC", AddressMode::Implicit, 2};
     }
 
     /*BCS*/ {
         instrucSet[0xB0] = {[this]() {
             auto fetched = (int8_t)fetch();
-            if (regs.flags.bits.c) {
-                auto penalty = crossPagePenalty(regs.pc, fetched);
-                regs.pc += fetched;
-                cycles += 1 + penalty;
-            }
+            if (regs.flags.bits.c) { branch(regs.pc, cycles, fetched); }
         }, "BCS", AddressMode::Implicit, 2};
     }
 
     /*BEQ*/ {
         instrucSet[0xF0] = {[this]() {
             auto fetched = (int8_t)fetch();
-            if (regs.flags.bits.z) {
-                auto penalty = crossPagePenalty(regs.pc, fetched);
-                regs.pc += fetched;
-                cycles += 1 + penalty;
-            }
+            if (regs.flags.bits.z) { branch(regs.pc, cycles, fetched); }
         }, "BEQ", AddressMode::Implicit, 2};
     }
 
@@ -170,33 +165,21 @@ int Console::init() {
     /*BMI*/ {
         instrucSet[0x30] = {[this]() {
             auto fetched = (int8_t)fetch();
-            if (regs.flags.bits.n) {
-                auto penalty = crossPagePenalty(regs.pc, fetched);
-                regs.pc += fetched;
-                cycles += 1 + penalty;
-            }
+            if (regs.flags.bits.n) { branch(regs.pc, cycles, fetched); }
         }, "BMI", AddressMode::Implicit, 2};
     }
 
     /*BNE*/ {
         instrucSet[0xD0] = {[this]() {
             auto fetched = (int8_t)fetch();
-            if (!regs.flags.bits.z) {
-                auto penalty = crossPagePenalty(regs.pc, fetched);
-                regs.pc += fetched;
-                cycles += 1 + penalty;
-            }
+            if (!regs.flags.bits.z) { branch(regs.pc, cycles, fetched); }
         }, "BNE", AddressMode::Implicit, 2};
     }
 
     /*BPL*/ {
         instrucSet[0x10] = {[this]() {
             auto fetched = (int8_t)fetch();
-            if (!regs.flags.bits.n) {
-                auto penalty = crossPagePenalty(regs.pc, fetched);
-                regs.pc += fetched;
-                cycles += 1 + penalty;
-            }
+            if (!regs.flags.bits.n) { branch(regs.pc, cycles, fetched); }
         }, "BPL", AddressMode::Implicit, 2};
     }
 
@@ -215,22 +198,14 @@ int Console::init() {
     /*BVC*/ {
         instrucSet[0x50] = {[this]() {
             auto fetched = (int8_t)fetch();
-            if (!regs.flags.bits.v) {
-                auto penalty = crossPagePenalty(regs.pc, fetched);
-                regs.pc += fetched;
-                cycles += 1 + penalty;
-            }
+            if (!regs.flags.bits.v) { branch(regs.pc, cycles, fetched); }
         }, "BVC", AddressMode::Implicit, 2};
     }
 
     /*BVS*/ {
         instrucSet[0x50] = {[this]() {
             auto fetched = (int8_t)fetch();
-            if (regs.flags.bits.v) {
-                auto penalty = crossPagePenalty(regs.pc, fetched);
-                regs.pc += fetched;
-                cycles += 1 + penalty;
-            }
+            if (regs.flags.bits.v) { branch(regs.pc, cycles, fetched); }
         }, "BVS", AddressMode::Implicit, 2};
     }
 
