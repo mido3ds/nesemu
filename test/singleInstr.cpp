@@ -59,27 +59,27 @@ TEST_CASE("memory-access") {
 
         for (int i = 0; i < 0xFF; i++) {
             auto oldsp = dev.regs.sp;
-            REQUIRE(dev.memory[oldsp+STACK.end] == 0);
+            REQUIRE(dev.memory[oldsp+STACK.start] == 0);
             dev.push(i);
             REQUIRE(dev.regs.sp == oldsp-1);
-            REQUIRE(dev.memory[oldsp+STACK.end] == i);
+            REQUIRE(dev.memory[oldsp+STACK.start] == i);
         }
     }
 
     SECTION("pop-increases") {
-        for (int i = 0; i < 0xFF; i++) {
-            dev.memory[STACK.end+i] = i;
-        }
-
         dev.regs.sp = 0;
+        for (int i = 0xFF; i >= 0; i--) {
+            dev.push(i);
+        }
+        REQUIRE(dev.regs.sp == 0);
 
         for (int i = 0; i < 0xFF; i++) {
             auto oldsp = dev.regs.sp;
 
             REQUIRE(dev.pop() == i);
-            
+
             REQUIRE(dev.regs.sp == oldsp+1);
-            REQUIRE(dev.memory[oldsp+STACK.end] == i);
+            REQUIRE(dev.memory[dev.regs.sp+STACK.start] == i);
         }
     }
 }
@@ -233,5 +233,52 @@ TEST_CASE("immediate-instructs") {
         REQUIRE(dev.oneCPUCycle() == 0);
         REQUIRE(dev.regs.a == (0b01010101 & 0b00000000));
         REQUIRE(dev.regs.flags.bits.z == 1);
+    }
+
+    SECTION("ADC") {
+        dev.regs.a = 3;
+        dev.regs.flags.bits.c = 1;
+        dev.memory[0] = 0x69;
+        dev.memory[1] = 99;
+        REQUIRE(dev.oneCPUCycle() == 0);
+        REQUIRE(dev.regs.a == (3 + 99 + 1));
+        REQUIRE(dev.regs.flags.bits.c == 0);
+    }
+
+    SECTION("ADC-unsigned-overflow") {
+        dev.regs.a = 0xFF;
+        dev.memory[0] = 0x69;
+        dev.memory[1] = 1;
+        REQUIRE(dev.oneCPUCycle() == 0);
+        REQUIRE(dev.regs.a == 0);
+        REQUIRE(dev.regs.flags.bits.c == 1);
+    }
+
+    SECTION("ADC-signed-overflow") {
+        dev.regs.a = 4;
+        dev.memory[0] = 0x69;
+        dev.memory[1] = -10;
+        REQUIRE(dev.oneCPUCycle() == 0);
+        REQUIRE(dev.regs.a == u8_t(4-10));
+        REQUIRE(dev.regs.flags.bits.c == 0);
+        REQUIRE(dev.regs.flags.bits.v == 1);
+    }
+}
+
+TEST_CASE("implied-instructs") {
+    Console dev;
+    REQUIRE(dev.init() == 0);
+
+    memset(&dev.regs, 0, sizeof dev.regs);
+    dev.memory.fill(0);
+    dev.cpuCycles = 0;
+    dev.regs.pc = 0;
+
+    SECTION("PHP") {
+        dev.regs.flags.byte = 0xF5;
+        dev.memory[0] = 0x08;
+        REQUIRE(dev.oneCPUCycle() == 0);
+        REQUIRE(dev.regs.flags.byte == 0xF5);
+        REQUIRE(dev.pop() == 0xF5);
     }
 }
