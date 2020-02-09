@@ -41,7 +41,7 @@ TEST_CASE("memory-access") {
     SECTION("basic-write") {
         for (auto i = 0; i < MEM_SIZE; i++) {
             dev.write(i, i);
-            REQUIRE(dev.memory[i] == uint8_t(i));
+            REQUIRE(dev.memory[i] == u8_t(i));
         }
     }
 
@@ -49,8 +49,8 @@ TEST_CASE("memory-access") {
         for (auto i = 0; i < MEM_SIZE-1; i++) {
             CAPTURE(i);
             dev.write16(i, i);
-            REQUIRE(dev.memory[i] == uint8_t(i & 255));
-            REQUIRE(dev.memory[i+1] == uint8_t((i >> 8) & 255));
+            REQUIRE(dev.memory[i] == u8_t(i & 255));
+            REQUIRE(dev.memory[i+1] == u8_t((i >> 8) & 255));
         }
     }
 
@@ -90,7 +90,7 @@ TEST_CASE("branch") {
 
     memset(&dev.regs, 0, sizeof dev.regs);
     dev.memory.fill(0);
-    dev.cycles = 0;
+    dev.cpuCycles = 0;
 
     auto oldpc = 123;
     auto addr = 100;
@@ -107,7 +107,7 @@ TEST_CASE("branch") {
         
         REQUIRE(dev.regs.pc == oldpc+addr+2);
         REQUIRE(oldflags == dev.regs.flags.byte);
-        REQUIRE(dev.cycles == dev.instrucSet[BCC].cycles+1);
+        REQUIRE(dev.cpuCycles == dev.instrucSet[BCC].cpuCycles+1);
     }
 
     SECTION("no-BCC") {
@@ -123,7 +123,7 @@ TEST_CASE("branch") {
         
         REQUIRE(dev.regs.pc == oldpc+2);
         REQUIRE(oldflags == dev.regs.flags.byte);
-        REQUIRE(dev.cycles == dev.instrucSet[BCC].cycles);
+        REQUIRE(dev.cpuCycles == dev.instrucSet[BCC].cpuCycles);
     }
 
     SECTION("BCC-cross-page") {
@@ -140,7 +140,7 @@ TEST_CASE("branch") {
         
         REQUIRE(dev.regs.pc == oldpc+addr+2);
         REQUIRE(oldflags == dev.regs.flags.byte);
-        REQUIRE(dev.cycles == dev.instrucSet[BCC].cycles+1+1); // added penalty
+        REQUIRE(dev.cpuCycles == dev.instrucSet[BCC].cpuCycles+1+1); // added penalty
     }
 
     SECTION("BEQ") {
@@ -156,7 +156,7 @@ TEST_CASE("branch") {
         
         REQUIRE(dev.regs.pc == oldpc+addr+2);
         REQUIRE(oldflags == dev.regs.flags.byte);
-        REQUIRE(dev.cycles == dev.instrucSet[BEQ].cycles+1);
+        REQUIRE(dev.cpuCycles == dev.instrucSet[BEQ].cpuCycles+1);
     }
 
     SECTION("no-BEQ") {
@@ -172,7 +172,7 @@ TEST_CASE("branch") {
         
         REQUIRE(dev.regs.pc == oldpc+2);
         REQUIRE(oldflags == dev.regs.flags.byte);
-        REQUIRE(dev.cycles == dev.instrucSet[BEQ].cycles);
+        REQUIRE(dev.cpuCycles == dev.instrucSet[BEQ].cpuCycles);
     }
 
     SECTION("BEQ") {
@@ -188,7 +188,7 @@ TEST_CASE("branch") {
         
         REQUIRE(dev.regs.pc == oldpc+addr+2);
         REQUIRE(oldflags == dev.regs.flags.byte);
-        REQUIRE(dev.cycles == dev.instrucSet[BEQ].cycles+1);
+        REQUIRE(dev.cpuCycles == dev.instrucSet[BEQ].cpuCycles+1);
     }
 
     SECTION("no-BEQ") {
@@ -204,6 +204,6 @@ TEST_CASE("branch") {
         
         REQUIRE(dev.regs.pc == oldpc+2);
         REQUIRE(oldflags == dev.regs.flags.byte);
-        REQUIRE(dev.cycles == dev.instrucSet[BEQ].cycles);
+        REQUIRE(dev.cpuCycles == dev.instrucSet[BEQ].cpuCycles);
     }
 }

@@ -49,7 +49,7 @@ Renderer::~Renderer() {
     }
 }
 
-void Renderer::pixel(int x, int y, Color c, uint8_t a) {
+void Renderer::pixel(int x, int y, Color c, u8_t a) {
     SDL_SetRenderTarget(renderer, backBuffer);
     SDL_SetRenderDrawColor(renderer, c.r, c.g, c.b, a);
     SDL_RenderDrawPoint(renderer, x, y);
@@ -57,7 +57,7 @@ void Renderer::pixel(int x, int y, Color c, uint8_t a) {
     endedPixels = false;
 }
 
-void Renderer::allPixels(Color c, uint8_t a) {
+void Renderer::allPixels(Color c, u8_t a) {
     SDL_SetRenderTarget(renderer, backBuffer);
     SDL_SetRenderDrawColor(renderer, c.r, c.g, c.b, a);
     SDL_RenderClear(renderer);
@@ -73,7 +73,7 @@ void Renderer::endPixels() {
     endedPixels = true;
 }
 
-int Renderer::text(string s, int x, int y, double scaleW, double scaleH, TTF_Font* font, Color c, int* newW, int* newH) {
+int Renderer::text(string s, int x, int y, f64_t scaleW, f64_t scaleH, TTF_Font* font, Color c, int* newW, int* newH) {
     if (!font) {
         logError("null font");
         return 1;

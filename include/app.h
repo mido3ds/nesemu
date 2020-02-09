@@ -2,6 +2,7 @@
 
 #include <SDL2/SDL.h>
 
+#include "sdttype.h"
 #include "renderer.h"
 #include "console.h"
 
@@ -16,8 +17,8 @@ protected:
         debugging = true, showMem = true,
         stepping = true;
 
-    uint16_t memBeggining = 0;
-    double fps;
+    u16_t memBeggining = 0;
+    f64_t fps;
 
     void toggleDebugger();
     void renderMem();
