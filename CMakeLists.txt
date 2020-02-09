@@ -102,5 +102,7 @@ option(BUILD_TESTS "Enable testing" ON)
             add_subdirectory(vendors/Catch2)
             target_link_libraries(test Catch2::Catch2)
         #
+
+        add_definitions(-DTEST)
     endif()
 #

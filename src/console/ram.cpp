@@ -51,13 +51,13 @@ void Console::write(u16_t address, u8_t value)  {
 }
 
 void Console::push(u8_t v) {
-    write(STACK.end + regs.sp, v);
+    write(STACK.start | regs.sp, v);
     regs.sp--;
 }
 
 u8_t Console::pop() {
-    u8_t v = read(STACK.end + regs.sp);
     regs.sp++;
+    u8_t v = read(STACK.start | regs.sp);
     return v;
 }
 
@@ -66,7 +66,7 @@ u16_t Console::zeroPageAddress(const u8_t bb) {
 }
 
 u16_t Console::indexedZeroPageAddress(const u8_t bb, const u8_t i) {
-    return (bb+i) % 0xFF;
+    return (bb+i) & 0xFF;
 }
 
 u16_t Console::absoluteAddress(const u8_t bb, const u8_t cc) {
