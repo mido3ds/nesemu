@@ -37,7 +37,7 @@ option(BUILD_TESTS "Enable testing" ON)
         # SDL2
         add_subdirectory(vendors/SDL2)
         find_package(SDL2 REQUIRED)
-        target_link_libraries(libnesemu PUBLIC SDL2)
+        target_link_libraries(libnesemu PRIVATE SDL2)
 
         # SDL2_ttf
         include(ExternalProject)
@@ -54,8 +54,8 @@ option(BUILD_TESTS "Enable testing" ON)
             BUILD_BYPRODUCTS "${CMAKE_SOURCE_DIR}/vendors/SDL2_ttf/.libs/libSDL2_ttf.so"
         )
 
-        target_link_libraries(libnesemu PUBLIC "${CMAKE_SOURCE_DIR}/vendors/SDL2_ttf/.libs/libSDL2_ttf.so")
-        target_sources(libnesemu PUBLIC "${CMAKE_SOURCE_DIR}/vendors/SDL2_ttf/SDL_ttf.h")
+        target_link_libraries(libnesemu PRIVATE "${CMAKE_SOURCE_DIR}/vendors/SDL2_ttf/.libs/libSDL2_ttf.so")
+        target_sources(libnesemu PRIVATE "${CMAKE_SOURCE_DIR}/vendors/SDL2_ttf/SDL_ttf.h")
     #
 #
 
