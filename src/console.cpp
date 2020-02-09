@@ -6,6 +6,10 @@
 #include "console.h"
 #include "logger.h"
 
+uint8_t crossPagePenalty(uint16_t const& pc, int8_t const& fetched) {
+    return (uint16_t(pc + fetched)>>8 == pc>>8) ? 0:1;
+}
+
 int Console::init() {
     logInfo("started building Console device");
 
@@ -120,8 +124,9 @@ int Console::init() {
         instrucSet[0x90] = {[this]() {
             auto fetched = (int8_t)fetch();
             if (!regs.flags.bits.c) {
+                auto penalty = crossPagePenalty(regs.pc, fetched);
                 regs.pc += fetched;
-                cycles++;
+                cycles += 1 + penalty;
             }
         }, "BCC", AddressMode::Implicit, 2};
     }
@@ -130,8 +135,9 @@ int Console::init() {
         instrucSet[0xB0] = {[this]() {
             auto fetched = (int8_t)fetch();
             if (regs.flags.bits.c) {
+                auto penalty = crossPagePenalty(regs.pc, fetched);
                 regs.pc += fetched;
-                cycles++;
+                cycles += 1 + penalty;
             }
         }, "BCS", AddressMode::Implicit, 2};
     }
@@ -140,8 +146,9 @@ int Console::init() {
         instrucSet[0xF0] = {[this]() {
             auto fetched = (int8_t)fetch();
             if (regs.flags.bits.z) {
+                auto penalty = crossPagePenalty(regs.pc, fetched);
                 regs.pc += fetched;
-                cycles++;
+                cycles += 1 + penalty;
             }
         }, "BEQ", AddressMode::Implicit, 2};
     }
@@ -164,8 +171,9 @@ int Console::init() {
         instrucSet[0x30] = {[this]() {
             auto fetched = (int8_t)fetch();
             if (regs.flags.bits.n) {
+                auto penalty = crossPagePenalty(regs.pc, fetched);
                 regs.pc += fetched;
-                cycles++;
+                cycles += 1 + penalty;
             }
         }, "BMI", AddressMode::Implicit, 2};
     }
@@ -174,8 +182,9 @@ int Console::init() {
         instrucSet[0xD0] = {[this]() {
             auto fetched = (int8_t)fetch();
             if (!regs.flags.bits.z) {
+                auto penalty = crossPagePenalty(regs.pc, fetched);
                 regs.pc += fetched;
-                cycles++;
+                cycles += 1 + penalty;
             }
         }, "BNE", AddressMode::Implicit, 2};
     }
@@ -184,8 +193,9 @@ int Console::init() {
         instrucSet[0x10] = {[this]() {
             auto fetched = (int8_t)fetch();
             if (!regs.flags.bits.n) {
+                auto penalty = crossPagePenalty(regs.pc, fetched);
                 regs.pc += fetched;
-                cycles++;
+                cycles += 1 + penalty;
             }
         }, "BPL", AddressMode::Implicit, 2};
     }
@@ -206,8 +216,9 @@ int Console::init() {
         instrucSet[0x50] = {[this]() {
             auto fetched = (int8_t)fetch();
             if (!regs.flags.bits.v) {
+                auto penalty = crossPagePenalty(regs.pc, fetched);
                 regs.pc += fetched;
-                cycles++;
+                cycles += 1 + penalty;
             }
         }, "BVC", AddressMode::Implicit, 2};
     }
@@ -216,8 +227,9 @@ int Console::init() {
         instrucSet[0x50] = {[this]() {
             auto fetched = (int8_t)fetch();
             if (regs.flags.bits.v) {
+                auto penalty = crossPagePenalty(regs.pc, fetched);
                 regs.pc += fetched;
-                cycles++;
+                cycles += 1 + penalty;
             }
         }, "BVS", AddressMode::Implicit, 2};
     }

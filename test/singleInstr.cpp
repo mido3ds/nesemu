@@ -84,6 +84,12 @@ TEST_CASE("memory-access") {
     }
 }
 
+uint8_t crossPagePenalty(uint16_t const& pc, int8_t const& fetched);
+TEST_CASE("cross-page-penalty") {
+    REQUIRE(crossPagePenalty(0x00FE +1, 0x01) == 1);
+    REQUIRE(crossPagePenalty(0x00F0 +1, 0x01) == 0);
+}
+
 TEST_CASE("branch") {
     Console dev;
     REQUIRE(dev.init() == 0);
@@ -124,6 +130,23 @@ TEST_CASE("branch") {
         REQUIRE(dev.regs.pc == oldpc+2);
         REQUIRE(oldflags == dev.regs.flags.byte);
         REQUIRE(dev.cycles == dev.instrucSet[BCC].cycles);
+    }
+
+    SECTION("BCC-cross-page") {
+        const auto BCC = 0x90;
+        auto oldflags = dev.regs.flags.byte;
+        oldpc = 0x00FF -1 -1;
+        addr = 0x01;
+
+        dev.regs.pc = oldpc;
+        dev.memory[dev.regs.pc] = BCC;
+        dev.memory[dev.regs.pc+1] = addr;
+
+        REQUIRE(dev.oneCPUCycle() == 0);
+        
+        REQUIRE(dev.regs.pc == oldpc+addr+2);
+        REQUIRE(oldflags == dev.regs.flags.byte);
+        REQUIRE(dev.cycles == dev.instrucSet[BCC].cycles+1+1); // added penalty
     }
 
     SECTION("BEQ") {
