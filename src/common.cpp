@@ -16,7 +16,7 @@ unique_ptr<char> readBinaryFile(string path, size_t* size) {
 }
 
 // nes color palatte -> RGB color
-Color Color::palatteToColor(const uint8_t palatte) {
+Color Color::fromPalatte(const u8_t palatte) {
     if (palatte > 0x3F) {
         logError("invalid palatte color(0x%02x), returning default color", palatte);
         return DEFAULT_COLOR;
@@ -97,18 +97,18 @@ ROM ROM::fromFile(string path) {
     return {readBinaryFile(path, &size), size, path};
 }
 
-vector<uint16_t> Mirror::getAdresses(const uint16_t address) const {
+vector<u16_t> Mirror::getAdresses(const u16_t address) const {
     if (source.contains(address)) {
-        uint16_t relativeAdress = address - source.start;
-        uint16_t stripe = source.size();
-        uint16_t num = dest.size()/stripe;
+        u16_t relativeAdress = address - source.start;
+        u16_t stripe = source.size();
+        u16_t num = dest.size()/stripe;
 
-        vector<uint16_t> adresses(num);
+        vector<u16_t> adresses(num);
         for (int i = 0; i < num; i++) {
             adresses[i] = dest.start + relativeAdress + stripe * i;
         }
         return adresses;
     }
 
-    return vector<uint16_t>();
+    return vector<u16_t>();
 }

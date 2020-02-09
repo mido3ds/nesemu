@@ -94,13 +94,13 @@ void App::toggleDebugger() {
     debugging = !debugging;
 }
 
-static string hex8(uint8_t v) {
+static string hex8(u8_t v) {
     char buffer[10] = {0};
     sprintf(buffer, "%02X", v);
     return buffer;
 }
 
-static string hex16(uint16_t v) {
+static string hex16(u16_t v) {
     char buffer[10] = {0};
     sprintf(buffer, "%04X", v);
     return buffer;

@@ -6,15 +6,15 @@
 #include "console.h"
 #include "logger.h"
 
-static inline uint8_t crossPagePenalty(uint16_t const& oldpc, uint16_t const& newpc) {
+static inline u8_t crossPagePenalty(u16_t const& oldpc, u16_t const& newpc) {
     // logInfo("newpc=%04X, oldpc=")
     return (newpc>>8 == oldpc>>8) ? 0:1;
 }
 
-static inline void branch(uint16_t& pc, uint16_t& cycles, uint8_t const& fetched) {
+static inline void branch(u16_t& pc, u16_t& cpuCycles, u8_t const& fetched) {
     const auto oldpc = pc;
     pc += fetched;
-    cycles += 1 + crossPagePenalty(oldpc, pc);
+    cpuCycles += 1 + crossPagePenalty(oldpc, pc);
 }
 
 int Console::init() {
@@ -28,13 +28,13 @@ int Console::init() {
     },"???", AddressMode::Implicit, 0});
 
     /*ADC*/ {
-        auto adc = [this](uint8_t v) {
-            uint16_t result = regs.a + v + regs.flags.bits.c;
+        auto adc = [this](u8_t v) {
+            u16_t result = regs.a + v + regs.flags.bits.c;
 
-            regs.flags.bits.c = (uint16_t)result > UINT8_MAX; 
-            regs.flags.bits.v = (int16_t)result > INT8_MAX || (int16_t)result < INT8_MIN; 
+            regs.flags.bits.c = (u16_t)result > UINT8_MAX; 
+            regs.flags.bits.v = (i16_t)result > INT8_MAX || (i16_t)result < INT8_MIN; 
 
-            regs.a = (uint8_t)result;
+            regs.a = (u8_t)result;
 
             regs.flags.bits.z = regs.a == 0;
             regs.flags.bits.n = regs.a >> 7;
@@ -66,7 +66,7 @@ int Console::init() {
     }
 
     /*AND*/ {
-        auto andd = [this](uint8_t v) {
+        auto andd = [this](u8_t v) {
             regs.a |= v;
             regs.flags.bits.z = regs.a == 0;
             regs.flags.bits.n = regs.a >> 7;
@@ -98,7 +98,7 @@ int Console::init() {
     }
 
     /*ASL*/ {
-        auto asl = [this](uint8_t v) -> uint8_t {
+        auto asl = [this](u8_t v) -> u8_t {
             regs.flags.bits.c = v >> 7;
             v <<= 1;
             regs.flags.bits.z = v == 0; // TODO: not sure if Accumulator only or any value
@@ -129,27 +129,27 @@ int Console::init() {
 
     /*BCC*/ {
         instrucSet[0x90] = {[this]() {
-            auto fetched = (int8_t)fetch();
-            if (!regs.flags.bits.c) { branch(regs.pc, cycles, fetched); }
+            auto fetched = (i8_t)fetch();
+            if (!regs.flags.bits.c) { branch(regs.pc, cpuCycles, fetched); }
         }, "BCC", AddressMode::Implicit, 2};
     }
 
     /*BCS*/ {
         instrucSet[0xB0] = {[this]() {
-            auto fetched = (int8_t)fetch();
-            if (regs.flags.bits.c) { branch(regs.pc, cycles, fetched); }
+            auto fetched = (i8_t)fetch();
+            if (regs.flags.bits.c) { branch(regs.pc, cpuCycles, fetched); }
         }, "BCS", AddressMode::Implicit, 2};
     }
 
     /*BEQ*/ {
         instrucSet[0xF0] = {[this]() {
-            auto fetched = (int8_t)fetch();
-            if (regs.flags.bits.z) { branch(regs.pc, cycles, fetched); }
+            auto fetched = (i8_t)fetch();
+            if (regs.flags.bits.z) { branch(regs.pc, cpuCycles, fetched); }
         }, "BEQ", AddressMode::Implicit, 2};
     }
 
     /*BIT*/ {
-        auto bit = [this](uint8_t v) {
+        auto bit = [this](u8_t v) {
             regs.flags.bits.z = (v & regs.a) == 0;
             regs.flags.bits.v = v >> 6;
             regs.flags.bits.n = v >> 7;
@@ -164,22 +164,22 @@ int Console::init() {
 
     /*BMI*/ {
         instrucSet[0x30] = {[this]() {
-            auto fetched = (int8_t)fetch();
-            if (regs.flags.bits.n) { branch(regs.pc, cycles, fetched); }
+            auto fetched = (i8_t)fetch();
+            if (regs.flags.bits.n) { branch(regs.pc, cpuCycles, fetched); }
         }, "BMI", AddressMode::Implicit, 2};
     }
 
     /*BNE*/ {
         instrucSet[0xD0] = {[this]() {
-            auto fetched = (int8_t)fetch();
-            if (!regs.flags.bits.z) { branch(regs.pc, cycles, fetched); }
+            auto fetched = (i8_t)fetch();
+            if (!regs.flags.bits.z) { branch(regs.pc, cpuCycles, fetched); }
         }, "BNE", AddressMode::Implicit, 2};
     }
 
     /*BPL*/ {
         instrucSet[0x10] = {[this]() {
-            auto fetched = (int8_t)fetch();
-            if (!regs.flags.bits.n) { branch(regs.pc, cycles, fetched); }
+            auto fetched = (i8_t)fetch();
+            if (!regs.flags.bits.n) { branch(regs.pc, cpuCycles, fetched); }
         }, "BPL", AddressMode::Implicit, 2};
     }
 
@@ -197,15 +197,15 @@ int Console::init() {
 
     /*BVC*/ {
         instrucSet[0x50] = {[this]() {
-            auto fetched = (int8_t)fetch();
-            if (!regs.flags.bits.v) { branch(regs.pc, cycles, fetched); }
+            auto fetched = (i8_t)fetch();
+            if (!regs.flags.bits.v) { branch(regs.pc, cpuCycles, fetched); }
         }, "BVC", AddressMode::Implicit, 2};
     }
 
     /*BVS*/ {
         instrucSet[0x50] = {[this]() {
-            auto fetched = (int8_t)fetch();
-            if (regs.flags.bits.v) { branch(regs.pc, cycles, fetched); }
+            auto fetched = (i8_t)fetch();
+            if (regs.flags.bits.v) { branch(regs.pc, cpuCycles, fetched); }
         }, "BVS", AddressMode::Implicit, 2};
     }
 
@@ -234,8 +234,8 @@ int Console::init() {
     }
 
     /*CMP*/ {
-        auto cmp = [this](uint8_t v) {
-            uint8_t result = regs.a - v;
+        auto cmp = [this](u8_t v) {
+            u8_t result = regs.a - v;
             regs.flags.bits.c = result > 0;
             regs.flags.bits.z = result == 0;
             regs.flags.bits.n = result >> 7;
@@ -267,8 +267,8 @@ int Console::init() {
     }
 
     /*CPX*/ {
-        auto cpx = [this](uint8_t v) {
-            uint8_t result = regs.x - v;
+        auto cpx = [this](u8_t v) {
+            u8_t result = regs.x - v;
             regs.flags.bits.c = result > 0;
             regs.flags.bits.z = result == 0;
             regs.flags.bits.n = result >> 7;
@@ -285,8 +285,8 @@ int Console::init() {
     }
 
     /*CPY*/ {
-        auto cpy = [this](uint8_t v) {
-            uint8_t result = regs.y - v;
+        auto cpy = [this](u8_t v) {
+            u8_t result = regs.y - v;
             regs.flags.bits.c = result > 0;
             regs.flags.bits.z = result == 0;
             regs.flags.bits.n = result >> 7;
@@ -303,7 +303,7 @@ int Console::init() {
     }
 
     /*DEC*/ {
-        auto dec = [this](uint8_t v) -> uint8_t {
+        auto dec = [this](u8_t v) -> u8_t {
             v--;
 
             regs.flags.bits.z = v == 0;
@@ -346,7 +346,7 @@ int Console::init() {
     }
 
     /*EOR*/ {
-        auto eor = [this](uint8_t v) {
+        auto eor = [this](u8_t v) {
             regs.a ^= v;
 
             regs.flags.bits.z = regs.a == 0;
@@ -379,7 +379,7 @@ int Console::init() {
     }
 
     /*INC*/ {
-        auto inc = [this](uint8_t v) -> uint8_t {
+        auto inc = [this](u8_t v) -> u8_t {
             v++;
 
             regs.flags.bits.z = v == 0;
@@ -438,7 +438,7 @@ int Console::init() {
     }
 
     /*LDA*/ {
-        auto lda = [this](uint8_t v) {
+        auto lda = [this](u8_t v) {
             regs.a = v;
 
             regs.flags.bits.z = regs.a == 0;
@@ -471,7 +471,7 @@ int Console::init() {
     }
 
     /*LDX*/ {
-        auto ldx = [this](uint8_t v) {
+        auto ldx = [this](u8_t v) {
             regs.x = v;
 
             regs.flags.bits.z = regs.x == 0;
@@ -495,7 +495,7 @@ int Console::init() {
     }
 
     /*LDY*/ {
-        auto ldy = [this](uint8_t v) {
+        auto ldy = [this](u8_t v) {
             regs.y = v;
 
             regs.flags.bits.z = regs.y == 0;
@@ -519,7 +519,7 @@ int Console::init() {
     }
 
     /*LSR*/ {
-        auto lsr = [this](uint8_t v) -> uint8_t {
+        auto lsr = [this](u8_t v) -> u8_t {
             regs.flags.bits.c = v & 1;
             
             v >>= 1;
@@ -551,13 +551,13 @@ int Console::init() {
     }
 
     /*NOP*/ {
-        for (auto& adr: vector<uint8_t>{0xEA ,0x1C ,0x3C ,0x5C ,0x7C ,0xDC ,0xFC}) {
+        for (auto& adr: vector<u8_t>{0xEA ,0x1C ,0x3C ,0x5C ,0x7C ,0xDC ,0xFC}) {
             instrucSet[adr] = {[](){}, "NOP", AddressMode::Implicit, 2};
         }
     }
 
     /*ORA*/ {
-        auto ora = [this](uint8_t v) {
+        auto ora = [this](u8_t v) {
             regs.a |= v;
 
             regs.flags.bits.z = regs.a == 0;
@@ -614,8 +614,8 @@ int Console::init() {
     }
 
     /*ROL*/ {
-        auto rol = [this](uint8_t v) -> uint8_t {
-            uint8_t oldCarry = regs.flags.bits.c;
+        auto rol = [this](u8_t v) -> u8_t {
+            u8_t oldCarry = regs.flags.bits.c;
             regs.flags.bits.c = v >> 7;
             
             v <<= 1;
@@ -648,8 +648,8 @@ int Console::init() {
     }
 
     /*ROR*/ {
-        auto ror = [this](uint8_t v) -> uint8_t {
-            uint8_t oldCarry = regs.flags.bits.c;
+        auto ror = [this](u8_t v) -> u8_t {
+            u8_t oldCarry = regs.flags.bits.c;
             regs.flags.bits.c = v & 1;
             
             v >>= 1;
@@ -695,13 +695,13 @@ int Console::init() {
     }
 
     /*SBC*/ {
-        auto sbc = [this](uint8_t v) {
-            uint16_t result = regs.a - v - (~ regs.flags.bits.c);
+        auto sbc = [this](u8_t v) {
+            u16_t result = regs.a - v - (~ regs.flags.bits.c);
 
-            regs.flags.bits.c = (uint16_t)result > UINT8_MAX; 
-            regs.flags.bits.v = (int16_t)result > INT8_MAX || (int16_t)result < INT8_MAX; 
+            regs.flags.bits.c = (u16_t)result > UINT8_MAX; 
+            regs.flags.bits.v = (i16_t)result > INT8_MAX || (i16_t)result < INT8_MAX; 
 
-            regs.a = (uint8_t)result;
+            regs.a = (u8_t)result;
 
             regs.flags.bits.z = regs.a == 0;
             regs.flags.bits.n = regs.a >> 7;
@@ -848,309 +848,4 @@ int Console::init() {
 
     logInfo("finished building Console device");
     return 0;
-}
-
-int Console::loadROM(ROM const& rom) {
-    logInfo("loading rom from %s", rom.path.c_str());
-
-    if (!rom.buffer) {
-        logError("couldn't read rom in path: %s", rom.path.c_str());
-        return 1;
-    }
-    if (rom.size == 0) {
-        logError("rom is empty");
-        return 1;
-    }
-
-    if (EX_ROM.start + rom.size >= MEM_SIZE) {
-        // TODO: fix 
-        logWarning("rom is bigger than its place in memory, copying part of it");
-        memcpy(&memory[EX_ROM.start], rom.buffer.get(), MEM_SIZE - EX_ROM.start + 1);
-    } else {
-        memcpy(&memory[EX_ROM.start], rom.buffer.get(), rom.size);
-    }
-
-    logInfo("copied rom");
-
-    return 0;
-}
-
-uint8_t Console::read(uint16_t address) {
-    if (address == PPU_STS_REG) return readPPUStatusRegister();
-    if (address == 0x2007) {
-        if (temp0x2006.state & X2006Reg::CAN_READ 
-        || (temp0x2006.state & X2006Reg::READ_BUFFERED && temp0x2006.addr >= IMG_PLT.start)) {
-            auto v = vram[temp0x2006.addr];
-            temp0x2006.addr += controlReg->getPPUIncrementRate();
-            return v;
-        }
-
-        if (temp0x2006.state & X2006Reg::READ_BUFFERED) {
-            temp0x2006.state |= X2006Reg::CAN_READ;
-        }  
-    }
-
-    return memory[address];
-}
-
-void Console::write(uint16_t address, uint8_t value)  {
-    memory[address] = value;
-
-    // apply mirroring 
-    for (auto mirror: MEM_MIRRORS) {
-        for (auto mirrorAddr: mirror.getAdresses(address)) {
-            memory[mirrorAddr] = value;
-        }
-    }
-
-    if (address == 0x4014) {
-        // DMA from memory -> sprram
-        memcpy(sprram.data(), memory.data() + 0x100 * uint8_t(value), sprram.size());
-    } else if (address == 0x2004) {
-        sprram[sprramAddrReg] = value;
-    } else if (address == 0x2006) {
-        if (temp0x2006.state & (X2006Reg::EMPTY | X2006Reg::FULL)) {
-            temp0x2006.state = X2006Reg::LSN;
-            temp0x2006.addr = value;
-        } else if (temp0x2006.state & X2006Reg::LSN) {
-            temp0x2006.state = X2006Reg::FULL | X2006Reg::CAN_WRITE | X2006Reg::READ_BUFFERED;
-            temp0x2006.addr |= value << 8;
-        }
-    }
-}
-
-void Console::push(uint8_t v) {
-    write(STACK.end + regs.sp, v);
-    regs.sp--;
-}
-
-uint8_t Console::pop() {
-    uint8_t v = read(STACK.end + regs.sp);
-    regs.sp++;
-    return v;
-}
-
-uint8_t Console::readVRam(uint16_t address) {
-    return vram[address];
-}
-
-void Console::writeVRam(uint16_t address, uint8_t value) {
-    vram[address] = value;
-
-    // apply mirroring 
-    for (auto mirror: VRAM_MIRRORS) {
-        for (auto mirrorAddr: mirror.getAdresses(address)) {
-            vram[mirrorAddr] = value;
-        }
-    }
-
-    if (address == 0x3F00) {
-        for (auto& mirrorAddr: {0x3F04, 0x3F08, 0x3F0C, 0x3F10, 0x3F14, 0x3F18, 0x3F1C}) {
-            vram[mirrorAddr] = value;
-        }
-    }
-}
-
-uint16_t Console::getSpriteAddr(SpriteInfo* inf, SpriteType type) {
-    if (type == SpriteType::S8x8) return PATT_TBL0.start + inf->i * SPRITE_8x8_SIZE;
-    if (inf->i % 2 == 0) return PATT_TBL0.start + inf->i * SPRITE_8x16_SIZE;
-    return PATT_TBL1.start + inf->i * SPRITE_8x16_SIZE;
-}
-
-uint8_t Console::readPPUStatusRegister() {
-    vramAddrReg0 = vramAddrReg1 = 0;
-    uint8_t old = statusReg->byte;
-    statusReg->byte &= ~(1 << 4);
-    return old;
-}
-
-int Console::reset() {
-    logInfo("start resetting");
-
-    regs.pc = read16(RH);
-    regs.sp = 0xFD;
-    regs.flags.byte = 0;
-    regs.a = regs.x = regs.y = 0;
-
-    vram[0x4015] = 0;
-    cycles += 8;
-
-    return 0;
-}
-
-int Console::powerOn() {
-    // https://wiki.nesdev.com/w/index.php/CPU_power_up_state#At_power-up
-    logInfo("start powering on CPU");
-
-    regs.pc = read16(RH);
-    regs.sp = 0xFD;
-    regs.flags.byte = 0x34; // IRQ disabled
-    regs.a = regs.x = regs.y = 0;
-
-    memory.fill(0);
-    cycles = 0;
-
-    // TODO: All 15 bits of noise channel LFSR = $0000[4]. 
-    //The first time the LFSR is clocked from the all-0s state, it will shift in a 1.
-
-    // TODO: 2A03G: APU Frame Counter reset. 
-    // (but 2A03letterless: APU frame counter powers up at a value equivalent to 15)
-
-    // https://wiki.nesdev.com/w/index.php/PPU_power_up_state
-    logInfo("start powering on ppu");
-    // TODO: set all ppu state
-
-    return 0;
-}
-
-int Console::oneCPUCycle() {
-    if (cycles > 0) {
-        cycles--;
-        return 0;
-    }
-
-    auto& inst = instrucSet[fetch()];
-    inst.exec();
-    cycles += inst.cycles;
-
-    return 0;
-}
-
-int Console::onePPUCycle(Renderer* renderer) {
-    // TODO
-    return 0;
-}
-
-int Console::oneAPUCycle() {
-    // TODO
-    return 0;
-}
-
-static tuple<string, int> oneInstr(uint8_t* mem, uint32_t size, const InstructionSet& instset) {
-    if (mem == nullptr || size == 0) { return make_tuple("???", 0); }
-
-    int bytes = 1;
-    ostringstream ss;
-    char a[4], b[4];
-
-    ss << instset[mem[0]].name;
-
-    if (size >= 2) { sprintf(a, "%02X", mem[1]); }
-    else           { strcpy(a, "??"); }
-
-    if (size >= 3) { sprintf(b, "%02X", mem[2]); }
-    else           { strcpy(b, "??"); }
-
-    switch (instset[mem[0]].mode ) {
-    case AddressMode::Implicit:
-        break;
-    case AddressMode::Accumulator:
-        ss << " A";
-        break;
-    case AddressMode::Immediate:
-        ss << " #" << a;
-        bytes++;
-        break;
-    case AddressMode::ZeroPage:
-        ss << " $" << a;
-        bytes++;
-        break;
-    case AddressMode::ZeroPageX:
-        ss << " $" << a << ", X";
-        bytes++;
-        break;
-    case AddressMode::ZeroPageY:
-        ss << " $" << a << ", Y";
-        bytes++;
-        break;
-    case AddressMode::Relative:
-        if (size >= 2) { sprintf(a, "%+d", int8_t(mem[1])); }
-        else           { strcpy(a, "??"); }
-
-        ss << " " << a;
-        bytes++;
-        break;
-    case AddressMode::Absolute:
-        ss << " $" << b << a;
-        bytes += 2;
-        break;
-    case AddressMode::AbsoluteX:
-        ss << " $" << b << a << ", X";
-        bytes += 2;
-        break;
-    case AddressMode::AbsoluteY:
-        ss << " $" << b << a << ", Y";
-        bytes += 2;
-        break;
-    case AddressMode::Indirect:
-        ss << " ($" << b << a << ")";
-        bytes += 2;
-        break;
-    case AddressMode::IndexedIndirect:
-        ss << " ($" << a << ", X)";
-        bytes++;
-        break;
-    case AddressMode::IndirectIndexed:
-        ss << " ($" << a << "), Y";
-        bytes++;
-        break;
-    default: logError("unknown address mode");
-    }
-
-    return make_tuple(ss.str(), bytes);
-}
-
-static string addAddress(uint16_t addr, string s) {
-    char adrPart[10];
-    sprintf(adrPart, "$%04X", addr);
-    return string(adrPart) + ": " + s;
-}
-
-static map<uint16_t, string> disassemble(uint8_t* mem, uint16_t addr, uint32_t size, const InstructionSet& instset) {
-    auto ret = map<uint16_t, string>();
-    string instr;
-    int consumedBytes;
-
-    while (size > 0) {
-        tie(instr, consumedBytes) = oneInstr(mem, size, instset);
-
-        ret[addr] = instr;
-
-        size -= consumedBytes;
-        mem += consumedBytes;
-        addr += consumedBytes;
-    }
-
-    return ret;
-}
-
-vector<string> Console::getAssembly(const uint16_t addr, const uint16_t n) {
-    static map<uint16_t, string> assembly = disassemble(&memory[0], 0, memory.size(), instrucSet);
-    vector<string> ret(2*n+1, "$????: ???");
-
-    auto tmpItr = assembly.lower_bound(addr);
-    auto fItr = tmpItr; // forward itr, addr : end
-    auto rItr = make_reverse_iterator(tmpItr); // reverse itr, addr-1 : rend
-
-    // addr
-    if (fItr != assembly.end()) {
-        if (fItr->first == addr) {
-            ret[n] = addAddress(fItr->first, fItr->second);
-            fItr++;
-        } else {
-            ret[n] = addAddress(addr, "???");
-        }
-    }
-
-    // [addr+1..addr+n]
-    for (auto i = n+1; fItr != assembly.end() && i < ret.size(); fItr++, i++) {
-        ret[i] = addAddress(fItr->first, fItr->second);
-    }
-
-    // [addr-n..addr-1]
-    for (auto i = n-1; rItr != assembly.rend() && i >= 0; rItr++, i--) {
-        ret[i] = addAddress(rItr->first, rItr->second);
-    }
-
-    return ret;
 }

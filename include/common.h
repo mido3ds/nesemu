@@ -1,18 +1,19 @@
 #pragma once
 
-#include <cstdint>
 #include <fstream>
 #include <vector>
 #include <string>
 #include <functional>
 #include <thread>
 
+#include "sdttype.h"
+
 using namespace std;
 
 struct Color {
-    uint8_t r, g, b;
+    u8_t r, g, b;
 
-    static Color palatteToColor(const uint8_t palatte);
+    static Color fromPalatte(const u8_t palatte);
 };
 
 struct ROM {
@@ -34,40 +35,40 @@ struct Instruction {
     function<void()> exec;
     string name;
     AddressMode mode;
-    uint16_t cycles;
+    u16_t cpuCycles;
 };
 
 typedef array<Instruction, UINT8_MAX+1> InstructionSet;
 
 struct Region {
-    uint16_t start, end;
+    u16_t start, end;
 
-    constexpr bool contains(uint16_t addr) const {return addr <= end && addr >= start;}  
-    constexpr uint16_t size() const {return (end + 1) - start;}
+    constexpr bool contains(u16_t addr) const {return addr <= end && addr >= start;}  
+    constexpr u16_t size() const {return (end + 1) - start;}
 };
 
 struct Mirror {
     Region source, dest;
 
-    vector<uint16_t> getAdresses(const uint16_t address) const;
+    vector<u16_t> getAdresses(const u16_t address) const;
 };
 
-enum class SpriteType : uint8_t {S8x8 = 0, S8x16 = 1};
-enum class ColorMode : uint8_t {Color = 0, Monochrome = 1};
+enum class SpriteType : u8_t {S8x8 = 0, S8x16 = 1};
+enum class ColorMode : u8_t {Color = 0, Monochrome = 1};
 
 struct SpriteInfo {
-    uint8_t y; // Y-coordinate of the top left of the sprite minus 1
-    uint8_t i; // Index number of the sprite in the pattern tables.
+    u8_t y; // Y-coordinate of the top left of the sprite minus 1
+    u8_t i; // Index number of the sprite in the pattern tables.
 
     union {
         struct {
-            uint8_t color:2; // Most significant two bits of the colour
-            uint8_t:3;
-            uint8_t pritority:1; // Indicates whether this sprite has priority over the background
-            uint8_t hFlip:1; // Indicates whether to flip the sprite horizontally
-            uint8_t vFlip:1; // Indicates whether to flip the sprite vertically}
+            u8_t color:2; // Most significant two bits of the colour
+            u8_t:3;
+            u8_t pritority:1; // Indicates whether this sprite has priority over the background
+            u8_t hFlip:1; // Indicates whether to flip the sprite horizontally
+            u8_t vFlip:1; // Indicates whether to flip the sprite vertically}
         } bits;
-        uint8_t byte;
+        u8_t byte;
     } attr;
 };
 
@@ -87,32 +88,27 @@ union PatternTablePointer {
     enum class TableHalf {LEFT, RIGHT};
 
     struct {
-        uint8_t rowInTile:3;
+        u8_t rowInTile:3;
         BitPlane bitPlane:1;
-        uint8_t tileCol:4;
-        uint8_t tileRow:4;
+        u8_t tileCol:4;
+        u8_t tileRow:4;
         TableHalf tableHalf:1;
-        uint8_t:3;
+        u8_t:3;
     } bits;
-    const uint16_t word = 0;
+    const u16_t word = 0;
 };
 
-constexpr uint8_t SPRITE_8x8_SIZE = 16;
-constexpr uint8_t SPRITE_8x16_SIZE = 2 * SPRITE_8x8_SIZE;
-constexpr uint32_t MEM_SIZE = 0xFFFF + 1;
-
-constexpr uint16_t PPU_CTRL_REG0 = 0x2000, 
-                    PPU_CTRL_REG1 = 0x2001, 
-                    PPU_STS_REG = 0x2002,
-                    PPU_SCRL_REG = 0x2006;
+constexpr u8_t SPRITE_8x8_SIZE = 16;
+constexpr u8_t SPRITE_8x16_SIZE = 2 * SPRITE_8x8_SIZE;
+constexpr u32_t MEM_SIZE = 0xFFFF + 1;
 
 // Video systems info 
 constexpr struct VideoSystem {
     int cpuCycles; // in nanoseconds
     int fps;
-    float timePerFrame; // in milliseconds
+    f32_t timePerFrame; // in milliseconds
     int scanlinesPerFrame;
-    float cpuCyclesPerScanline;
+    f32_t cpuCyclesPerScanline;
     struct {int width, height;} resolution;
 } NTSC {559, 60, 16.67f, 262, 113.33f, {256, 224}},
 PAL {601, 50, 20, 312, 106.56f, {256, 240}};
@@ -165,5 +161,42 @@ constexpr array<Mirror, 3> VRAM_MIRRORS {
 };
 
 // interrupt vector table
-constexpr uint16_t
-    IRQ = 0xFFFE, NMI = 0xFFFA, RH = 0xFFFC;
+constexpr u16_t
+    IRQ = 0xFFFE, 
+    NMI = 0xFFFA, 
+    RH = 0xFFFC;
+
+// registers addresses
+constexpr u16_t PPU_CTRL_REG0 = 0x2000,
+                PPU_CTRL_REG1 = 0x2001, 
+                PPU_STS_REG   = 0x2002,
+                PPU_SCRL_REG  = 0x2006,
+
+                SPRRAM_ADDR_REG = 0x2003,
+                SPRRAM_IO_REG   = 0x2004,
+                SPRITE_DMA_REG  = 0x4014,
+
+                VRAM_ADDR_REG0 = 0x2005,
+                VRAM_ADDR_REG1 = 0x2006,
+                VRAM_IO_REG    = 0x2007,
+
+                APU_PULSE1_CONTROL_REG                = 0x4000,
+                APU_PULSE1_RAMP_CONTROL_REG           = 0x4001,
+                APU_PULSE1_FINETUNE_REG               = 0x4002,
+                APU_PULSE1_COARSETUNE_REG             = 0x4003,
+                APU_PULSE2_CONTROL_REG                = 0x4004,
+                APU_PULSE2_RAMP_CONTROL_REG           = 0x4005,
+                APU_PULSE2_FINETUNE_REG               = 0x4006,
+                APU_PULSE2_COARSETUNE_REG             = 0x4007,
+                APU_TRIANGLE_CONTROL_REG1             = 0x4008,
+                APU_TRIANGLE_CONTROL_REG2             = 0x4009,
+                APU_TRIANGLE_FREQUENCY_REG1           = 0x400A,
+                APU_TRIANGLE_FREQUENCY_REG2           = 0x400B,
+                APU_NOISE_CONTROL_REG1                = 0x400C,
+                APU_NOISE_FREQUENCY_REG1              = 0x400E,
+                APU_NOISE_FREQUENCY_REG2              = 0x400F,
+                APU_DELTA_MODULATION_CONTROL_REG      = 0x4010,
+                APU_DELTA_MODULATION_DA_REG           = 0x4011,
+                APU_DELTA_MODULATION_ADDRESS_REG      = 0x4012,
+                APU_DELTA_MODULATION_DATA_LENGTH_REG  = 0x4013,
+                APU_VERTICAL_CLOCK_SIGNAL_REG         = 0x4015;
