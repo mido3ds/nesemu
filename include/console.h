@@ -2,6 +2,7 @@
 
 #include "common.h"
 #include "renderer.h"
+#include "rom.h"
 
 struct Console {
 /////////////////////////// State ///////////////////////////
@@ -174,7 +175,6 @@ struct Console {
 
     // main
     int init();
-    int loadROM(ROM const& rom);
     int reset();
     int powerOn();
     int oneCPUCycle();

@@ -16,14 +16,6 @@ struct Color {
     static Color fromPalatte(const u8_t palatte);
 };
 
-struct ROM {
-    unique_ptr<char> buffer;
-    size_t size;
-    string path;
-
-    static ROM fromFile(string path);
-};
-
 enum class AddressMode {
     Implicit, Accumulator, Immediate, ZeroPage,
     ZeroPageX, ZeroPageY, Relative, Absolute,
