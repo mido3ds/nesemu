@@ -63,8 +63,7 @@ option(BUILD_TESTS "Enable testing" ON)
     add_executable(nesemu)
 
     ## sources
-        file(GLOB_RECURSE PROJECT_SOURCES src/main.cpp)
-        target_sources(nesemu PRIVATE ${PROJECT_SOURCES})
+        target_sources(nesemu PRIVATE src/main.cpp)
     #
 
     ## headers

@@ -1,20 +1,6 @@
 #include "common.h"
 #include "logger.h"
 
-unique_ptr<char> readBinaryFile(string path, size_t* size) {
-    ifstream file(path, ios::in|ios::binary|ios::ate);
-    if (!file.is_open()) return nullptr;
-
-    *size = (size_t)file.tellg();
-    auto buffer = unique_ptr<char>(new char[*size]);
-
-    file.seekg(0, ios::beg);
-    file.read(buffer.get(), *size);
-    file.close();
-
-    return buffer;
-}
-
 // nes color palatte -> RGB color
 Color Color::fromPalatte(const u8_t palatte) {
     if (palatte > 0x3F) {
@@ -90,11 +76,6 @@ Color Color::fromPalatte(const u8_t palatte) {
     };
     
     return colorPalatte[palatte];
-}
-
-ROM ROM::fromFile(string path) {
-    size_t size;
-    return {readBinaryFile(path, &size), size, path};
 }
 
 vector<u16_t> Mirror::getAdresses(const u16_t address) const {

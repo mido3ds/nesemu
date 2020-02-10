@@ -28,7 +28,13 @@ int main(int argc, char** argv) {
         return err;
     }
 
-    err = dev.loadROM(ROM::fromFile(argv[1]));
+    ROM rom;
+    err = rom.fromFile(argv[1]);
+    if (err != 0) {
+        return err;
+    }
+
+    err = rom.loadIntoMemory(dev.memory.data());
     if (err != 0) {
         return err;
     }
