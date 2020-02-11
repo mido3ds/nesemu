@@ -41,7 +41,7 @@ private:
         union {
             struct {
                 u8_t vsUnisystem:1;
-                u8_t:1;
+                bool hasPlayChoice:1;
                 u8_t nes2format:2;
                 u8_t upperMapperNum:4;
             } bits;

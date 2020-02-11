@@ -17,7 +17,6 @@ namespace Config {
         select = SDL_SCANCODE_TAB,
 
         // debugging
-        nextInstr = SDL_SCANCODE_F10,
         scrollMemDown = SDL_SCANCODE_J,
         scrollMemUp = SDL_SCANCODE_K;
     
@@ -27,6 +26,7 @@ namespace Config {
         reset = SDLK_r, 
 
         // debugging
+        nextInstr = SDLK_F10,
         debug = SDLK_d, 
         showMem = SDLK_m,
         toggleStepping = SDLK_F5;
