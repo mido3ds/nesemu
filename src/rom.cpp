@@ -70,11 +70,38 @@ int ROM::fromFile(string path) {
     // no playchoice
 
     delete buffer;
+
+    logInfo("done reading ROM");
     return 0;
 }
 
-int ROM::loadIntoMemory(u8_t* memory) {
-    logWarning("TODO: load rom");
+int ROM::copyToMemory(MemType* memory) {
+    if (!memory) {
+        logError("null memory");
+        return 1;
+    }
+
+    if (header.numCHRs == 0 || header.numPRGs == 0 ||
+        !prgData || !chrData) {
+        logError("invalid state/no rom is stored");
+        return 1;
+    }
+
+    int prgSize = getPRGRomSize();
+    if (prgSize > PRG_ROM_LOW.size()+PRG_ROM_UP.size()) {
+        logError("cant handle sizes bigger than %d", PRG_ROM_LOW.size()+PRG_ROM_UP.size());
+        return 1;
+    }
+
+    memcpy(memory->data()+PRG_ROM_LOW.start, prgData, prgSize);
+    
+    if (header.numPRGs == 1) {
+        memcpy(memory->data()+PRG_ROM_UP.start, prgData, prgSize);
+    }
+
+    // TODO: copy chr
+    
+    logInfo("loaded ROM into device memory");
     return 0;
 }
 
@@ -83,11 +110,11 @@ u16_t ROM::getMapperNumber() {
 }
 
 u32_t ROM::getPRGRomSize() {
-    return header.prgSize*16384;
+    return header.numPRGs*16*1024; // 16 KB
 }
 
 u32_t ROM::getCHRRomSize() {
-    return header.chrSize*8192;
+    return header.numCHRs*8*1024; // 8 KB
 }
 
 ROM::~ROM() {

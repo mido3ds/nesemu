@@ -94,6 +94,8 @@ constexpr u8_t SPRITE_8x8_SIZE = 16;
 constexpr u8_t SPRITE_8x16_SIZE = 2 * SPRITE_8x8_SIZE;
 constexpr u32_t MEM_SIZE = 0xFFFF + 1;
 
+typedef array<u8_t, MEM_SIZE> MemType;
+
 // Video systems info 
 constexpr struct VideoSystem {
     int cpuCycles; // in nanoseconds

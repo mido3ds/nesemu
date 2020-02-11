@@ -17,24 +17,14 @@ int main(int argc, char** argv) {
 
     string title = "NESEMU - " + string(argv[1]);
 
-    Console dev;
-    err = dev.init();
-    if (err != 0) {
-        return err;
-    }
-
-    err = dev.powerOn();
-    if (err != 0) {
-        return err;
-    }
-
     ROM rom;
     err = rom.fromFile(argv[1]);
     if (err != 0) {
         return err;
     }
 
-    err = rom.loadIntoMemory(dev.memory.data());
+    Console dev;
+    err = dev.init(&rom);
     if (err != 0) {
         return err;
     }

@@ -3,14 +3,15 @@
 #include <string>
 
 #include "sdttype.h"
+#include "common.h"
 
 using namespace std;
 
 class ROM {
 private:
     struct {
-        u8_t prgSize;
-        u8_t chrSize;
+        u8_t numPRGs = 0;
+        u8_t numCHRs = 0;
 
         // 76543210
         // ||||||||
@@ -58,7 +59,7 @@ private:
 public:
     int fromFile(string path);
 
-    int loadIntoMemory(u8_t* memory);
+    int copyToMemory(MemType* memory);
 
     u16_t getMapperNumber();
 
