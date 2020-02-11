@@ -14,8 +14,7 @@ NES emulator in c++
 
 Install requirements, then:
 
-``` 
-$ ./scripts/fetch-libs
+```
 $ mkdir build && cd build
 $ cmake ..
 ```

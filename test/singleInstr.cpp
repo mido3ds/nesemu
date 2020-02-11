@@ -1,10 +1,12 @@
-#include "catch2/catch.hpp"
+#include <cstring>
+
+#include "catch.hpp"
 
 #include "console.h"
 
 TEST_CASE("memory-access") {
     Console dev;
-    REQUIRE(dev.init() == 0);
+    dev.init(nullptr);
 
     memset(&dev.regs, 0, sizeof dev.regs);
     dev.memory.fill(0);
@@ -86,7 +88,7 @@ TEST_CASE("memory-access") {
 
 TEST_CASE("branch") {
     Console dev;
-    REQUIRE(dev.init() == 0);
+    dev.init(nullptr);
 
     memset(&dev.regs, 0, sizeof dev.regs);
     dev.memory.fill(0);
@@ -103,7 +105,7 @@ TEST_CASE("branch") {
         dev.memory[dev.regs.pc] = BCC;
         dev.memory[dev.regs.pc+1] = addr;
 
-        REQUIRE(dev.oneCPUCycle() == 0);
+        dev.oneCPUCycle();
         
         REQUIRE(dev.regs.pc == oldpc+addr+2);
         REQUIRE(oldflags == dev.regs.flags.byte);
@@ -119,7 +121,7 @@ TEST_CASE("branch") {
         dev.memory[dev.regs.pc] = BCC;
         dev.memory[dev.regs.pc+1] = addr;
 
-        REQUIRE(dev.oneCPUCycle() == 0);
+        dev.oneCPUCycle();
         
         REQUIRE(dev.regs.pc == oldpc+2);
         REQUIRE(oldflags == dev.regs.flags.byte);
@@ -136,7 +138,7 @@ TEST_CASE("branch") {
         dev.memory[dev.regs.pc] = BCC;
         dev.memory[dev.regs.pc+1] = addr;
 
-        REQUIRE(dev.oneCPUCycle() == 0);
+        dev.oneCPUCycle();
         
         REQUIRE(dev.regs.pc == oldpc+addr+2);
         REQUIRE(oldflags == dev.regs.flags.byte);
@@ -152,7 +154,7 @@ TEST_CASE("branch") {
         dev.memory[dev.regs.pc] = BEQ;
         dev.memory[dev.regs.pc+1] = addr;
 
-        REQUIRE(dev.oneCPUCycle() == 0);
+        dev.oneCPUCycle();
         
         REQUIRE(dev.regs.pc == oldpc+addr+2);
         REQUIRE(oldflags == dev.regs.flags.byte);
@@ -168,7 +170,7 @@ TEST_CASE("branch") {
         dev.memory[dev.regs.pc] = BEQ;
         dev.memory[dev.regs.pc+1] = addr;
 
-        REQUIRE(dev.oneCPUCycle() == 0);
+        dev.oneCPUCycle();
         
         REQUIRE(dev.regs.pc == oldpc+2);
         REQUIRE(oldflags == dev.regs.flags.byte);
@@ -184,7 +186,7 @@ TEST_CASE("branch") {
         dev.memory[dev.regs.pc] = BEQ;
         dev.memory[dev.regs.pc+1] = addr;
 
-        REQUIRE(dev.oneCPUCycle() == 0);
+        dev.oneCPUCycle();
         
         REQUIRE(dev.regs.pc == oldpc+addr+2);
         REQUIRE(oldflags == dev.regs.flags.byte);
@@ -200,7 +202,7 @@ TEST_CASE("branch") {
         dev.memory[dev.regs.pc] = BEQ;
         dev.memory[dev.regs.pc+1] = addr;
 
-        REQUIRE(dev.oneCPUCycle() == 0);
+        dev.oneCPUCycle();
         
         REQUIRE(dev.regs.pc == oldpc+2);
         REQUIRE(oldflags == dev.regs.flags.byte);
@@ -210,7 +212,7 @@ TEST_CASE("branch") {
 
 TEST_CASE("immediate-instructs") {
     Console dev;
-    REQUIRE(dev.init() == 0);
+    dev.init(nullptr);
 
     memset(&dev.regs, 0, sizeof dev.regs);
     dev.memory.fill(0);
@@ -221,7 +223,7 @@ TEST_CASE("immediate-instructs") {
         dev.regs.a = 0b01010101;
         dev.memory[0] = 0x29;
         dev.memory[1] = 0b00010001;
-        REQUIRE(dev.oneCPUCycle() == 0);
+        dev.oneCPUCycle();
         REQUIRE(dev.regs.a == (0b01010101 & 0b00010001));
         REQUIRE(dev.regs.flags.bits.z == 0);
     }
@@ -230,7 +232,7 @@ TEST_CASE("immediate-instructs") {
         dev.regs.a = 0b01010101;
         dev.memory[0] = 0x29;
         dev.memory[1] = 0b00000000;
-        REQUIRE(dev.oneCPUCycle() == 0);
+        dev.oneCPUCycle();
         REQUIRE(dev.regs.a == (0b01010101 & 0b00000000));
         REQUIRE(dev.regs.flags.bits.z == 1);
     }
@@ -240,7 +242,7 @@ TEST_CASE("immediate-instructs") {
         dev.regs.flags.bits.c = 1;
         dev.memory[0] = 0x69;
         dev.memory[1] = 99;
-        REQUIRE(dev.oneCPUCycle() == 0);
+        dev.oneCPUCycle();
         REQUIRE(dev.regs.a == (3 + 99 + 1));
         REQUIRE(dev.regs.flags.bits.c == 0);
     }
@@ -249,7 +251,7 @@ TEST_CASE("immediate-instructs") {
         dev.regs.a = 0xFF;
         dev.memory[0] = 0x69;
         dev.memory[1] = 1;
-        REQUIRE(dev.oneCPUCycle() == 0);
+        dev.oneCPUCycle();
         REQUIRE(dev.regs.a == 0);
         REQUIRE(dev.regs.flags.bits.c == 1);
     }
@@ -258,7 +260,7 @@ TEST_CASE("immediate-instructs") {
         dev.regs.a = 4;
         dev.memory[0] = 0x69;
         dev.memory[1] = -10;
-        REQUIRE(dev.oneCPUCycle() == 0);
+        dev.oneCPUCycle();
         REQUIRE(dev.regs.a == u8_t(4-10));
         REQUIRE(dev.regs.flags.bits.c == 0);
         REQUIRE(dev.regs.flags.bits.v == 1);
@@ -267,7 +269,7 @@ TEST_CASE("immediate-instructs") {
 
 TEST_CASE("implied-instructs") {
     Console dev;
-    REQUIRE(dev.init() == 0);
+    dev.init(nullptr);
 
     memset(&dev.regs, 0, sizeof dev.regs);
     dev.memory.fill(0);
@@ -277,7 +279,7 @@ TEST_CASE("implied-instructs") {
     SECTION("PHP") {
         dev.regs.flags.byte = 0xF5;
         dev.memory[0] = 0x08;
-        REQUIRE(dev.oneCPUCycle() == 0);
+        dev.oneCPUCycle();
         REQUIRE(dev.regs.flags.byte == 0xF5);
         REQUIRE(dev.pop() == 0xF5);
     }

@@ -13,38 +13,12 @@ option(BUILD_TESTS "Enable testing" ON)
     set(CMAKE_BUILD_TYPE ${BUILD_TYPE})
 #
 
-## library
-    add_library(libnesemu STATIC)
-    set_target_properties(libnesemu PROPERTIES OUTPUT_NAME nesemu)
-
-    ## sources
-        file(GLOB_RECURSE PROJECT_SOURCES src/*.cpp src/*.cxx src/*.cc src/*.c)
-        file(GLOB_RECURSE MAIN_PATH src/main.*)
-        list(REMOVE_ITEM PROJECT_SOURCES "${MAIN_PATH}")
-
-        target_sources(libnesemu PUBLIC ${PROJECT_SOURCES})
-    #
-
-    ## headers
-        target_include_directories(libnesemu PUBLIC include/)
-
-        # make headers available for IDEs
-        file(GLOB_RECURSE PROJECT_HEADERS include/*.hpp include/*.h)
-        target_sources(libnesemu PUBLIC ${PROJECT_HEADERS})
-    #
-
-    ## dependecies
-        # SFML
-        find_package(SFML COMPONENTS window audio system REQUIRED)
-        target_link_libraries(libnesemu PRIVATE sfml-window sfml-graphics sfml-audio)
-    #
-#
-
 ## executable
     add_executable(nesemu)
 
     ## sources
-        target_sources(nesemu PRIVATE src/main.cpp)
+        file(GLOB_RECURSE PROJECT_SOURCES src/*.cpp src/*.cxx src/*.cc src/*.c)
+        target_sources(nesemu PUBLIC ${PROJECT_SOURCES})
     #
 
     ## headers
@@ -56,8 +30,9 @@ option(BUILD_TESTS "Enable testing" ON)
     #
 
     ## dependecies
-        # libnesemu
-        target_link_libraries(nesemu PRIVATE libnesemu)
+        # SFML
+        find_package(SFML COMPONENTS window audio system REQUIRED)
+        target_link_libraries(nesemu PRIVATE sfml-window sfml-graphics sfml-audio)
     #
 
     # copy files
@@ -71,18 +46,29 @@ option(BUILD_TESTS "Enable testing" ON)
     if(BUILD_TESTS)
         add_executable(test)
         
-        file(GLOB_RECURSE TEST_SOURCES test/*.cpp test/*.cxx test/*.cc test/*.c)
-        target_sources(test PRIVATE ${TEST_SOURCES})
+        ## sources
+            file(GLOB_RECURSE PROJECT_SOURCES src/*.cpp src/*.cxx src/*.cc src/*.c)
+            file(GLOB_RECURSE MAIN_PATH src/main.*)
+            list(REMOVE_ITEM PROJECT_SOURCES "${MAIN_PATH}")
 
-        ## dependecies
-            # libnesemu
-            target_link_libraries(test libnesemu)
+            file(GLOB_RECURSE TEST_SOURCES test/*.cpp test/*.cxx test/*.cc test/*.c)
+            
+            target_sources(test PRIVATE ${TEST_SOURCES} ${PROJECT_SOURCES})
+        #
+            
+        ## headers
+            target_include_directories(test PRIVATE test include/)
 
-            # Catch2
-            add_subdirectory(vendors/Catch2)
-            target_link_libraries(test Catch2::Catch2)
+            file(GLOB_RECURSE TEST_HEADERS test/*.hpp test/*.h)
+            target_sources(test PRIVATE ${TEST_HEADERS})
         #
 
-        add_definitions(-DTEST)
+        target_compile_definitions(test PRIVATE -DTEST)
+
+        ## dependecies
+            # SFML
+            find_package(SFML COMPONENTS window audio system REQUIRED)
+            target_link_libraries(test PRIVATE sfml-window sfml-graphics sfml-audio)
+        #
     endif()
 #
