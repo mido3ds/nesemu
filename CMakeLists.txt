@@ -34,28 +34,9 @@ option(BUILD_TESTS "Enable testing" ON)
     #
 
     ## dependecies
-        # SDL2
-        add_subdirectory(vendors/SDL2)
-        find_package(SDL2 REQUIRED)
-        target_link_libraries(libnesemu PRIVATE SDL2)
-
-        # SDL2_ttf
-        include(ExternalProject)
-        find_program(MAKE_EXE NAMES gmake nmake make)
-        ExternalProject_Add(SDL2_ttf
-            SOURCE_DIR "${CMAKE_SOURCE_DIR}/vendors/SDL2_ttf/"
-            DOWNLOAD_COMMAND ""
-            BUILD_IN_SOURCE YES
-            WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/vendors/SDL2_ttf/"
-            CONFIGURE_COMMAND ""
-            BUILD_COMMAND ./configure
-            COMMAND ${MAKE_EXE}
-            INSTALL_COMMAND ""
-            BUILD_BYPRODUCTS "${CMAKE_SOURCE_DIR}/vendors/SDL2_ttf/.libs/libSDL2_ttf.so"
-        )
-
-        target_link_libraries(libnesemu PRIVATE "${CMAKE_SOURCE_DIR}/vendors/SDL2_ttf/.libs/libSDL2_ttf.so")
-        target_sources(libnesemu PRIVATE "${CMAKE_SOURCE_DIR}/vendors/SDL2_ttf/SDL_ttf.h")
+        # SFML
+        find_package(SFML COMPONENTS window audio system REQUIRED)
+        target_link_libraries(libnesemu PRIVATE sfml-window sfml-graphics sfml-audio)
     #
 #
 

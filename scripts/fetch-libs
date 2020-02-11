@@ -3,14 +3,11 @@ set -ex
 
 mkdir -p vendors && cd vendors
 
-wget -c 'https://www.libsdl.org/release/SDL2-2.0.10.tar.gz'
-tar xzf SDL2-2.0.10.tar.gz
-ln -sf SDL2-2.0.10 SDL2
-
-wget -c 'https://www.libsdl.org/projects/SDL_ttf/release/SDL2_ttf-2.0.15.tar.gz'
-tar xzf SDL2_ttf-2.0.15.tar.gz
-ln -sf SDL2_ttf-2.0.15 SDL2_ttf
 
 wget -c 'https://github.com/catchorg/Catch2/archive/v2.11.1.tar.gz' -O Catch2-2.11.1.tar.gz
 tar xzf Catch2-2.11.1.tar.gz
 ln -sf Catch2-2.11.1 Catch2
+
+wget -c 'https://github.com/SFML/SFML/archive/2.5.1.tar.gz' -O SFML-2.5.1.tar.gz
+tar xzf SFML-2.5.1.tar.gz
+ln -sf SFML-2.5.1 SFML

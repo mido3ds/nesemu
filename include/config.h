@@ -1,43 +1,42 @@
 #pragma once
 
-#include <SDL2/SDL.h>
+#include <SFML/Window.hpp>
 
 #include "common.h"
 
 namespace Config {
-    // read keyboard state
-    constexpr SDL_Scancode 
-        up = SDL_SCANCODE_UP, 
-        down = SDL_SCANCODE_DOWN, 
-        left = SDL_SCANCODE_LEFT, 
-        right = SDL_SCANCODE_RIGHT, 
-        a = SDL_SCANCODE_A, 
-        b = SDL_SCANCODE_S, 
-        start = SDL_SCANCODE_RETURN, 
-        select = SDL_SCANCODE_TAB,
+    constexpr sf::Keyboard::Key
+        // window
+        pause = sf::Keyboard::P,
+        exit = sf::Keyboard::Escape, 
+
+        // console
+        reset = sf::Keyboard::R, 
+        up = sf::Keyboard::Up, 
+        down = sf::Keyboard::Down, 
+        left = sf::Keyboard::Left, 
+        right = sf::Keyboard::Right, 
+        a = sf::Keyboard::A, 
+        b = sf::Keyboard::S, 
+        start = sf::Keyboard::Return, 
+        select = sf::Keyboard::Tab,
 
         // debugging
-        scrollMemDown = SDL_SCANCODE_J,
-        scrollMemUp = SDL_SCANCODE_K;
-    
-    constexpr SDL_Keycode
-        pause = SDLK_p,
-        exit = SDLK_ESCAPE, 
-        reset = SDLK_r, 
-
-        // debugging
-        nextInstr = SDLK_F10,
-        debug = SDLK_d, 
-        showMem = SDLK_m,
-        toggleStepping = SDLK_F5;
+        nextInstr = sf::Keyboard::F10,
+        debug = sf::Keyboard::D, 
+        showMem = sf::Keyboard::M,
+        toggleStepping = sf::Keyboard::F5,
+        scrollMemDown = sf::Keyboard::J,
+        scrollMemUp = sf::Keyboard::K;
 
     constexpr VideoSystem sys = NTSC;
 
-    constexpr SDL_Rect resolution{0, 0, NTSC.resolution.width, NTSC.resolution.height};
+    struct Rect {int w, h;};
+    constexpr Rect resolution{NTSC.resolution.width, NTSC.resolution.height};
     
-    constexpr SDL_Rect mainWind{0, 0, resolution.w * 3, resolution.h * 3}; 
-    constexpr SDL_Rect debugWind{0, 0, 230, mainWind.h};
-    constexpr SDL_Rect memWind{0, 0, mainWind.w, 100};
+    constexpr Rect mainWind{resolution.w * 3, resolution.h * 3}; 
+    constexpr Rect debugWind{230, mainWind.h};
+    constexpr Rect memWind{mainWind.w, 100};
 
     constexpr char* fontPath = "zig.ttf";
     constexpr int fontSize = 13;
