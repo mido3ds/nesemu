@@ -52,7 +52,10 @@ int App::init(string title, Console* dev) {
         logError("null debugWind");
         return 1;
     }
-    if (debugging) { SDL_ShowWindow(debugWind); }
+    if (debugging) { 
+        SDL_ShowWindow(debugWind); 
+        logInfo("started in debugging");
+    }
 
     err = debugRenderer.init(debugWind, Config::debugWind, Config::debugWind);
     if (err != 0) {
@@ -65,6 +68,7 @@ int App::init(string title, Console* dev) {
         return 1;
     }
 
+    logInfo("initialized app");
     return 0;
 }
 
@@ -196,10 +200,7 @@ int App::mainTick() {
         case SDL_KEYUP:
             switch (event.key.keysym.sym) {
             case Config::reset:
-                err = dev->reset();
-                if (err != 0) {
-                    return err;
-                }
+                dev->reset();
                 break;
             case Config::exit:
                 quit = true;
@@ -235,20 +236,9 @@ int App::mainTick() {
     dev->joypad0.select  = keyb[Config::select];
 
     if (!stepping || keyb[Config::nextInstr]) {
-        err = dev->oneCPUCycle();
-        if (err != 0) {
-            return err;
-        }
-
-        err = dev->onePPUCycle(&mainRenderer);
-        if (err != 0) {
-            return err;
-        }
-
-        err = dev->oneAPUCycle();
-        if (err != 0) {
-            return err;
-        }
+        dev->oneCPUCycle();
+        dev->onePPUCycle(&mainRenderer);
+        dev->oneAPUCycle();
     }
 
     if (showMem) { 

@@ -96,7 +96,9 @@ static map<u16_t, string> disassemble(u8_t* mem, u16_t addr, u32_t size, const I
 
         ret[addr] = instr;
 
-        size -= consumedBytes;
+        if (consumedBytes <= size) { size -= consumedBytes; }
+        else { size = 0; }
+
         mem += consumedBytes;
         addr += consumedBytes;
     }

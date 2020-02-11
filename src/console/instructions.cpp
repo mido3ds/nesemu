@@ -17,16 +17,9 @@ static inline void branch(u16_t& pc, u16_t& cpuCycles, u8_t const& fetched) {
     cpuCycles += 1 + crossPagePenalty(oldpc, pc);
 }
 
-int Console::init() {
-#ifndef TEST
-    logInfo("started building Console device");
-
-    // 6502 instruction set reference: http://obelisk.me.uk/6502/reference.html
-    logInfo("filling instruction set data");
-#endif //TEST
-
+void Console::loadInstructions() {
     instrucSet.fill({[this]() {
-        logWarning("invalid/unsupported opcode(0x%02X) called", read(regs.pc-1));
+        logError("invalid/unsupported opcode(0x%02X) called [pc=0x%04X]", read(regs.pc-1), regs.pc-1);
     },"???", AddressMode::Implicit, 0});
 
     /*ADC*/ {
@@ -847,8 +840,23 @@ int Console::init() {
             regs.flags.bits.n = regs.a >> 7;
         }, "TYA", AddressMode::Implicit, 2};
     }
-#ifndef TEST
-    logInfo("finished building Console device");
-#endif
+}
+
+int Console::init(ROM* rom) {
+    if (!rom) { 
+        logError("null rom");
+        return 1;
+    }
+
+    loadInstructions();
+
+    int err = rom->copyToMemory(&memory);
+    if (err != 0) {
+        return err;
+    }
+
+    powerOn();
+
+    logInfo("finished initalizing Console device");
     return 0;
 }

@@ -4,7 +4,11 @@
 #include "renderer.h"
 #include "rom.h"
 
-struct Console {
+class Console {
+private:
+    void powerOn();
+    void loadInstructions();
+public:
 /////////////////////////// State ///////////////////////////
     struct {
         u16_t pc; // program counter
@@ -27,8 +31,8 @@ struct Console {
         } flags; // processor status
     } regs;
 
-    array<u8_t, MEM_SIZE> memory;
-    array<u8_t, MEM_SIZE> vram;
+    MemType memory;
+    MemType vram;
     array<u8_t, 256> sprram; // sprite ram
 
     InstructionSet instrucSet;
@@ -174,12 +178,13 @@ struct Console {
     u8_t readPPUStatusRegister();
 
     // main
-    int init();
-    int reset();
-    int powerOn();
-    int oneCPUCycle();
-    int onePPUCycle(Renderer* renderer);
-    int oneAPUCycle();
+    int init(ROM* rom);
+    void reset();
+
+    // cycle
+    void oneCPUCycle();
+    void onePPUCycle(Renderer* renderer);
+    void oneAPUCycle();
 
     // getAssembly returns array of the assembly representation of instructions in memory
     // from addr-n ... addr+n, with total size of (2*n+1) string
