@@ -8,7 +8,11 @@
 
 using std::string;
 
+#ifndef TEST
 void logInfo(string format, ...);
+#else
+#define logInfo(...)
+#endif
 
 void logWarning(string format, ...);
 

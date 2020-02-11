@@ -843,16 +843,15 @@ void Console::loadInstructions() {
 }
 
 int Console::init(ROM* rom) {
-    if (!rom) { 
-        logError("null rom");
-        return 1;
-    }
-
     loadInstructions();
 
-    int err = rom->copyToMemory(&memory);
-    if (err != 0) {
-        return err;
+    if (rom) {
+        int err = rom->copyToMemory(&memory);
+        if (err != 0) {
+            return err;
+        }
+    } else {
+        logInfo("no rom");
     }
 
     powerOn();
