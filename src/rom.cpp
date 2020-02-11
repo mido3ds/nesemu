@@ -21,6 +21,8 @@ tuple<u8_t*, size_t> readBinaryFile(string path) {
 int ROM::fromFile(string path) {
     size_t size = 0;
     u8_t* buffer = nullptr;
+
+    logInfo("reading rom from %s", path.c_str());
     
     tie(buffer, size) = readBinaryFile(path);
     if (size == 0 || buffer == nullptr) {  
@@ -38,7 +40,16 @@ int ROM::fromFile(string path) {
     // copy rest of header
     memcpy(&header, buffer+4, 16-4);
 
+    if (getMapperNumber() != 0) {
+        logError("emulator only supports NROM (0 mapper)");
+        logWarning("mapping as 0 mapper");
+    }
+
     // no trainer
+    if (header.flags6.bits.hasTrainer) {
+        logError("emulator doesnt support trainers");
+        logWarning("ignoring trainer");
+    }
 
     // cpy PRG 
     u8_t* prgPtr = buffer+16;
@@ -68,9 +79,26 @@ int ROM::fromFile(string path) {
     memcpy(chrData, chrPtr, chrSize);
 
     // no playchoice
+    if (header.flags7.bits.hasPlayChoice) {
+        logError("emulator doesnt support PlayChoice");
+        logWarning("ignoring PlayChoice");
+    }
 
     delete buffer;
 
+    logInfo("rom mapper num = %d", getMapperNumber());
+    logInfo("iNES version = %d", header.flags7.bits.nes2format == 2? 2:1);
+    logInfo("rom num of PRG roms = %d", header.numPRGs);
+    logInfo("rom num of CHR roms = %d", header.numCHRs);
+    if (!header.flags6.bits.ignoreMirroringControl) {
+        if (header.flags6.bits.mirroring == 0){
+            logInfo("rom mirroring is horizontal");
+        } else {
+            logInfo("rom mirroring is vertical");
+        }
+    } else {
+        logInfo("rom ignores mirroring");
+    }
     logInfo("done reading ROM");
     return 0;
 }

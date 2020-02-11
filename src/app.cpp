@@ -12,7 +12,6 @@
 #define MEM_VPADDING 5
 
 int App::init(string title, Console* dev) {
-    memBeggining = EX_ROM.start/MEM_WIDTH;
     int err;
 
     this->dev = dev;
@@ -191,6 +190,7 @@ void App::renderMem() {
 int App::mainTick() {
     int err;
     SDL_Event event;
+    bool step = false;
 
     while (SDL_PollEvent(&event)) {
         switch (event.type) {
@@ -220,6 +220,9 @@ int App::mainTick() {
             case Config::toggleStepping:
                 stepping = !stepping;
                 break;
+            case Config::nextInstr:
+                step = true;
+                break;
             }
         }
     }
@@ -235,7 +238,7 @@ int App::mainTick() {
     dev->joypad0.start   = keyb[Config::start];
     dev->joypad0.select  = keyb[Config::select];
 
-    if (!stepping || keyb[Config::nextInstr]) {
+    if (!stepping || step) {
         dev->oneCPUCycle();
         dev->onePPUCycle(&mainRenderer);
         dev->oneAPUCycle();
