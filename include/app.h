@@ -1,6 +1,7 @@
 #pragma once
 
-#include <SDL2/SDL.h>
+#include <SFML/Window.hpp>
+#include <SFML/Graphics.hpp>
 
 #include "sdttype.h"
 #include "renderer.h"
@@ -9,9 +10,9 @@
 class App {
 protected:
     Console* dev = nullptr;
-    SDL_Window *mainWind = nullptr, *debugWind = nullptr;
+    sf::RenderWindow mainWind, debugWind;
     Renderer mainRenderer, debugRenderer;
-    TTF_Font* mainFont = nullptr;
+    sf::Font mainFont;
 
     bool quit = false, pause = false, 
         debugging = true, showMem = true,

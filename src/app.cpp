@@ -20,49 +20,29 @@ int App::init(string title, Console* dev) {
         return 1;
     }
 
-    SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO);
-    TTF_Init();
+    // main window
+    mainWind.create(sf::VideoMode(Config::mainWind.w, Config::mainWind.h), 
+        title, sf::Style::Titlebar|sf::Style::Close);
 
-    mainWind = SDL_CreateWindow(
-        title.c_str(),
-        SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
-        Config::mainWind.w, Config::mainWind.h,
-        SDL_WINDOW_SHOWN
-    );
-    if (mainWind == nullptr) {
-        logError("null mainWind");
-        return 1;
-    }
-
-    err = mainRenderer.init(mainWind, Config::resolution, Config::mainWind);
+    err = mainRenderer.init(&mainWind, Config::resolution, Config::mainWind);
     if (err != 0) {
         return err;
     }
 
-    int x;
-    SDL_GetWindowPosition(mainWind, &x, 0);
-    debugWind = SDL_CreateWindow(
-        "Debugger",
-        x+Config::mainWind.w+5, SDL_WINDOWPOS_CENTERED,
-        Config::debugWind.w, Config::debugWind.h,
-        SDL_WINDOW_HIDDEN
-    );
-    if (debugWind == nullptr) {
-        logError("null debugWind");
-        return 1;
-    }
-    if (debugging) { 
-        SDL_ShowWindow(debugWind); 
-        logInfo("started in debugging");
-    }
+    // debug window
+    debugWind.create(sf::VideoMode(Config::debugWind.w, Config::debugWind.h), 
+        "Debugger", sf::Style::Titlebar|sf::Style::Close);
+    debugWind.setVisible(debugging);
+    auto mpos = mainWind.getPosition();
+    debugWind.setPosition(sf::Vector2i(mpos.x+Config::mainWind.w+5, mpos.y));
 
-    err = debugRenderer.init(debugWind, Config::debugWind, Config::debugWind);
+    err = debugRenderer.init(&debugWind, Config::resolution, Config::debugWind);
     if (err != 0) {
         return err;
     }
 
-    mainFont = TTF_OpenFont(Config::fontPath, Config::fontSize);
-    if (mainFont == nullptr) {
+    // font
+    if (!mainFont.loadFromFile(Config::fontPath)) {
         logError("cant load main font");
         return 1;
     }
@@ -72,29 +52,20 @@ int App::init(string title, Console* dev) {
 }
 
 App::~App() {
-    if (mainFont) {
-        TTF_CloseFont(mainFont);
+    if (debugWind.isOpen()) {
+        debugWind.close();
     }
 
-    if (debugWind) {
-        SDL_DestroyWindow(debugWind);
+    if (mainWind.isOpen()) {
+        mainWind.close();
     }
-
-    if (mainWind) {
-        SDL_DestroyWindow(mainWind);
-    }
-
-    TTF_Quit();
-    SDL_Quit();
 }
 
 void App::toggleDebugger() {
-    if (debugging) {
-        SDL_HideWindow(debugWind);
-    } else {
-        SDL_ShowWindow(debugWind);
-    }
     debugging = !debugging;
+    debugWind.setVisible(debugging);
+    auto mpos = mainWind.getPosition();
+    debugWind.setPosition(sf::Vector2i(mpos.x+Config::mainWind.w+5, mpos.y));
 }
 
 static string hex8(u8_t v) {
@@ -112,40 +83,72 @@ static string hex16(u16_t v) {
 int App::debuggerTick() {
     if (!debugging) { return 0; }
 
-    debugRenderer.allPixels({0,0,0},0);
-    debugRenderer.endPixels();
+    sf::Event event;
+    while (debugWind.pollEvent(event)) {
+        switch (event.type) {
+        case sf::Event::Closed:
+            quit = true;
+            return 0;
+        case sf::Event::KeyPressed:
+            switch (event.key.code) {
+            case Config::reset:
+                dev->reset();
+                break;
+            case Config::exit:
+                quit = true;
+                return 0;
+            case Config::pause:
+                if (pause) { logInfo("pause"); }
+                else       { logInfo("unpause"); }
+                
+                pause = !pause;
+                break;
+            case Config::debug:
+                toggleDebugger();
+                break;
+            case Config::showMem:
+                showMem = !showMem;
+                break;
+            case Config::toggleStepping:
+                stepping = !stepping;
+                break;
+            }
+        }
+    }
+
+    debugRenderer.clear({0,0,0},0);
 
     const int h = Config::fontSize+1, 
         w = Config::debugWind.w/2;
     int i = 0;
 
     // fps
-    debugRenderer.text("FPS: "+to_string(int(fps)), 10,(i)*h,1,1, mainFont,{255,0,0}, 0, 0);
+    debugRenderer.text("FPS: "+to_string(int(fps)), 10,(i)*h,1,1, &mainFont,{255,0,0}, 0, 0);
 
     // mem
-    debugRenderer.text("MEM ", 10+w,(i)*h,1,1, mainFont,{255,255,255}, 0, 0);
-    if (showMem) { debugRenderer.text("ON", 10+w+40,(i++)*h,1,1, mainFont,{0,255,0}, 0, 0); }
-    else { debugRenderer.text("OFF", 10+w+40,(i++)*h,1,1, mainFont,{255,0,0}, 0, 0); }
+    debugRenderer.text("MEM ", 10+w,(i)*h,1,1, &mainFont,{255,255,255}, 0, 0);
+    if (showMem) { debugRenderer.text("ON", 10+w+40,(i++)*h,1,1, &mainFont,{0,255,0}, 0, 0); }
+    else { debugRenderer.text("OFF", 10+w+40,(i++)*h,1,1, &mainFont,{255,0,0}, 0, 0); }
     i++;
 
     // regs
     Color c{255,255,0};
-    debugRenderer.text("SP: $" + hex8(dev->regs.sp), 10,(i)*h,1,1, mainFont,c, 0, 0);
-    debugRenderer.text("A: $" + hex8(dev->regs.a), 10+w,(i++)*h,1,1, mainFont,c, 0, 0);
+    debugRenderer.text("SP: $" + hex8(dev->regs.sp), 10,(i)*h,1,1, &mainFont,c, 0, 0);
+    debugRenderer.text("A: $" + hex8(dev->regs.a), 10+w,(i++)*h,1,1, &mainFont,c, 0, 0);
 
-    debugRenderer.text("X: $" + hex8(dev->regs.x), 10,(i)*h,1,1, mainFont,c, 0, 0);
-    debugRenderer.text("Y: $" + hex8(dev->regs.y), 10+w,(i++)*h,1,1, mainFont,c, 0, 0);
+    debugRenderer.text("X: $" + hex8(dev->regs.x), 10,(i)*h,1,1, &mainFont,c, 0, 0);
+    debugRenderer.text("Y: $" + hex8(dev->regs.y), 10+w,(i++)*h,1,1, &mainFont,c, 0, 0);
     i++;
 
-    debugRenderer.text("C: " + to_string(dev->regs.flags.bits.c), 10,(i)*h,1,1, mainFont,c, 0, 0);
-    debugRenderer.text("Z: " + to_string(dev->regs.flags.bits.z), 10+w*2.0/3,(i)*h,1,1, mainFont,c, 0, 0);
-    debugRenderer.text("I: " + to_string(dev->regs.flags.bits.i), 10+w*4.0/3,(i++)*h,1,1, mainFont,c, 0, 0);
+    debugRenderer.text("C: " + to_string(dev->regs.flags.bits.c), 10,(i)*h,1,1, &mainFont,c, 0, 0);
+    debugRenderer.text("Z: " + to_string(dev->regs.flags.bits.z), 10+w*2.0/3,(i)*h,1,1, &mainFont,c, 0, 0);
+    debugRenderer.text("I: " + to_string(dev->regs.flags.bits.i), 10+w*4.0/3,(i++)*h,1,1, &mainFont,c, 0, 0);
 
-    debugRenderer.text("D: " + to_string(dev->regs.flags.bits.d), 10,(i)*h,1,1, mainFont,c, 0, 0);
-    debugRenderer.text("B: " + to_string(dev->regs.flags.bits.b), 10+w*2.0/3,(i)*h,1,1, mainFont,c, 0, 0);
-    debugRenderer.text("V: " + to_string(dev->regs.flags.bits.v), 10+w*4.0/3,(i++)*h,1,1, mainFont,c, 0, 0);
+    debugRenderer.text("D: " + to_string(dev->regs.flags.bits.d), 10,(i)*h,1,1, &mainFont,c, 0, 0);
+    debugRenderer.text("B: " + to_string(dev->regs.flags.bits.b), 10+w*2.0/3,(i)*h,1,1, &mainFont,c, 0, 0);
+    debugRenderer.text("V: " + to_string(dev->regs.flags.bits.v), 10+w*4.0/3,(i++)*h,1,1, &mainFont,c, 0, 0);
 
-    debugRenderer.text("N: " + to_string(dev->regs.flags.bits.n), 10,(i++)*h,1,1, mainFont,c, 0, 0);
+    debugRenderer.text("N: " + to_string(dev->regs.flags.bits.n), 10,(i++)*h,1,1, &mainFont,c, 0, 0);
     i++;
     
     // assembly
@@ -157,7 +160,7 @@ int App::debuggerTick() {
             c.g = c.b = 0;
         }
 
-        debugRenderer.text(s, 10,(i++)*h,1,1, mainFont,c, 0, 0);
+        debugRenderer.text(s, 10,(i++)*h,1,1, &mainFont,c, 0, 0);
     }
 
     debugRenderer.show();
@@ -166,21 +169,20 @@ int App::debuggerTick() {
 }
 
 void App::renderMem() {
-    mainRenderer.allPixels({0,0,0},0);
-    mainRenderer.endPixels();
+    mainRenderer.clear({0,0,0},0);
 
     for (int i = 0; i < MEM_WIDTH; i++) {
         int x = MEM_HPADDING+53+i*30;
-        mainRenderer.text(hex8(i), x, MEM_VPADDING, 1, 1, mainFont, {255,255,255}, 0, 0);
+        mainRenderer.text(hex8(i), x, MEM_VPADDING, 1, 1, &mainFont, {255,255,255}, 0, 0);
     }
 
     for (int j = 0; j < MEM_HEIGHT; j++) {
         int y = MEM_VPADDING+(j+1)*(Config::fontSize+1);
-        mainRenderer.text(hex16((memBeggining+j)*MEM_WIDTH), MEM_HPADDING, y, 1, 1, mainFont, {255,255,255}, 0, 0);
+        mainRenderer.text(hex16((memBeggining+j)*MEM_WIDTH), MEM_HPADDING, y, 1, 1, &mainFont, {255,255,255}, 0, 0);
 
         for (int i = 0; i < MEM_WIDTH; i++) {
             int x = MEM_HPADDING+53+i*30;
-            mainRenderer.text(hex8(dev->memory[(memBeggining+j)*MEM_WIDTH+i]), x, y, 1, 1, mainFont, {255,255,0}, 0, 0);
+            mainRenderer.text(hex8(dev->memory[(memBeggining+j)*MEM_WIDTH+i]), x, y, 1, 1, &mainFont, {255,255,0}, 0, 0);
         }
     }
 
@@ -189,16 +191,17 @@ void App::renderMem() {
 
 int App::mainTick() {
     int err;
-    SDL_Event event;
     bool step = false;
 
-    while (SDL_PollEvent(&event)) {
+    // TODO: in one function
+    sf::Event event;
+    while (mainWind.pollEvent(event)) {
         switch (event.type) {
-        case SDL_QUIT:
+        case sf::Event::Closed:
             quit = true;
             return 0;
-        case SDL_KEYUP:
-            switch (event.key.keysym.sym) {
+        case sf::Event::KeyPressed:
+            switch (event.key.code) {
             case Config::reset:
                 dev->reset();
                 break;
@@ -228,15 +231,15 @@ int App::mainTick() {
     }
     if (pause) { return 0; }
 
-    auto keyb = SDL_GetKeyboardState(NULL);
-    dev->joypad0.up      = keyb[Config::up];
-    dev->joypad0.down    = keyb[Config::down];
-    dev->joypad0.left    = keyb[Config::left];
-    dev->joypad0.right   = keyb[Config::right];
-    dev->joypad0.a       = keyb[Config::a];
-    dev->joypad0.b       = keyb[Config::b];
-    dev->joypad0.start   = keyb[Config::start];
-    dev->joypad0.select  = keyb[Config::select];
+    const auto keyb = sf::Keyboard::isKeyPressed;
+    dev->joypad0.up      = keyb(Config::up);
+    dev->joypad0.down    = keyb(Config::down);
+    dev->joypad0.left    = keyb(Config::left);
+    dev->joypad0.right   = keyb(Config::right);
+    dev->joypad0.a       = keyb(Config::a);
+    dev->joypad0.b       = keyb(Config::b);
+    dev->joypad0.start   = keyb(Config::start);
+    dev->joypad0.select  = keyb(Config::select);
 
     if (!stepping || step) {
         dev->oneCPUCycle();
@@ -245,13 +248,13 @@ int App::mainTick() {
     }
 
     if (showMem) { 
-        int scrolMultiplier = keyb[SDL_SCANCODE_LCTRL] || keyb[SDL_SCANCODE_RCTRL] ? MEM_HEIGHT:1;
+        int scrolMultiplier = keyb(sf::Keyboard::LControl) || keyb(sf::Keyboard::RControl) ? MEM_HEIGHT:1;
 
-        if (keyb[Config::scrollMemDown]) {
+        if (keyb(Config::scrollMemDown)) {
             if ((memBeggining+scrolMultiplier+MEM_HEIGHT)*MEM_WIDTH < MEM_SIZE) {
                 memBeggining += scrolMultiplier;
             }
-        } else if (keyb[Config::scrollMemUp]) {
+        } else if (keyb(Config::scrollMemUp)) {
             if (memBeggining >= scrolMultiplier) {
                 memBeggining -= scrolMultiplier;
             }
@@ -269,7 +272,7 @@ int App::mainLoop() {
     logInfo("start executing");
     int err;
 
-    while (!quit) {
+    while (!quit && mainWind.isOpen()) {
         auto t1 = high_resolution_clock::now();
 
         if ((err = mainTick()) != 0) {
