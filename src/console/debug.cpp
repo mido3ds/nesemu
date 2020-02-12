@@ -13,7 +13,14 @@ static tuple<string, int> oneInstr(u8_t* mem, u32_t size, const InstructionSet& 
     ostringstream ss;
     char a[4], b[4];
 
-    ss << instset[mem[0]].name;
+    auto name = instset[mem[0]].name;
+    if (name == "???") {
+        char tmp[10];
+        sprintf(tmp, "$%02X", mem[0]);
+        ss << tmp << " ?????";
+    } else {
+        ss << name;
+    }
 
     if (size >= 2) { sprintf(a, "%02X", mem[1]); }
     else           { strcpy(a, "??"); }

@@ -23,6 +23,7 @@ int App::init(string title, Console* dev) {
     // main window
     mainWind.create(sf::VideoMode(Config::mainWind.w, Config::mainWind.h), 
         title, sf::Style::Titlebar|sf::Style::Close);
+    mainWind.setPosition(sf::Vector2i(0,0));
 
     err = mainRenderer.init(&mainWind, Config::resolution, Config::mainWind);
     if (err != 0) {
@@ -157,6 +158,10 @@ int App::debuggerTick() {
     for (auto& s: dev->getAssembly(dev->regs.pc, n)) {
         c = {r:255, g:255, b:255};
         if (j++ == n+1) {
+            c.b=0;
+        }
+
+        if (s.size() >= 8 && s[7] == '$') {
             c.g = c.b = 0;
         }
 
