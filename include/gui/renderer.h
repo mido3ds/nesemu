@@ -4,7 +4,7 @@
 #include <SFML/Graphics.hpp>
 
 #include "sdttype.h"
-#include "common.h"
+#include "emulation/common.h"
 #include "config.h"
 
 class Renderer {

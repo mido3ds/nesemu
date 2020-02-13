@@ -2,7 +2,7 @@
 #include <sstream>
 #include <unistd.h>
 
-#include "app.h"
+#include "gui/app.h"
 #include "logger.h"
 #include "config.h"
 

@@ -1,4 +1,4 @@
-#include "common.h"
+#include "emulation/common.h"
 #include "logger.h"
 
 // nes color palatte -> RGB color

@@ -1,4 +1,4 @@
-#include "renderer.h"
+#include "gui/renderer.h"
 #include "logger.h"
 #include "config.h"
 

@@ -3,7 +3,7 @@
 #include <string>
 
 #include "sdttype.h"
-#include "common.h"
+#include "emulation/common.h"
 
 using namespace std;
 

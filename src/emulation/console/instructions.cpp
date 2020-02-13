@@ -3,7 +3,7 @@
 #include <map>
 #include <iterator>
 
-#include "console.h"
+#include "emulation/console.h"
 #include "logger.h"
 
 static inline u8_t crossPagePenalty(u16_t const& oldpc, u16_t const& newpc) {

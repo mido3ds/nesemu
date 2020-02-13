@@ -4,8 +4,8 @@
 #include <SFML/Graphics.hpp>
 
 #include "sdttype.h"
-#include "renderer.h"
-#include "console.h"
+#include "gui/renderer.h"
+#include "emulation/console.h"
 
 class App {
 protected:

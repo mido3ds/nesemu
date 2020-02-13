@@ -3,7 +3,7 @@
 #include <map>
 #include <iterator>
 
-#include "console.h"
+#include "emulation/console.h"
 #include "logger.h"
 
 u8_t Console::read(u16_t address) {
