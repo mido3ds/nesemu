@@ -4,7 +4,7 @@
 // nes color palatte -> RGB color
 Color Color::fromPalatte(const u8_t palatte) {
     if (palatte > 0x3F) {
-        logError("invalid palatte color(0x%02x), returning default color", palatte);
+        ERROR("invalid palatte color(0x%02x), returning default color", palatte);
         return DEFAULT_COLOR;
     }
 

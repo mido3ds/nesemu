@@ -8,7 +8,7 @@
 
 void Console::reset() {
     regs.pc = read16(RH);
-    logInfo("PC = memory[0xFFFC] = 0x%04X", regs.pc);
+    INFO("PC = memory[0xFFFC] = 0x%04X", regs.pc);
     
     regs.sp = 0xFD;
     regs.flags.byte = 0;
@@ -16,20 +16,20 @@ void Console::reset() {
 
     vram[0x4015] = 0;
     cpuCycles += 8;
-    logInfo("done resetting");
+    INFO("done resetting");
 }
 
 void Console::powerOn() {
     // https://wiki.nesdev.com/w/index.php/CPU_power_up_state#At_power-up
     regs.pc = read16(RH);
-    logInfo("PC = memory[0xFFFC] = 0x%04X", regs.pc);
+    INFO("PC = memory[0xFFFC] = 0x%04X", regs.pc);
 
     regs.sp = 0xFD;
     regs.flags.byte = 0x34; // IRQ disabled
     regs.a = regs.x = regs.y = 0;
 
     cpuCycles = 0;
-    logInfo("intialized CPU");
+    INFO("intialized CPU");
 
     // TODO: All 15 bits of noise channel LFSR = $0000[4]. 
     //The first time the LFSR is clocked from the all-0s state, it will shift in a 1.
@@ -39,7 +39,7 @@ void Console::powerOn() {
 
     // https://wiki.nesdev.com/w/index.php/PPU_power_up_state
     // TODO: set all ppu state
-    logInfo("initialized PPU");
+    INFO("initialized PPU");
 }
 
 void Console::oneCPUCycle() {

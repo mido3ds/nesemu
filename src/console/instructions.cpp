@@ -7,7 +7,7 @@
 #include "logger.h"
 
 static inline u8_t crossPagePenalty(u16_t const& oldpc, u16_t const& newpc) {
-    // logInfo("newpc=%04X, oldpc=")
+    // INFO("newpc=%04X, oldpc=")
     return (newpc>>8 == oldpc>>8) ? 0:1;
 }
 
@@ -19,7 +19,7 @@ static inline void branch(u16_t& pc, u16_t& cpuCycles, u8_t const& fetched) {
 
 void Console::loadInstructions() {
     instrucSet.fill({[this]() {
-        logError("invalid/unsupported opcode(0x%02X) called [pc=0x%04X]", read(regs.pc-1), regs.pc-1);
+        ERROR("invalid/unsupported opcode(0x%02X) called [pc=0x%04X]", read(regs.pc-1), regs.pc-1);
     },"???", AddressMode::Implicit, 0});
 
     /*ADC*/ {
@@ -851,11 +851,11 @@ int Console::init(ROM* rom) {
             return err;
         }
     } else {
-        logInfo("no rom");
+        INFO("no rom");
     }
 
     powerOn();
 
-    logInfo("finished initalizing Console device");
+    INFO("finished initalizing Console device");
     return 0;
 }

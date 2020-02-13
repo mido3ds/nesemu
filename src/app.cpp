@@ -16,7 +16,7 @@ int App::init(string title, Console* dev) {
 
     this->dev = dev;
     if (dev == nullptr) {
-        logError("dev null");
+        ERROR("dev null");
         return 1;
     }
 
@@ -44,11 +44,11 @@ int App::init(string title, Console* dev) {
 
     // font
     if (!mainFont.loadFromFile(Config::fontPath)) {
-        logError("cant load main font");
+        ERROR("cant load main font");
         return 1;
     }
 
-    logInfo("initialized app");
+    INFO("initialized app");
     return 0;
 }
 
@@ -81,41 +81,58 @@ static string hex16(u16_t v) {
     return buffer;
 }
 
-int App::debuggerTick() {
-    if (!debugging) { return 0; }
-
+void App::handleEvents(sf::RenderWindow& w) {
     sf::Event event;
-    while (debugWind.pollEvent(event)) {
+    while (w.pollEvent(event)) {
         switch (event.type) {
         case sf::Event::Closed:
             quit = true;
-            return 0;
+            break;
         case sf::Event::KeyPressed:
-            switch (event.key.code) {
-            case Config::reset:
-                dev->reset();
-                break;
-            case Config::exit:
-                quit = true;
-                return 0;
-            case Config::pause:
-                if (pause) { logInfo("pause"); }
-                else       { logInfo("unpause"); }
-                
-                pause = !pause;
-                break;
-            case Config::debug:
-                toggleDebugger();
-                break;
-            case Config::showMem:
-                showMem = !showMem;
-                break;
-            case Config::toggleStepping:
-                stepping = !stepping;
-                break;
-            }
+            onKeyPressed(event.key.code);
+            break;
+        case sf::Event::KeyReleased:
+            onKeyReleased(event.key.code);
+            break;
         }
     }
+}
+
+void App::onKeyPressed(sf::Keyboard::Key key) {
+    switch (key) {
+    case Config::reset:
+        dev->reset();
+        break;
+    case Config::exit:
+        quit = true;
+        break;
+    case Config::pause:
+        pause = !pause;
+
+        if (pause) { INFO("pause"); }
+        else       { INFO("unpause"); }
+        break;
+    case Config::debug:
+        toggleDebugger();
+        break;
+    case Config::showMem:
+        showMem = !showMem;
+        break;
+    case Config::toggleStepping:
+        inDebugMode = !inDebugMode;
+        break;
+    case Config::nextInstr:
+        doOneInstr = true;
+        break;
+    }
+}
+
+void App::onKeyReleased(sf::Keyboard::Key key) {}
+
+int App::debuggerTick() {
+    if (!debugging) { return 0; }
+
+    handleEvents(debugWind);
 
     debugRenderer.clear({0,0,0},0);
 
@@ -196,44 +213,9 @@ void App::renderMem() {
 
 int App::mainTick() {
     int err;
-    bool step = false;
 
-    // TODO: in one function
-    sf::Event event;
-    while (mainWind.pollEvent(event)) {
-        switch (event.type) {
-        case sf::Event::Closed:
-            quit = true;
-            return 0;
-        case sf::Event::KeyPressed:
-            switch (event.key.code) {
-            case Config::reset:
-                dev->reset();
-                break;
-            case Config::exit:
-                quit = true;
-                return 0;
-            case Config::pause:
-                if (pause) { logInfo("pause"); }
-                else       { logInfo("unpause"); }
-                
-                pause = !pause;
-                break;
-            case Config::debug:
-                toggleDebugger();
-                break;
-            case Config::showMem:
-                showMem = !showMem;
-                break;
-            case Config::toggleStepping:
-                stepping = !stepping;
-                break;
-            case Config::nextInstr:
-                step = true;
-                break;
-            }
-        }
-    }
+    handleEvents(mainWind);
+
     if (pause) { return 0; }
 
     const auto keyb = sf::Keyboard::isKeyPressed;
@@ -246,11 +228,12 @@ int App::mainTick() {
     dev->joypad0.start   = keyb(Config::start);
     dev->joypad0.select  = keyb(Config::select);
 
-    if (!stepping || step) {
+    if (!inDebugMode || doOneInstr) {
         dev->oneCPUCycle();
         dev->onePPUCycle(&mainRenderer);
         dev->oneAPUCycle();
     }
+    doOneInstr = false;
 
     if (showMem) { 
         int scrolMultiplier = keyb(sf::Keyboard::LControl) || keyb(sf::Keyboard::RControl) ? MEM_HEIGHT:1;
@@ -274,7 +257,7 @@ int App::mainTick() {
 int App::mainLoop() {
     using namespace chrono;
 
-    logInfo("start executing");
+    INFO("start executing");
     int err;
 
     while (!quit && mainWind.isOpen()) {
