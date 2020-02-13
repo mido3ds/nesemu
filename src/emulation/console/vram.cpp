@@ -3,7 +3,7 @@
 #include <map>
 #include <iterator>
 
-#include "console.h"
+#include "emulation/console.h"
 #include "logger.h"
 
 u16_t Console::readVRam16(u16_t address) { return readVRam(address) | readVRam(address+1) << 8; }

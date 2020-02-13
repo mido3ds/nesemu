@@ -2,7 +2,7 @@
 
 #include "catch.hpp"
 
-#include "console.h"
+#include "emulation/console.h"
 
 TEST_CASE("memory-access") {
     Console dev;

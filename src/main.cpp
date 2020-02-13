@@ -4,8 +4,8 @@
 */
 #include <string>
 
-#include "app.h"
-#include "console.h"
+#include "gui/app.h"
+#include "emulation/console.h"
 
 int main(int argc, char** argv) {
     int err;

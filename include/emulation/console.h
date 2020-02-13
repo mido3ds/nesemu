@@ -1,8 +1,8 @@
 #pragma once
 
-#include "common.h"
-#include "renderer.h"
-#include "rom.h"
+#include "emulation/common.h"
+#include "gui/renderer.h"
+#include "emulation/rom.h"
 
 class Console {
 private:

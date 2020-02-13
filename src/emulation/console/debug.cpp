@@ -3,7 +3,7 @@
 #include <map>
 #include <iterator>
 
-#include "console.h"
+#include "emulation/console.h"
 #include "logger.h"
 
 static tuple<string, int> oneInstr(u8_t* mem, u32_t size, const InstructionSet& instset) {

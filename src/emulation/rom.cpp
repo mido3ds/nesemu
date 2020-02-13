@@ -1,7 +1,7 @@
 #include <fstream>
 #include <tuple>
 
-#include "rom.h"
+#include "emulation/rom.h"
 #include "logger.h"
 
 tuple<u8_t*, size_t> readBinaryFile(string path) {

@@ -5,19 +5,6 @@
 #define YELLOW  "\033[0;33m"
 #define RESET   "\033[0m"
 
-static char* getGMTDateTime() {
-    time_t rawTime;
-    tm* ptm;
-    char* result;
-
-    time(&rawTime);
-    ptm = gmtime(&rawTime);
-
-    result = asctime(ptm);
-    result[strlen(result)-1] = '\0';
-    return result;
-}
-
 void logInfo(string format, ...) {
     format = GREEN"[INFO] "RESET + format + '\n';
 
