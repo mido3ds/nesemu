@@ -81,7 +81,7 @@ static tuple<string, int> oneInstr(u8_t* mem, u32_t size, const InstructionSet& 
         ss << " ($" << a << "), Y";
         bytes++;
         break;
-    default: logError("unknown address mode");
+    default: ERROR("unknown address mode");
     }
 
     return make_tuple(ss.str(), bytes);

@@ -16,13 +16,17 @@ protected:
 
     bool quit = false, pause = false, 
         debugging = true, showMem = true,
-        stepping = true;
+        inDebugMode = true, doOneInstr = false;
 
     u16_t memBeggining = 0;
     f64_t fps;
 
     void toggleDebugger();
     void renderMem();
+
+    void handleEvents(sf::RenderWindow& w);
+    void onKeyPressed(sf::Keyboard::Key key);
+    void onKeyReleased(sf::Keyboard::Key key);
 
     int debuggerTick();
     int mainTick();

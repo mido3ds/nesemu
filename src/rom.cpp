@@ -22,18 +22,18 @@ int ROM::fromFile(string path) {
     size_t size = 0;
     u8_t* buffer = nullptr;
 
-    logInfo("reading rom from %s", path.c_str());
+    INFO("reading rom from %s", path.c_str());
     
     tie(buffer, size) = readBinaryFile(path);
     if (size == 0 || buffer == nullptr) {  
-        logError("couldn't load rom from path %s", path.c_str());
+        ERROR("couldn't load rom from path %s", path.c_str());
         return 1;
     }
 
     // check header
     const unsigned char constants[] = {0x4E, 0x45, 0x53, 0x1A};
     if (size < 16 || memcmp(buffer, constants, 4) != 0) {
-        logError("no valid header");
+        ERROR("no valid header");
         return 1;
     }
 
@@ -41,14 +41,14 @@ int ROM::fromFile(string path) {
     memcpy(&header, buffer+4, 16-4);
 
     if (getMapperNumber() != 0) {
-        logError("emulator only supports NROM (0 mapper)");
-        logWarning("mapping as 0 mapper");
+        ERROR("emulator only supports NROM (0 mapper)");
+        WARNING("mapping as 0 mapper");
     }
 
     // no trainer
     if (header.flags6.bits.hasTrainer) {
-        logError("emulator doesnt support trainers");
-        logWarning("ignoring trainer");
+        ERROR("emulator doesnt support trainers");
+        WARNING("ignoring trainer");
     }
 
     // cpy PRG 
@@ -59,7 +59,7 @@ int ROM::fromFile(string path) {
 
     auto prgSize = getPRGRomSize();
     if (prgPtr+prgSize > buffer+size) {
-        logError("no PRG ROM");
+        ERROR("no PRG ROM");
         return 1;
     }
 
@@ -71,7 +71,7 @@ int ROM::fromFile(string path) {
 
     auto chrSize = getCHRRomSize();
     if (chrPtr+chrSize > buffer+size) {
-        logError("no CHR ROM");
+        ERROR("no CHR ROM");
         return 1;
     }
     
@@ -80,44 +80,44 @@ int ROM::fromFile(string path) {
 
     // no playchoice
     if (header.flags7.bits.hasPlayChoice) {
-        logError("emulator doesnt support PlayChoice");
-        logWarning("ignoring PlayChoice");
+        ERROR("emulator doesnt support PlayChoice");
+        WARNING("ignoring PlayChoice");
     }
 
     delete buffer;
 
-    logInfo("rom mapper num = %d", getMapperNumber());
-    logInfo("iNES version = %d", header.flags7.bits.nes2format == 2? 2:1);
-    logInfo("rom num of PRG roms = %d", header.numPRGs);
-    logInfo("rom num of CHR roms = %d", header.numCHRs);
+    INFO("rom mapper num = %d", getMapperNumber());
+    INFO("iNES version = %d", header.flags7.bits.nes2format == 2? 2:1);
+    INFO("rom num of PRG roms = %d", header.numPRGs);
+    INFO("rom num of CHR roms = %d", header.numCHRs);
     if (!header.flags6.bits.ignoreMirroringControl) {
         if (header.flags6.bits.mirroring == 0){
-            logInfo("rom mirroring is horizontal");
+            INFO("rom mirroring is horizontal");
         } else {
-            logInfo("rom mirroring is vertical");
+            INFO("rom mirroring is vertical");
         }
     } else {
-        logInfo("rom ignores mirroring");
+        INFO("rom ignores mirroring");
     }
-    logInfo("done reading ROM");
+    INFO("done reading ROM");
     return 0;
 }
 
 int ROM::copyToMemory(MemType* memory) {
     if (!memory) {
-        logError("null memory");
+        ERROR("null memory");
         return 1;
     }
 
     if (header.numCHRs == 0 || header.numPRGs == 0 ||
         !prgData || !chrData) {
-        logError("invalid state/no rom is stored");
+        ERROR("invalid state/no rom is stored");
         return 1;
     }
 
     int prgSize = getPRGRomSize();
     if (prgSize > PRG_ROM_LOW.size()+PRG_ROM_UP.size()) {
-        logError("cant handle sizes bigger than %d", PRG_ROM_LOW.size()+PRG_ROM_UP.size());
+        ERROR("cant handle sizes bigger than %d", PRG_ROM_LOW.size()+PRG_ROM_UP.size());
         return 1;
     }
 
@@ -129,7 +129,7 @@ int ROM::copyToMemory(MemType* memory) {
 
     // TODO: copy chr
     
-    logInfo("loaded ROM into device memory");
+    INFO("loaded ROM into device memory");
     return 0;
 }
 

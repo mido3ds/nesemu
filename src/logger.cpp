@@ -18,7 +18,6 @@ static char* getGMTDateTime() {
     return result;
 }
 
-#ifndef TEST
 void logInfo(string format, ...) {
     format = GREEN"[INFO] "RESET + format + '\n';
 
@@ -27,7 +26,6 @@ void logInfo(string format, ...) {
     vfprintf (stdout, format.c_str(), args);
     va_end (args);
 }
-#endif
 
 void logWarning(string format, ...) {
     format = YELLOW"[WARNING] " + format + RESET"\n";

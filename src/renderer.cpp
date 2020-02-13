@@ -5,7 +5,7 @@
 int Renderer::init(sf::RenderWindow* window, Config::Rect resolution, Config::Rect windSize) {
     if (resolution.w <= 0 || resolution.h <= 0 || 
         windSize.w <= 0 || windSize.h <= 0) {
-        logError("invalid resolution or windsize");
+        ERROR("invalid resolution or windsize");
         return 1;
     }
 
@@ -14,7 +14,7 @@ int Renderer::init(sf::RenderWindow* window, Config::Rect resolution, Config::Re
 
     this->window = window;
     if (!window) {
-        logError("null window");
+        ERROR("null window");
         return 1;
     }
 
@@ -36,7 +36,7 @@ void Renderer::clear(Color c, u8_t a) {
 
 int Renderer::text(string s, int x, int y, f64_t scaleW, f64_t scaleH, sf::Font* font, Color c, int* newW, int* newH) {
     if (!font) {
-        logError("null font");
+        ERROR("null font");
         return 1;
     }
 
