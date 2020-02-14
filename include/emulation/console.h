@@ -7,7 +7,6 @@
 class Console {
 private:
     void powerOn();
-    void loadInstructions();
 public:
 /////////////////////////// State ///////////////////////////
     struct {
@@ -35,7 +34,6 @@ public:
     MemType vram;
     array<u8_t, 256> sprram; // sprite ram
 
-    InstructionSet instrucSet;
     u16_t cpuCycles, ppuCycles, apuCycles;
 
     union ScrollReg {
@@ -185,6 +183,14 @@ public:
     void oneCPUCycle();
     void onePPUCycle(Renderer* renderer);
     void oneAPUCycle();
+
+    // instruction
+    u8_t getArgValue();
+    u16_t getArgAddr();
+    void writeArg(u8_t v); u8_t argValue; u16_t argAddr; AddressMode mode;
+    void prepareArg(AddressMode mode);
+    void reprepareJMPArg();
+    void noCrossPage(); bool cpp;
 
     // getAssembly returns array of the assembly representation of instructions in memory
     // from addr-n ... addr+n, with total size of (2*n+1) string

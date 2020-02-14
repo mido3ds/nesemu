@@ -3,7 +3,7 @@
 #include <SFML/Window.hpp>
 #include <SFML/Graphics.hpp>
 
-#include "sdttype.h"
+#include "stdtype.h"
 #include "gui/renderer.h"
 #include "emulation/console.h"
 

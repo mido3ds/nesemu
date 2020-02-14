@@ -3,6 +3,7 @@
 #include "catch.hpp"
 
 #include "emulation/console.h"
+#include "emulation/instructions.h"
 
 TEST_CASE("memory-access") {
     Console dev;
@@ -109,7 +110,7 @@ TEST_CASE("branch") {
         
         REQUIRE(dev.regs.pc == oldpc+addr+2);
         REQUIRE(oldflags == dev.regs.flags.byte);
-        REQUIRE(dev.cpuCycles == dev.instrucSet[BCC].cpuCycles+1);
+        REQUIRE(dev.cpuCycles == instructionSet[BCC].cpuCycles+1);
     }
 
     SECTION("no-BCC") {
@@ -125,7 +126,7 @@ TEST_CASE("branch") {
         
         REQUIRE(dev.regs.pc == oldpc+2);
         REQUIRE(oldflags == dev.regs.flags.byte);
-        REQUIRE(dev.cpuCycles == dev.instrucSet[BCC].cpuCycles);
+        REQUIRE(dev.cpuCycles == instructionSet[BCC].cpuCycles);
     }
 
     SECTION("BCC-cross-page") {
@@ -142,7 +143,7 @@ TEST_CASE("branch") {
         
         REQUIRE(dev.regs.pc == oldpc+addr+2);
         REQUIRE(oldflags == dev.regs.flags.byte);
-        REQUIRE(dev.cpuCycles == dev.instrucSet[BCC].cpuCycles+1+1); // added penalty
+        REQUIRE(dev.cpuCycles == instructionSet[BCC].cpuCycles+1+1); // added penalty
     }
 
     SECTION("BEQ") {
@@ -158,7 +159,7 @@ TEST_CASE("branch") {
         
         REQUIRE(dev.regs.pc == oldpc+addr+2);
         REQUIRE(oldflags == dev.regs.flags.byte);
-        REQUIRE(dev.cpuCycles == dev.instrucSet[BEQ].cpuCycles+1);
+        REQUIRE(dev.cpuCycles == instructionSet[BEQ].cpuCycles+1);
     }
 
     SECTION("no-BEQ") {
@@ -174,7 +175,7 @@ TEST_CASE("branch") {
         
         REQUIRE(dev.regs.pc == oldpc+2);
         REQUIRE(oldflags == dev.regs.flags.byte);
-        REQUIRE(dev.cpuCycles == dev.instrucSet[BEQ].cpuCycles);
+        REQUIRE(dev.cpuCycles == instructionSet[BEQ].cpuCycles);
     }
 
     SECTION("BEQ") {
@@ -190,7 +191,7 @@ TEST_CASE("branch") {
         
         REQUIRE(dev.regs.pc == oldpc+addr+2);
         REQUIRE(oldflags == dev.regs.flags.byte);
-        REQUIRE(dev.cpuCycles == dev.instrucSet[BEQ].cpuCycles+1);
+        REQUIRE(dev.cpuCycles == instructionSet[BEQ].cpuCycles+1);
     }
 
     SECTION("no-BEQ") {
@@ -206,7 +207,7 @@ TEST_CASE("branch") {
         
         REQUIRE(dev.regs.pc == oldpc+2);
         REQUIRE(oldflags == dev.regs.flags.byte);
-        REQUIRE(dev.cpuCycles == dev.instrucSet[BEQ].cpuCycles);
+        REQUIRE(dev.cpuCycles == instructionSet[BEQ].cpuCycles);
     }
 }
 
@@ -282,5 +283,60 @@ TEST_CASE("implied-instructs") {
         dev.oneCPUCycle();
         REQUIRE(dev.regs.flags.byte == 0xF5);
         REQUIRE(dev.pop() == 0xF5);
+    }
+}
+
+TEST_CASE("jmp-bug") {
+    Console dev;
+    dev.init(nullptr);
+
+    memset(&dev.regs, 0, sizeof dev.regs);
+    dev.memory.fill(0);
+    dev.cpuCycles = 0;
+
+    SECTION("absolute-bug") {
+        dev.regs.pc = 0x00FE;
+        dev.memory[0x00FE] = 0x4C;
+        dev.memory[0x00FF] = 0x11;
+        dev.memory[0x0000] = 0xF5;
+
+        dev.oneCPUCycle();
+        REQUIRE(dev.regs.pc == 0xF511);
+    }
+
+    SECTION("indirect-bug") {
+        dev.regs.pc = 0x00FE;
+        dev.memory[0x00FE] = 0x6C;
+        dev.memory[0x00FF] = 0x11;
+        dev.memory[0x0000] = 0xF5;
+
+        dev.memory[0xF511] = 0x13;
+        dev.memory[0xF512] = 0x0f;
+
+        dev.oneCPUCycle();
+        REQUIRE(dev.regs.pc == 0x0F13);
+    }
+
+    SECTION("absolute-no-bug") {
+        dev.regs.pc = 0x00FD;
+        dev.memory[0x00FD] = 0x4C;
+        dev.memory[0x00FE] = 0x11;
+        dev.memory[0x00FF] = 0xF5;
+
+        dev.oneCPUCycle();
+        REQUIRE(dev.regs.pc == 0xF511);
+    }
+
+    SECTION("indirect-no-bug") {
+        dev.regs.pc = 0x00FD;
+        dev.memory[0x00FD] = 0x6C;
+        dev.memory[0x00FE] = 0x11;
+        dev.memory[0x00FF] = 0xF5;
+
+        dev.memory[0xF511] = 0x13;
+        dev.memory[0xF512] = 0x0f;
+
+        dev.oneCPUCycle();
+        REQUIRE(dev.regs.pc == 0x0F13);
     }
 }

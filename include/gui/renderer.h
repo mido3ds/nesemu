@@ -3,7 +3,7 @@
 #include <SFML/Window.hpp>
 #include <SFML/Graphics.hpp>
 
-#include "sdttype.h"
+#include "stdtype.h"
 #include "emulation/common.h"
 #include "config.h"
 
