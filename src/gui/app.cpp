@@ -166,7 +166,8 @@ int App::debuggerTick() {
     debugRenderer.text("B: " + to_string(dev->regs.flags.bits.b), 10+w*2.0/3,(i)*h,1,1, &mainFont,c, 0, 0);
     debugRenderer.text("V: " + to_string(dev->regs.flags.bits.v), 10+w*4.0/3,(i++)*h,1,1, &mainFont,c, 0, 0);
 
-    debugRenderer.text("N: " + to_string(dev->regs.flags.bits.n), 10,(i++)*h,1,1, &mainFont,c, 0, 0);
+    debugRenderer.text("N: " + to_string(dev->regs.flags.bits.n), 10,(i)*h,1,1, &mainFont,c, 0, 0);
+    debugRenderer.text("PC: " + string("$")+hex16(dev->regs.pc), 10+w*2.0/3,(i++)*h,1,1, &mainFont,{255,0,0}, 0, 0);
     i++;
     
     // assembly

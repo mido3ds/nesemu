@@ -9,7 +9,7 @@
             "request": "launch",
             "name": "nesemu",
             "program": "${workspaceFolder}/build/nesemu",
-            "args": ["donkey-kong.nes"],
+            "args": ["1942.nes"],
             "cwd": "${workspaceFolder}/build"
         },
         {

@@ -2,7 +2,7 @@
 
 #include <string>
 
-#include "sdttype.h"
+#include "stdtype.h"
 #include "emulation/common.h"
 
 using namespace std;

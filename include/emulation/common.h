@@ -6,7 +6,7 @@
 #include <functional>
 #include <thread>
 
-#include "sdttype.h"
+#include "stdtype.h"
 
 using namespace std;
 
@@ -22,15 +22,6 @@ enum class AddressMode {
     AbsoluteX, AbsoluteY, Indirect, IndexedIndirect,
     IndirectIndexed
 };
-
-struct Instruction {
-    function<void()> exec;
-    string name;
-    AddressMode mode;
-    u16_t cpuCycles;
-};
-
-typedef array<Instruction, UINT8_MAX+1> InstructionSet;
 
 struct Region {
     u16_t start, end;

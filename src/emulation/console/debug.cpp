@@ -4,6 +4,7 @@
 #include <iterator>
 
 #include "emulation/console.h"
+#include "emulation/instructions.h"
 #include "logger.h"
 
 static tuple<string, int> oneInstr(u8_t* mem, u32_t size, const InstructionSet& instset) {
@@ -114,7 +115,7 @@ static map<u16_t, string> disassemble(u8_t* mem, u16_t addr, u32_t size, const I
 }
 
 vector<string> Console::getAssembly(const u16_t addr, const u16_t n) {
-    static map<u16_t, string> assembly = disassemble(&memory[0], 0, memory.size(), instrucSet);
+    static map<u16_t, string> assembly = disassemble(&memory[0], 0, memory.size(), instructionSet);
     vector<string> ret(2*n+1, "$????: ???");
 
     auto tmpItr = assembly.lower_bound(addr);

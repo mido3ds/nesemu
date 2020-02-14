@@ -83,7 +83,7 @@ u16_t Console::indirectAddress(const u8_t bb, const u8_t cc) {
 }
 
 u16_t Console::indexedIndirectAddress(const u8_t bb, const u8_t i) {
-    return absoluteAddress(read(bb+i), read(bb+i+1));
+    return absoluteAddress(read((bb+i) & 0x00FF), read((bb+i+1) & 0x00FF));
 }
 
 u16_t Console::indirectIndexedAddress(const u8_t bb, const u8_t i) {
