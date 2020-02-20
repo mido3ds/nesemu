@@ -3,491 +3,491 @@
 #include <functional>
 
 #include "emulation/common.h"
-#include "emulation/console.h"
+#include "emulation/CPU.h"
 #include "emulation/instructions.h"
 #include "stdtype.h"
-#include "logger.h"
+#include "log.h"
 
 using namespace std;
 
-void ADC(Console& dev) {
-    auto v = dev.getArgValue();
+void ADC(CPU& cpu) {
+    auto v = cpu.getArgValue();
     
-    u16_t result = dev.regs.a + v + dev.regs.flags.bits.c;
+    u16_t result = cpu.regs.a + v + cpu.regs.flags.bits.c;
 
-    dev.regs.flags.bits.c = (u16_t)result > UINT8_MAX; 
-    dev.regs.flags.bits.v = (i16_t)result > INT8_MAX || (i16_t)result < INT8_MIN; 
+    cpu.regs.flags.bits.c = (u16_t)result > UINT8_MAX; 
+    cpu.regs.flags.bits.v = (i16_t)result > INT8_MAX || (i16_t)result < INT8_MIN; 
 
-    dev.regs.a = (u8_t)result;
+    cpu.regs.a = (u8_t)result;
 
-    dev.regs.flags.bits.z = dev.regs.a == 0;
-    dev.regs.flags.bits.n = dev.regs.a >> 7;
+    cpu.regs.flags.bits.z = cpu.regs.a == 0;
+    cpu.regs.flags.bits.n = cpu.regs.a >> 7;
 }
 
-void AHX(Console& dev) {
+void AHX(CPU& cpu) {
     ERROR("invalid/unsupported opcode was called");
 }
 
-void ALR(Console& dev) {
+void ALR(CPU& cpu) {
     ERROR("invalid/unsupported opcode was called");
 }
 
-void ANC(Console& dev) {
+void ANC(CPU& cpu) {
     ERROR("invalid/unsupported opcode was called");
 }
 
-void AND(Console& dev) {
-    auto v = dev.getArgValue();
+void AND(CPU& cpu) {
+    auto v = cpu.getArgValue();
 
-    dev.regs.a = dev.regs.a & v;
-    dev.regs.flags.bits.z = dev.regs.a == 0;
-    dev.regs.flags.bits.n = dev.regs.a >> 7;
+    cpu.regs.a = cpu.regs.a & v;
+    cpu.regs.flags.bits.z = cpu.regs.a == 0;
+    cpu.regs.flags.bits.n = cpu.regs.a >> 7;
 }
 
-void ARR(Console& dev) {
+void ARR(CPU& cpu) {
     ERROR("invalid/unsupported opcode was called");
 }
 
-void ASL(Console& dev) {
-    auto v = dev.getArgValue();
+void ASL(CPU& cpu) {
+    auto v = cpu.getArgValue();
 
-    dev.regs.flags.bits.c = v >> 7;
+    cpu.regs.flags.bits.c = v >> 7;
     v <<= 1;
-    dev.regs.flags.bits.z = v == 0; // TODO: not sure if Accumulator only or any value
-    dev.regs.flags.bits.n = v >> 7;
+    cpu.regs.flags.bits.z = v == 0; // TODO: not sure if Accumulator only or any value
+    cpu.regs.flags.bits.n = v >> 7;
 
-    dev.writeArg(v);
+    cpu.writeArg(v);
 }
 
-void AXS(Console& dev) {
+void AXS(CPU& cpu) {
     ERROR("invalid/unsupported opcode was called");
 }
 
-void BCC(Console& dev) {
-    if (!dev.regs.flags.bits.c) { 
-        auto fetched = (i8_t)dev.getArgValue();
-        dev.regs.pc += fetched;
-        dev.cpuCycles++;
+void BCC(CPU& cpu) {
+    if (!cpu.regs.flags.bits.c) { 
+        auto fetched = (i8_t)cpu.getArgValue();
+        cpu.regs.pc += fetched;
+        cpu.cycles++;
     } else {
-        dev.noCrossPage();
+        cpu.noCrossPage();
     }
 }
 
-void BCS(Console& dev) {
-    if (dev.regs.flags.bits.c) { 
-        auto fetched = (i8_t)dev.getArgValue();
-        dev.regs.pc += fetched;
-        dev.cpuCycles++;
+void BCS(CPU& cpu) {
+    if (cpu.regs.flags.bits.c) { 
+        auto fetched = (i8_t)cpu.getArgValue();
+        cpu.regs.pc += fetched;
+        cpu.cycles++;
     } else {
-        dev.noCrossPage();
+        cpu.noCrossPage();
     }
 }
 
-void BEQ(Console& dev) {
-    if (dev.regs.flags.bits.z) { 
-        auto fetched = (i8_t)dev.getArgValue();
-        dev.regs.pc += fetched;
-        dev.cpuCycles++;
+void BEQ(CPU& cpu) {
+    if (cpu.regs.flags.bits.z) { 
+        auto fetched = (i8_t)cpu.getArgValue();
+        cpu.regs.pc += fetched;
+        cpu.cycles++;
     } else {
-        dev.noCrossPage();
+        cpu.noCrossPage();
     }
 }
 
-void BIT(Console& dev) {
-    auto v = dev.getArgValue();
+void BIT(CPU& cpu) {
+    auto v = cpu.getArgValue();
 
-    dev.regs.flags.bits.z = (v & dev.regs.a) == 0;
-    dev.regs.flags.bits.v = v >> 6;
-    dev.regs.flags.bits.n = v >> 7;
+    cpu.regs.flags.bits.z = (v & cpu.regs.a) == 0;
+    cpu.regs.flags.bits.v = v >> 6;
+    cpu.regs.flags.bits.n = v >> 7;
 }
 
-void BMI(Console& dev) {
-    if (dev.regs.flags.bits.n) { 
-        auto fetched = (i8_t)dev.getArgValue();
-        dev.regs.pc += fetched;
-        dev.cpuCycles++;
+void BMI(CPU& cpu) {
+    if (cpu.regs.flags.bits.n) { 
+        auto fetched = (i8_t)cpu.getArgValue();
+        cpu.regs.pc += fetched;
+        cpu.cycles++;
     } else {
-        dev.noCrossPage();
+        cpu.noCrossPage();
     }
 }
 
-void BNE(Console& dev) {
-    if (!dev.regs.flags.bits.z) { 
-        auto fetched = (i8_t)dev.getArgValue();
-        dev.regs.pc += fetched;
-        dev.cpuCycles++;
+void BNE(CPU& cpu) {
+    if (!cpu.regs.flags.bits.z) { 
+        auto fetched = (i8_t)cpu.getArgValue();
+        cpu.regs.pc += fetched;
+        cpu.cycles++;
     } else {
-        dev.noCrossPage();
+        cpu.noCrossPage();
     }
 }
 
-void BPL(Console& dev) {
-    if (!dev.regs.flags.bits.n) { 
-        auto fetched = (i8_t)dev.getArgValue();
-        dev.regs.pc += fetched;
-        dev.cpuCycles++;
+void BPL(CPU& cpu) {
+    if (!cpu.regs.flags.bits.n) { 
+        auto fetched = (i8_t)cpu.getArgValue();
+        cpu.regs.pc += fetched;
+        cpu.cycles++;
     } else {
-        dev.noCrossPage();
+        cpu.noCrossPage();
     }
 }
 
-void BRK(Console& dev) {
-    if (dev.regs.flags.bits.i == 1) return;
+void BRK(CPU& cpu) {
+    if (cpu.regs.flags.bits.i == 1) return;
 
-    dev.push(dev.regs.pc);
-    dev.push(dev.regs.flags.byte);
-    dev.regs.pc = dev.read16(IRQ); 
-    dev.regs.flags.bits.b = 1;
-    dev.regs.flags.bits.i = 1;
+    cpu.push(cpu.regs.pc);
+    cpu.push(cpu.regs.flags.byte);
+    cpu.regs.pc = cpu.read16(IRQ); 
+    cpu.regs.flags.bits.b = 1;
+    cpu.regs.flags.bits.i = 1;
 }
 
-void BVC(Console& dev) {
-    if (!dev.regs.flags.bits.v) { 
-        auto fetched = (i8_t)dev.getArgValue();
-        dev.regs.pc += fetched;
-        dev.cpuCycles++;
+void BVC(CPU& cpu) {
+    if (!cpu.regs.flags.bits.v) { 
+        auto fetched = (i8_t)cpu.getArgValue();
+        cpu.regs.pc += fetched;
+        cpu.cycles++;
     } else {
-        dev.noCrossPage();
+        cpu.noCrossPage();
     }
 }
 
-void BVS(Console& dev) {
-    if (dev.regs.flags.bits.v) { 
-        auto fetched = (i8_t)dev.getArgValue();
-        dev.regs.pc += fetched;
-        dev.cpuCycles++;
+void BVS(CPU& cpu) {
+    if (cpu.regs.flags.bits.v) { 
+        auto fetched = (i8_t)cpu.getArgValue();
+        cpu.regs.pc += fetched;
+        cpu.cycles++;
     } else {
-        dev.noCrossPage();
+        cpu.noCrossPage();
     }
 }
 
-void CLC(Console& dev) {
-    dev.regs.flags.bits.c = 0;
+void CLC(CPU& cpu) {
+    cpu.regs.flags.bits.c = 0;
 }
 
-void CLD(Console& dev) {
-    dev.regs.flags.bits.d = 0;
+void CLD(CPU& cpu) {
+    cpu.regs.flags.bits.d = 0;
 }
 
-void CLI(Console& dev) {
-    dev.regs.flags.bits.i = 0;
+void CLI(CPU& cpu) {
+    cpu.regs.flags.bits.i = 0;
 }
 
-void CLV(Console& dev) {
-    dev.regs.flags.bits.v = 0;
+void CLV(CPU& cpu) {
+    cpu.regs.flags.bits.v = 0;
 }
 
-void CMP(Console& dev) {
-    auto v = dev.getArgValue();
-    u8_t result = dev.regs.a - v;
-    dev.regs.flags.bits.c = result > 0;
-    dev.regs.flags.bits.z = result == 0;
-    dev.regs.flags.bits.n = result >> 7;
+void CMP(CPU& cpu) {
+    auto v = cpu.getArgValue();
+    u8_t result = cpu.regs.a - v;
+    cpu.regs.flags.bits.c = result > 0;
+    cpu.regs.flags.bits.z = result == 0;
+    cpu.regs.flags.bits.n = result >> 7;
 }
 
-void CPX(Console& dev) {
-    auto v = dev.getArgValue();
-    u8_t result = dev.regs.x - v;
-    dev.regs.flags.bits.c = result > 0;
-    dev.regs.flags.bits.z = result == 0;
-    dev.regs.flags.bits.n = result >> 7;
+void CPX(CPU& cpu) {
+    auto v = cpu.getArgValue();
+    u8_t result = cpu.regs.x - v;
+    cpu.regs.flags.bits.c = result > 0;
+    cpu.regs.flags.bits.z = result == 0;
+    cpu.regs.flags.bits.n = result >> 7;
 }
 
-void CPY(Console& dev) {
-    auto v = dev.getArgValue();
-    u8_t result = dev.regs.y - v;
-    dev.regs.flags.bits.c = result > 0;
-    dev.regs.flags.bits.z = result == 0;
-    dev.regs.flags.bits.n = result >> 7;
+void CPY(CPU& cpu) {
+    auto v = cpu.getArgValue();
+    u8_t result = cpu.regs.y - v;
+    cpu.regs.flags.bits.c = result > 0;
+    cpu.regs.flags.bits.z = result == 0;
+    cpu.regs.flags.bits.n = result >> 7;
 }
 
-void DCP(Console& dev) {
+void DCP(CPU& cpu) {
     ERROR("invalid/unsupported opcode was called");
 }
 
-void DEC(Console& dev) {
-    auto v = dev.getArgValue();
+void DEC(CPU& cpu) {
+    auto v = cpu.getArgValue();
     v--;
 
-    dev.regs.flags.bits.z = v == 0;
-    dev.regs.flags.bits.n = v >> 7;
+    cpu.regs.flags.bits.z = v == 0;
+    cpu.regs.flags.bits.n = v >> 7;
 
-    dev.writeArg(v);
+    cpu.writeArg(v);
 }
 
-void DEX(Console& dev) {
-    dev.regs.x--;
-    dev.regs.flags.bits.z = dev.regs.x == 0;
-    dev.regs.flags.bits.n = dev.regs.x >> 7;
+void DEX(CPU& cpu) {
+    cpu.regs.x--;
+    cpu.regs.flags.bits.z = cpu.regs.x == 0;
+    cpu.regs.flags.bits.n = cpu.regs.x >> 7;
 }
 
-void DEY(Console& dev) {
-    dev.regs.y--;
-    dev.regs.flags.bits.z = dev.regs.y == 0;
-    dev.regs.flags.bits.n = dev.regs.y >> 7;
+void DEY(CPU& cpu) {
+    cpu.regs.y--;
+    cpu.regs.flags.bits.z = cpu.regs.y == 0;
+    cpu.regs.flags.bits.n = cpu.regs.y >> 7;
 }
 
-void EOR(Console& dev) {
-    auto v = dev.getArgValue();
-    dev.regs.a ^= v;
+void EOR(CPU& cpu) {
+    auto v = cpu.getArgValue();
+    cpu.regs.a ^= v;
 
-    dev.regs.flags.bits.z = dev.regs.a == 0;
-    dev.regs.flags.bits.n = dev.regs.a >> 7;
+    cpu.regs.flags.bits.z = cpu.regs.a == 0;
+    cpu.regs.flags.bits.n = cpu.regs.a >> 7;
 }
 
-void INC(Console& dev) {
-    auto v = dev.getArgValue();
+void INC(CPU& cpu) {
+    auto v = cpu.getArgValue();
     v++;
 
-    dev.regs.flags.bits.z = v == 0;
-    dev.regs.flags.bits.n = v >> 7;
+    cpu.regs.flags.bits.z = v == 0;
+    cpu.regs.flags.bits.n = v >> 7;
 
-    dev.writeArg(v);
+    cpu.writeArg(v);
 }
 
-void INX(Console& dev) {
-    dev.regs.x++;
-    dev.regs.flags.bits.z = dev.regs.x == 0;
-    dev.regs.flags.bits.n = dev.regs.x >> 7;
+void INX(CPU& cpu) {
+    cpu.regs.x++;
+    cpu.regs.flags.bits.z = cpu.regs.x == 0;
+    cpu.regs.flags.bits.n = cpu.regs.x >> 7;
 }
 
-void INY(Console& dev) {
-    dev.regs.y++;
-    dev.regs.flags.bits.z = dev.regs.y == 0;
-    dev.regs.flags.bits.n = dev.regs.y >> 7;
+void INY(CPU& cpu) {
+    cpu.regs.y++;
+    cpu.regs.flags.bits.z = cpu.regs.y == 0;
+    cpu.regs.flags.bits.n = cpu.regs.y >> 7;
 }
 
-void ISC(Console& dev) {
+void ISC(CPU& cpu) {
     ERROR("invalid/unsupported opcode was called");
 }
 
-void JMP(Console& dev) {
-    dev.reprepareJMPArg();
-    dev.regs.pc = dev.getArgAddr();
+void JMP(CPU& cpu) {
+    cpu.reprepareJMPArg();
+    cpu.regs.pc = cpu.getArgAddr();
 }
 
-void JSR(Console& dev) {
-    dev.push16(dev.regs.pc);
-    dev.regs.pc = dev.getArgAddr();
+void JSR(CPU& cpu) {
+    cpu.push16(cpu.regs.pc);
+    cpu.regs.pc = cpu.getArgAddr();
 }
 
-void KIL(Console& dev) {
+void KIL(CPU& cpu) {
     ERROR("KIL was called");
 }
 
-void LAS(Console& dev) {
+void LAS(CPU& cpu) {
     ERROR("invalid/unsupported opcode was called");
 }
 
-void LAX(Console& dev) {
+void LAX(CPU& cpu) {
     ERROR("invalid/unsupported opcode was called");
 }
 
-void LDA(Console& dev) {
-    auto v = dev.getArgValue();
-    dev.regs.a = v;
+void LDA(CPU& cpu) {
+    auto v = cpu.getArgValue();
+    cpu.regs.a = v;
 
-    dev.regs.flags.bits.z = dev.regs.a == 0;
-    dev.regs.flags.bits.n = dev.regs.a >> 7;
+    cpu.regs.flags.bits.z = cpu.regs.a == 0;
+    cpu.regs.flags.bits.n = cpu.regs.a >> 7;
 }
 
-void LDX(Console& dev) {
-    auto v = dev.getArgValue();
-    dev.regs.x = v;
+void LDX(CPU& cpu) {
+    auto v = cpu.getArgValue();
+    cpu.regs.x = v;
 
-    dev.regs.flags.bits.z = dev.regs.x == 0;
-    dev.regs.flags.bits.n = dev.regs.x >> 7;
+    cpu.regs.flags.bits.z = cpu.regs.x == 0;
+    cpu.regs.flags.bits.n = cpu.regs.x >> 7;
 }
 
-void LDY(Console& dev) {
-    auto v = dev.getArgValue();
-    dev.regs.y = v;
+void LDY(CPU& cpu) {
+    auto v = cpu.getArgValue();
+    cpu.regs.y = v;
 
-    dev.regs.flags.bits.z = dev.regs.y == 0;
-    dev.regs.flags.bits.n = dev.regs.y >> 7;
+    cpu.regs.flags.bits.z = cpu.regs.y == 0;
+    cpu.regs.flags.bits.n = cpu.regs.y >> 7;
 }
 
-void LSR(Console& dev) {
-    auto v = dev.getArgValue();
-    dev.regs.flags.bits.c = v & 1;
+void LSR(CPU& cpu) {
+    auto v = cpu.getArgValue();
+    cpu.regs.flags.bits.c = v & 1;
             
     v >>= 1;
 
-    dev.regs.flags.bits.z = v == 0;
-    dev.regs.flags.bits.n = 0;
+    cpu.regs.flags.bits.z = v == 0;
+    cpu.regs.flags.bits.n = 0;
 
-    dev.writeArg(v);
+    cpu.writeArg(v);
 }
 
-void NOP(Console& dev) {}
+void NOP(CPU& cpu) {}
 
-void ORA(Console& dev) {
-    auto v = dev.getArgValue();
-    dev.regs.a |= v;
+void ORA(CPU& cpu) {
+    auto v = cpu.getArgValue();
+    cpu.regs.a |= v;
 
-    dev.regs.flags.bits.z = dev.regs.a == 0;
-    dev.regs.flags.bits.n = dev.regs.a >> 7;
+    cpu.regs.flags.bits.z = cpu.regs.a == 0;
+    cpu.regs.flags.bits.n = cpu.regs.a >> 7;
 }
 
-void PHA(Console& dev) {
-    dev.push(dev.regs.a);
+void PHA(CPU& cpu) {
+    cpu.push(cpu.regs.a);
 }
 
-void PHP(Console& dev) {
-    dev.push(dev.regs.flags.byte);
+void PHP(CPU& cpu) {
+    cpu.push(cpu.regs.flags.byte);
 }
 
-void PLA(Console& dev) {
-    dev.regs.a = dev.pop();
+void PLA(CPU& cpu) {
+    cpu.regs.a = cpu.pop();
 }
 
-void PLP(Console& dev) {
-    dev.regs.flags.byte = dev.pop();
+void PLP(CPU& cpu) {
+    cpu.regs.flags.byte = cpu.pop();
 }
 
-void RLA(Console& dev) {
+void RLA(CPU& cpu) {
     ERROR("invalid/unsupported opcode was called");
 }
 
-void ROL(Console& dev) {
-    auto v = dev.getArgValue();
-    u8_t oldCarry = dev.regs.flags.bits.c;
-    dev.regs.flags.bits.c = v >> 7;
+void ROL(CPU& cpu) {
+    auto v = cpu.getArgValue();
+    u8_t oldCarry = cpu.regs.flags.bits.c;
+    cpu.regs.flags.bits.c = v >> 7;
     
     v <<= 1;
     v |= oldCarry;
 
-    dev.regs.flags.bits.z = v == 0;
-    dev.regs.flags.bits.n = v >> 7;
+    cpu.regs.flags.bits.z = v == 0;
+    cpu.regs.flags.bits.n = v >> 7;
 
-    dev.writeArg(v);
+    cpu.writeArg(v);
 }
 
-void ROR(Console& dev) {
-    auto v = dev.getArgValue();
-    u8_t oldCarry = dev.regs.flags.bits.c;
-    dev.regs.flags.bits.c = v & 1;
+void ROR(CPU& cpu) {
+    auto v = cpu.getArgValue();
+    u8_t oldCarry = cpu.regs.flags.bits.c;
+    cpu.regs.flags.bits.c = v & 1;
     
     v >>= 1;
     v |= oldCarry << 7;
 
-    dev.regs.flags.bits.z = v == 0;
-    dev.regs.flags.bits.n = oldCarry;
+    cpu.regs.flags.bits.z = v == 0;
+    cpu.regs.flags.bits.n = oldCarry;
 
-    dev.writeArg(v);
+    cpu.writeArg(v);
 }
 
-void RRA(Console& dev) {
+void RRA(CPU& cpu) {
     ERROR("invalid/unsupported opcode was called");
 }
 
-void RTI(Console& dev) {
-    dev.regs.flags.byte = dev.pop();
-    dev.regs.pc = dev.pop16();
+void RTI(CPU& cpu) {
+    cpu.regs.flags.byte = cpu.pop();
+    cpu.regs.pc = cpu.pop16();
 }
 
-void RTS(Console& dev) {
-    dev.regs.pc = dev.pop16() + 1;
+void RTS(CPU& cpu) {
+    cpu.regs.pc = cpu.pop16() + 1;
 }
 
-void SAX(Console& dev) {
+void SAX(CPU& cpu) {
     ERROR("invalid/unsupported opcode was called");
 }
 
-void SBC(Console& dev) {
-    auto v = dev.getArgValue();
-    u16_t result = dev.regs.a - v - (~ dev.regs.flags.bits.c);
+void SBC(CPU& cpu) {
+    auto v = cpu.getArgValue();
+    u16_t result = cpu.regs.a - v - (~ cpu.regs.flags.bits.c);
 
-    dev.regs.flags.bits.c = (u16_t)result > UINT8_MAX; 
-    dev.regs.flags.bits.v = (i16_t)result > INT8_MAX || (i16_t)result < INT8_MAX; 
+    cpu.regs.flags.bits.c = (u16_t)result > UINT8_MAX; 
+    cpu.regs.flags.bits.v = (i16_t)result > INT8_MAX || (i16_t)result < INT8_MAX; 
 
-    dev.regs.a = (u8_t)result;
+    cpu.regs.a = (u8_t)result;
 
-    dev.regs.flags.bits.z = dev.regs.a == 0;
-    dev.regs.flags.bits.n = dev.regs.a >> 7;
+    cpu.regs.flags.bits.z = cpu.regs.a == 0;
+    cpu.regs.flags.bits.n = cpu.regs.a >> 7;
 }
 
-void SEC(Console& dev) {
-    dev.regs.flags.bits.c = 1;
+void SEC(CPU& cpu) {
+    cpu.regs.flags.bits.c = 1;
 }
 
-void SED(Console& dev) {
-    dev.regs.flags.bits.d = 1;
+void SED(CPU& cpu) {
+    cpu.regs.flags.bits.d = 1;
 }
 
-void SEI(Console& dev) {
-    dev.regs.flags.bits.i = 1;
+void SEI(CPU& cpu) {
+    cpu.regs.flags.bits.i = 1;
 }
 
-void SHX(Console& dev) {
+void SHX(CPU& cpu) {
     ERROR("invalid/unsupported opcode was called");
 }
 
-void SHY(Console& dev) {
+void SHY(CPU& cpu) {
     ERROR("invalid/unsupported opcode was called");
 }
 
-void SLO(Console& dev) {
+void SLO(CPU& cpu) {
     ERROR("invalid/unsupported opcode was called");
 }
 
-void SRE(Console& dev) {
+void SRE(CPU& cpu) {
     ERROR("invalid/unsupported opcode was called");
 }
 
-void STA(Console& dev) {
-    dev.writeArg(dev.regs.a);
+void STA(CPU& cpu) {
+    cpu.writeArg(cpu.regs.a);
 }
 
-void STX(Console& dev) {
-    dev.writeArg(dev.regs.x);
+void STX(CPU& cpu) {
+    cpu.writeArg(cpu.regs.x);
 }
 
-void STY(Console& dev) {
-    dev.writeArg(dev.regs.y);
+void STY(CPU& cpu) {
+    cpu.writeArg(cpu.regs.y);
 }
 
-void TAS(Console& dev) {
+void TAS(CPU& cpu) {
     ERROR("invalid/unsupported opcode was called");
 }
 
-void TAX(Console& dev) {
-    dev.regs.x = dev.regs.a;
-    dev.regs.flags.bits.z = dev.regs.x == 0;
-    dev.regs.flags.bits.n = dev.regs.x >> 7;
+void TAX(CPU& cpu) {
+    cpu.regs.x = cpu.regs.a;
+    cpu.regs.flags.bits.z = cpu.regs.x == 0;
+    cpu.regs.flags.bits.n = cpu.regs.x >> 7;
 }
 
-void TAY(Console& dev) {
-    dev.regs.y = dev.regs.a;
-    dev.regs.flags.bits.z = dev.regs.y == 0;
-    dev.regs.flags.bits.n = dev.regs.y >> 7;
+void TAY(CPU& cpu) {
+    cpu.regs.y = cpu.regs.a;
+    cpu.regs.flags.bits.z = cpu.regs.y == 0;
+    cpu.regs.flags.bits.n = cpu.regs.y >> 7;
 }
 
-void TSX(Console& dev) {
-    dev.regs.x = dev.regs.sp;
-    dev.regs.flags.bits.z = dev.regs.x == 0;
-    dev.regs.flags.bits.n = dev.regs.x >> 7;
+void TSX(CPU& cpu) {
+    cpu.regs.x = cpu.regs.sp;
+    cpu.regs.flags.bits.z = cpu.regs.x == 0;
+    cpu.regs.flags.bits.n = cpu.regs.x >> 7;
 }
 
-void TXA(Console& dev) {
-    dev.regs.a = dev.regs.x;
-    dev.regs.flags.bits.z = dev.regs.x == 0;
-    dev.regs.flags.bits.n = dev.regs.x >> 7;
+void TXA(CPU& cpu) {
+    cpu.regs.a = cpu.regs.x;
+    cpu.regs.flags.bits.z = cpu.regs.x == 0;
+    cpu.regs.flags.bits.n = cpu.regs.x >> 7;
 }
 
-void TXS(Console& dev) {
-    dev.regs.sp = dev.regs.x;
-    dev.regs.flags.bits.z = dev.regs.x == 0;
-    dev.regs.flags.bits.n = dev.regs.x >> 7;
+void TXS(CPU& cpu) {
+    cpu.regs.sp = cpu.regs.x;
+    cpu.regs.flags.bits.z = cpu.regs.x == 0;
+    cpu.regs.flags.bits.n = cpu.regs.x >> 7;
 }
 
-void TYA(Console& dev) {
-    dev.regs.a = dev.regs.y;
-    dev.regs.flags.bits.z = dev.regs.a == 0;
-    dev.regs.flags.bits.n = dev.regs.a >> 7;
+void TYA(CPU& cpu) {
+    cpu.regs.a = cpu.regs.y;
+    cpu.regs.flags.bits.z = cpu.regs.a == 0;
+    cpu.regs.flags.bits.n = cpu.regs.a >> 7;
 }
 
-void XAA(Console& dev) {
+void XAA(CPU& cpu) {
     ERROR("invalid/unsupported opcode was called");
 }
 

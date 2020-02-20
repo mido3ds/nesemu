@@ -1,5 +1,5 @@
-#include "gui/renderer.h"
-#include "logger.h"
+#include "gui/Renderer.h"
+#include "log.h"
 #include "config.h"
 
 int Renderer::init(sf::RenderWindow* window, Config::Rect resolution, Config::Rect windSize) {

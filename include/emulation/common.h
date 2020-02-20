@@ -104,7 +104,7 @@ constexpr Color DEFAULT_COLOR = Color({0, 0, 0});
 constexpr Region
     ZERO_PAGE {0x0000, 0x0100-1},
     STACK {0x0100, 0x0200-1},
-    RAM {0x0200, 0x0800-1},
+    RRAM {0x0200, 0x0800-1},
 
     IO_REGS0 {0x2000, 0x2008-1},
     IO_REGS1 {0x4000, 0x4020-1},

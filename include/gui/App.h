@@ -4,12 +4,19 @@
 #include <SFML/Graphics.hpp>
 
 #include "stdtype.h"
-#include "gui/renderer.h"
-#include "emulation/console.h"
+#include "gui/Renderer.h"
+#include "emulation/Console.h"
 
 class App {
-protected:
-    Console* dev = nullptr;
+public:
+    int init(string title, Console* dev);
+
+    int mainLoop();
+
+    ~App();
+
+private:
+    Console* dev;
     sf::RenderWindow mainWind, debugWind;
     Renderer mainRenderer, debugRenderer;
     sf::Font mainFont;
@@ -30,10 +37,6 @@ protected:
 
     int debuggerTick();
     int mainTick();
-public:
-    int init(string title, Console* dev);
 
-    int mainLoop();
-
-    ~App();
+    JoyPadInput getInput();
 };

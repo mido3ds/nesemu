@@ -1,5 +1,5 @@
 #include "emulation/common.h"
-#include "logger.h"
+#include "log.h"
 
 // nes color palatte -> RGB color
 Color Color::fromPalatte(const u8_t palatte) {
@@ -76,20 +76,4 @@ Color Color::fromPalatte(const u8_t palatte) {
     };
     
     return colorPalatte[palatte];
-}
-
-vector<u16_t> Mirror::getAdresses(const u16_t address) const {
-    if (source.contains(address)) {
-        u16_t relativeAdress = address - source.start;
-        u16_t stripe = source.size();
-        u16_t num = dest.size()/stripe;
-
-        vector<u16_t> adresses(num);
-        for (int i = 0; i < num; i++) {
-            adresses[i] = dest.start + relativeAdress + stripe * i;
-        }
-        return adresses;
-    }
-
-    return vector<u16_t>();
 }

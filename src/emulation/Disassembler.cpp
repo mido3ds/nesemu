@@ -1,20 +1,74 @@
 #include <sstream>
 #include <tuple>
 #include <map>
+#include <cstring>
 #include <iterator>
 
-#include "emulation/console.h"
+#include "emulation/Disassembler.h"
 #include "emulation/instructions.h"
-#include "logger.h"
+#include "log.h"
 
-static tuple<string, int> oneInstr(u8_t* mem, u32_t size, const InstructionSet& instset) {
+void Disassembler::init(const vector<u8_t>& data, u16_t addr) {
+    u8_t const* mem = data.data();
+    int size = data.size();
+
+    while (size > 0) {
+        string instr;
+        int consumedBytes;
+        tie(instr, consumedBytes) = dissasmble(mem, size);
+
+        assembly[addr] = instr;
+
+        size -= consumedBytes;
+        mem  += consumedBytes;
+        addr += consumedBytes;
+    }
+}
+
+static string addAddress(u16_t addr, string s) {
+    char adrPart[10];
+    sprintf(adrPart, "$%04X", addr);
+    return string(adrPart) + ": " + s;
+}
+
+vector<string> Disassembler::get(const u16_t addr, const u16_t n) const {
+    vector<string> ret(2*n+1, "$????: ???");
+
+    auto tmpItr = assembly.lower_bound(addr);
+    auto fItr = tmpItr; // forward itr, addr : end
+    auto rItr = make_reverse_iterator(tmpItr); // reverse itr, addr-1 : rend
+
+    // addr
+    if (fItr != assembly.end()) {
+        if (fItr->first == addr) {
+            ret[n] = addAddress(fItr->first, fItr->second);
+            fItr++;
+        } else {
+            ret[n] = addAddress(addr, "???");
+        }
+    }
+
+    // [addr+1..addr+n]
+    for (auto i = n+1; fItr != assembly.end() && i < ret.size(); fItr++, i++) {
+        ret[i] = addAddress(fItr->first, fItr->second);
+    }
+
+    // [addr-n..addr-1]
+    for (auto i = n-1; rItr != assembly.rend() && i >= 0; rItr++, i--) {
+        ret[i] = addAddress(rItr->first, rItr->second);
+    }
+
+    return ret;
+}
+
+tuple<string, int> Disassembler::dissasmble(u8_t const* mem, u32_t size) {
     if (mem == nullptr || size == 0) { return make_tuple("???", 0); }
 
     int bytes = 1;
     ostringstream ss;
     char a[4], b[4];
 
-    auto name = instset[mem[0]].name;
+    auto name = instructionSet[mem[0]].name;
     if (name == "???") {
         char tmp[10];
         sprintf(tmp, "$%02X", mem[0]);
@@ -29,7 +83,7 @@ static tuple<string, int> oneInstr(u8_t* mem, u32_t size, const InstructionSet& 
     if (size >= 3) { sprintf(b, "%02X", mem[2]); }
     else           { strcpy(b, "??"); }
 
-    switch (instset[mem[0]].mode ) {
+    switch (instructionSet[mem[0]].mode ) {
     case AddressMode::Implicit:
         break;
     case AddressMode::Accumulator:
@@ -86,61 +140,4 @@ static tuple<string, int> oneInstr(u8_t* mem, u32_t size, const InstructionSet& 
     }
 
     return make_tuple(ss.str(), bytes);
-}
-
-static string addAddress(u16_t addr, string s) {
-    char adrPart[10];
-    sprintf(adrPart, "$%04X", addr);
-    return string(adrPart) + ": " + s;
-}
-
-static map<u16_t, string> disassemble(u8_t* mem, u16_t addr, u32_t size, const InstructionSet& instset) {
-    auto ret = map<u16_t, string>();
-    string instr;
-    int consumedBytes;
-
-    while (size > 0) {
-        tie(instr, consumedBytes) = oneInstr(mem, size, instset);
-
-        ret[addr] = instr;
-
-        if (consumedBytes <= size) { size -= consumedBytes; }
-        else { size = 0; }
-
-        mem += consumedBytes;
-        addr += consumedBytes;
-    }
-
-    return ret;
-}
-
-vector<string> Console::getAssembly(const u16_t addr, const u16_t n) {
-    static map<u16_t, string> assembly = disassemble(&memory[0], 0, memory.size(), instructionSet);
-    vector<string> ret(2*n+1, "$????: ???");
-
-    auto tmpItr = assembly.lower_bound(addr);
-    auto fItr = tmpItr; // forward itr, addr : end
-    auto rItr = make_reverse_iterator(tmpItr); // reverse itr, addr-1 : rend
-
-    // addr
-    if (fItr != assembly.end()) {
-        if (fItr->first == addr) {
-            ret[n] = addAddress(fItr->first, fItr->second);
-            fItr++;
-        } else {
-            ret[n] = addAddress(addr, "???");
-        }
-    }
-
-    // [addr+1..addr+n]
-    for (auto i = n+1; fItr != assembly.end() && i < ret.size(); fItr++, i++) {
-        ret[i] = addAddress(fItr->first, fItr->second);
-    }
-
-    // [addr-n..addr-1]
-    for (auto i = n-1; rItr != assembly.rend() && i >= 0; rItr++, i--) {
-        ret[i] = addAddress(rItr->first, rItr->second);
-    }
-
-    return ret;
 }

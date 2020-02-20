@@ -3,13 +3,13 @@
 #include <functional>
 
 #include "emulation/common.h"
-#include "emulation/console.h"
+#include "emulation/CPU.h"
 
 struct Instruction {
-    function<void(Console&)> exec;
+    function<void(CPU&)> exec;
     string name;
     AddressMode mode;
-    u16_t cpuCycles;
+    u16_t cycles;
     bool crossPagePenalty;
 };
 
