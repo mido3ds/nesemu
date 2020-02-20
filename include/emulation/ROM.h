@@ -1,6 +1,8 @@
 #pragma once
 
 #include <string>
+#include <vector>
+#include <thread>
 
 #include "stdtype.h"
 #include "emulation/common.h"
@@ -8,6 +10,13 @@
 using namespace std;
 
 class ROM {
+public:
+    int init(string path);
+    
+    u16_t getMapperNumber();
+
+    vector<u8_t> prg, chr;
+
 private:
     struct {
         u8_t numPRGs = 0;
@@ -54,17 +63,6 @@ private:
         u8_t:8;
     } header;
 
-    u8_t *prgData = nullptr, 
-        *chrData = nullptr;
-public:
-    int fromFile(string path);
-
-    int copyToMemory(MemType* memory);
-
-    u16_t getMapperNumber();
-
     u32_t getPRGRomSize();
     u32_t getCHRRomSize();
-
-    ~ROM();
 };

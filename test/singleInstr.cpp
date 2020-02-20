@@ -1,8 +1,9 @@
+// TODO fix
 #include <cstring>
 
 #include "catch.hpp"
 
-#include "emulation/console.h"
+#include "emulation/Console.h"
 #include "emulation/instructions.h"
 
 TEST_CASE("memory-access") {

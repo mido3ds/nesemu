@@ -2,8 +2,8 @@
 #include <sstream>
 #include <unistd.h>
 
-#include "gui/app.h"
-#include "logger.h"
+#include "gui/App.h"
+#include "log.h"
 #include "config.h"
 
 #define MEM_WIDTH 16
@@ -15,8 +15,8 @@ int App::init(string title, Console* dev) {
     int err;
 
     this->dev = dev;
-    if (dev == nullptr) {
-        ERROR("dev null");
+    if (!dev) {
+        ERROR("dev is null");
         return 1;
     }
 
@@ -151,29 +151,30 @@ int App::debuggerTick() {
 
     // regs
     Color c{255,255,0};
-    debugRenderer.text("SP: $" + hex8(dev->regs.sp), 10,(i)*h,1,1, &mainFont,c, 0, 0);
-    debugRenderer.text("A: $" + hex8(dev->regs.a), 10+w,(i++)*h,1,1, &mainFont,c, 0, 0);
+    auto regs = dev->getCPU().getRegs();
+    debugRenderer.text("SP: $" + hex8(regs.sp), 10,(i)*h,1,1, &mainFont,c, 0, 0);
+    debugRenderer.text("A: $" + hex8(regs.a), 10+w,(i++)*h,1,1, &mainFont,c, 0, 0);
 
-    debugRenderer.text("X: $" + hex8(dev->regs.x), 10,(i)*h,1,1, &mainFont,c, 0, 0);
-    debugRenderer.text("Y: $" + hex8(dev->regs.y), 10+w,(i++)*h,1,1, &mainFont,c, 0, 0);
+    debugRenderer.text("X: $" + hex8(regs.x), 10,(i)*h,1,1, &mainFont,c, 0, 0);
+    debugRenderer.text("Y: $" + hex8(regs.y), 10+w,(i++)*h,1,1, &mainFont,c, 0, 0);
     i++;
 
-    debugRenderer.text("C: " + to_string(dev->regs.flags.bits.c), 10,(i)*h,1,1, &mainFont,c, 0, 0);
-    debugRenderer.text("Z: " + to_string(dev->regs.flags.bits.z), 10+w*2.0/3,(i)*h,1,1, &mainFont,c, 0, 0);
-    debugRenderer.text("I: " + to_string(dev->regs.flags.bits.i), 10+w*4.0/3,(i++)*h,1,1, &mainFont,c, 0, 0);
+    debugRenderer.text("C: " + to_string(regs.flags.bits.c), 10,(i)*h,1,1, &mainFont,c, 0, 0);
+    debugRenderer.text("Z: " + to_string(regs.flags.bits.z), 10+w*2.0/3,(i)*h,1,1, &mainFont,c, 0, 0);
+    debugRenderer.text("I: " + to_string(regs.flags.bits.i), 10+w*4.0/3,(i++)*h,1,1, &mainFont,c, 0, 0);
 
-    debugRenderer.text("D: " + to_string(dev->regs.flags.bits.d), 10,(i)*h,1,1, &mainFont,c, 0, 0);
-    debugRenderer.text("B: " + to_string(dev->regs.flags.bits.b), 10+w*2.0/3,(i)*h,1,1, &mainFont,c, 0, 0);
-    debugRenderer.text("V: " + to_string(dev->regs.flags.bits.v), 10+w*4.0/3,(i++)*h,1,1, &mainFont,c, 0, 0);
+    debugRenderer.text("D: " + to_string(regs.flags.bits.d), 10,(i)*h,1,1, &mainFont,c, 0, 0);
+    debugRenderer.text("B: " + to_string(regs.flags.bits.b), 10+w*2.0/3,(i)*h,1,1, &mainFont,c, 0, 0);
+    debugRenderer.text("V: " + to_string(regs.flags.bits.v), 10+w*4.0/3,(i++)*h,1,1, &mainFont,c, 0, 0);
 
-    debugRenderer.text("N: " + to_string(dev->regs.flags.bits.n), 10,(i)*h,1,1, &mainFont,c, 0, 0);
-    debugRenderer.text("PC: " + string("$")+hex16(dev->regs.pc), 10+w*2.0/3,(i++)*h,1,1, &mainFont,{255,0,0}, 0, 0);
+    debugRenderer.text("N: " + to_string(regs.flags.bits.n), 10,(i)*h,1,1, &mainFont,c, 0, 0);
+    debugRenderer.text("PC: " + string("$")+hex16(regs.pc), 10+w*2.0/3,(i++)*h,1,1, &mainFont,{255,0,0}, 0, 0);
     i++;
     
     // assembly
     const int n = 18;
     int j = 1;
-    for (auto& s: dev->getAssembly(dev->regs.pc, n)) {
+    for (auto& s: dev->getDisassembler().get(regs.pc, n)) { // TODO: solve bug
         c = {r:255, g:255, b:255};
         if (j++ == n+1) {
             c.b=0;
@@ -205,42 +206,47 @@ void App::renderMem() {
 
         for (int i = 0; i < MEM_WIDTH; i++) {
             int x = MEM_HPADDING+53+i*30;
-            mainRenderer.text(hex8(dev->memory[(memBeggining+j)*MEM_WIDTH+i]), x, y, 1, 1, &mainFont, {255,255,0}, 0, 0);
+            u8_t data;
+            if (dev->getRAM().read((memBeggining+j)*MEM_WIDTH+i, data)) {
+                mainRenderer.text(hex8(data), x, y, 1, 1, &mainFont, {255,255,0}, 0, 0);
+            }
         }
     }
 
     mainRenderer.show();
 }
 
+JoyPadInput App::getInput() {
+    const auto keyb = sf::Keyboard::isKeyPressed;
+    return JoyPadInput{
+        a       : keyb(Config::a),
+        b       : keyb(Config::b),
+        select  : keyb(Config::select),
+        start   : keyb(Config::start),
+        up      : keyb(Config::up),
+        down    : keyb(Config::down),
+        left    : keyb(Config::left),
+        right   : keyb(Config::right)
+    };
+}
+
 int App::mainTick() {
-    int err;
-
     handleEvents(mainWind);
-
     if (pause) { return 0; }
 
-    const auto keyb = sf::Keyboard::isKeyPressed;
-    dev->joypad0.up      = keyb(Config::up);
-    dev->joypad0.down    = keyb(Config::down);
-    dev->joypad0.left    = keyb(Config::left);
-    dev->joypad0.right   = keyb(Config::right);
-    dev->joypad0.a       = keyb(Config::a);
-    dev->joypad0.b       = keyb(Config::b);
-    dev->joypad0.start   = keyb(Config::start);
-    dev->joypad0.select  = keyb(Config::select);
+    dev->input(getInput());
 
     if (!inDebugMode || doOneInstr) {
-        dev->oneCPUCycle();
-        dev->onePPUCycle(&mainRenderer);
-        dev->oneAPUCycle();
+        dev->clock();
     }
     doOneInstr = false;
 
     if (showMem) { 
-        int scrolMultiplier = keyb(sf::Keyboard::LControl) || keyb(sf::Keyboard::RControl) ? MEM_HEIGHT:1;
+        const auto keyb = sf::Keyboard::isKeyPressed;
+        int scrolMultiplier = keyb(sf::Keyboard::LControl) || keyb(sf::Keyboard::RControl) ? MEM_HEIGHT/2:1;
 
         if (keyb(Config::scrollMemDown)) {
-            if ((memBeggining+scrolMultiplier+MEM_HEIGHT)*MEM_WIDTH < MEM_SIZE) {
+            if ((memBeggining+scrolMultiplier+MEM_HEIGHT)*MEM_WIDTH <= 0x0800) {
                 memBeggining += scrolMultiplier;
             }
         } else if (keyb(Config::scrollMemUp)) {
@@ -264,15 +270,8 @@ int App::mainLoop() {
     while (!quit && mainWind.isOpen()) {
         auto t1 = high_resolution_clock::now();
 
-        if ((err = mainTick()) != 0) {
-            return err;
-        }
-
-        if ((err = debuggerTick()) != 0) {
-            return err;
-        }
-        
-        usleep(1); // guard window from overdrawing
+        if ((err = mainTick())) { return err; }
+        if ((err = debuggerTick())) { return err; }
 
         auto t2 = high_resolution_clock::now();
         auto duration = duration_cast<chrono::milliseconds>(t2 - t1).count();

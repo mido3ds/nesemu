@@ -1,8 +1,8 @@
 #include <fstream>
 #include <tuple>
 
-#include "emulation/rom.h"
-#include "logger.h"
+#include "emulation/ROM.h"
+#include "log.h"
 
 tuple<u8_t*, size_t> readBinaryFile(string path) {
     ifstream file(path, ios::in|ios::binary|ios::ate);
@@ -18,7 +18,7 @@ tuple<u8_t*, size_t> readBinaryFile(string path) {
     return make_tuple((u8_t*) buffer, size);
 }
 
-int ROM::fromFile(string path) {
+int ROM::init(string path) {
     size_t size = 0;
     u8_t* buffer = nullptr;
 
@@ -40,15 +40,9 @@ int ROM::fromFile(string path) {
     // copy rest of header
     memcpy(&header, buffer+4, 16-4);
 
-    if (getMapperNumber() != 0) {
-        ERROR("emulator only supports NROM (0 mapper)");
-        WARNING("mapping as 0 mapper");
-    }
-
     // no trainer
     if (header.flags6.bits.hasTrainer) {
-        ERROR("emulator doesnt support trainers");
-        WARNING("ignoring trainer");
+        WARNING("emulator doesnt support trainers, ignoring trainer");
     }
 
     // cpy PRG 
@@ -63,8 +57,8 @@ int ROM::fromFile(string path) {
         return 1;
     }
 
-    if (!prgData) { prgData = new u8_t[prgSize]; }
-    memcpy(prgData, prgPtr, prgSize);
+    prg.clear();
+    prg.insert(prg.end(), prgPtr, prgPtr+prgSize);
 
     // cpy CHR
     u8_t* chrPtr = prgPtr+prgSize;
@@ -75,8 +69,8 @@ int ROM::fromFile(string path) {
         return 1;
     }
     
-    if (!chrData) { chrData = new u8_t[chrSize]; }
-    memcpy(chrData, chrPtr, chrSize);
+    chr.clear();
+    chr.insert(chr.end(), chrPtr, chrPtr+chrSize);
 
     // no playchoice
     if (header.flags7.bits.hasPlayChoice) {
@@ -103,36 +97,6 @@ int ROM::fromFile(string path) {
     return 0;
 }
 
-int ROM::copyToMemory(MemType* memory) {
-    if (!memory) {
-        ERROR("null memory");
-        return 1;
-    }
-
-    if (header.numCHRs == 0 || header.numPRGs == 0 ||
-        !prgData || !chrData) {
-        ERROR("invalid state/no rom is stored");
-        return 1;
-    }
-
-    int prgSize = getPRGRomSize();
-    if (prgSize > PRG_ROM_LOW.size()+PRG_ROM_UP.size()) {
-        ERROR("cant handle sizes bigger than %d", PRG_ROM_LOW.size()+PRG_ROM_UP.size());
-        return 1;
-    }
-
-    memcpy(memory->data()+PRG_ROM_LOW.start, prgData, prgSize);
-    
-    if (header.numPRGs == 1) {
-        memcpy(memory->data()+PRG_ROM_UP.start, prgData, prgSize);
-    }
-
-    // TODO: copy chr
-    
-    INFO("loaded ROM into device memory");
-    return 0;
-}
-
 u16_t ROM::getMapperNumber() {
     return header.flags6.bits.lowerMapperNum | header.flags7.bits.upperMapperNum << 8;
 }
@@ -143,14 +107,4 @@ u32_t ROM::getPRGRomSize() {
 
 u32_t ROM::getCHRRomSize() {
     return header.numCHRs*8*1024; // 8 KB
-}
-
-ROM::~ROM() {
-    if (chrData) {
-        delete chrData;
-    }
-
-    if (prgData) {
-        delete prgData;
-    }
 }
