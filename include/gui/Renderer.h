@@ -5,7 +5,7 @@
 
 #include "stdtype.h"
 #include "emulation/common.h"
-#include "config.h"
+#include "Config.h"
 
 class Renderer {
 private:
