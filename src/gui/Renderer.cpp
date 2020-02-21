@@ -1,6 +1,6 @@
 #include "gui/Renderer.h"
 #include "log.h"
-#include "config.h"
+#include "Config.h"
 
 int Renderer::init(sf::RenderWindow* window, Config::Rect resolution, Config::Rect windSize) {
     if (resolution.w <= 0 || resolution.h <= 0 || 

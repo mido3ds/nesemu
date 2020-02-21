@@ -4,7 +4,7 @@
 
 #include "gui/App.h"
 #include "log.h"
-#include "config.h"
+#include "Config.h"
 
 #define MEM_WIDTH 16
 #define MEM_HEIGHT 46
