@@ -23,7 +23,8 @@ struct JoyPadInput {
 
 class Console {
 public:
-    int init(string romPath);
+    int init(string romPath); // with rom
+    int init();
 
     void reset();
     void clock();

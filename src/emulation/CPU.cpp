@@ -233,7 +233,7 @@ void CPU::write16(u16_t address, u16_t v) { bus->write16(address, v); }
 u16_t CPU::pop16() { return pop() | pop() << 8; }
 void CPU::push16(u16_t v) { push(v & 255); push((v >> 8) & 255); }
 
-CPURegs CPU::getRegs() {
+CPURegs& CPU::getRegs() {
     return regs;
 }
 
