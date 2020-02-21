@@ -13,7 +13,7 @@ class ROM {
 public:
     int init(string path);
     
-    u16_t getMapperNumber();
+    u16_t getMapperNumber() const;
 
     vector<u8_t> prg, chr;
 
@@ -63,6 +63,6 @@ private:
         u8_t:8;
     } header;
 
-    u32_t getPRGRomSize();
-    u32_t getCHRRomSize();
+    u32_t getPRGRomSize() const;
+    u32_t getCHRRomSize() const;
 };

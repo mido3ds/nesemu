@@ -6,7 +6,7 @@ void CPU::init(Bus* bus) {
     this->bus = bus;
 
     // https://wiki.nesdev.com/w/index.php/CPU_power_up_state#At_power-up
-    // regs.pc = read16(RH); TODO
+    regs.pc = read16(RH);
     INFO("PC = memory[0xFFFC] = 0x%04X", regs.pc);
 
     regs.sp = 0xFD;
@@ -152,7 +152,7 @@ u16_t CPU::getArgAddr() {
 }
 
 void CPU::writeArg(u8_t v) {
-    switch (mode) {
+    switch (this->mode) {
     case AddressMode::Accumulator:
         argValue = regs.a;
         break;

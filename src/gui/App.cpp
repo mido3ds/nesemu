@@ -174,7 +174,7 @@ int App::debuggerTick() {
     // assembly
     const int n = 18;
     int j = 1;
-    for (auto& s: dev->getDisassembler().get(regs.pc, n)) { // TODO: solve bug
+    for (auto& s: dev->getDisassembler().get(regs.pc, n)) {
         c = {r:255, g:255, b:255};
         if (j++ == n+1) {
             c.b=0;

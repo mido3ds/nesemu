@@ -97,14 +97,14 @@ int ROM::init(string path) {
     return 0;
 }
 
-u16_t ROM::getMapperNumber() {
+u16_t ROM::getMapperNumber() const {
     return header.flags6.bits.lowerMapperNum | header.flags7.bits.upperMapperNum << 8;
 }
 
-u32_t ROM::getPRGRomSize() {
+u32_t ROM::getPRGRomSize() const {
     return header.numPRGs*16*1024; // 16 KB
 }
 
-u32_t ROM::getCHRRomSize() {
+u32_t ROM::getCHRRomSize() const {
     return header.numCHRs*8*1024; // 8 KB
 }

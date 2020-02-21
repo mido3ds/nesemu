@@ -1,25 +1,24 @@
 #pragma once
 
 #include <thread>
+#include <vector>
 
-#include "stdtype.h"
-#include "emulation/MMC.h"
-#include "emulation/RAM.h"
-#include "emulation/IORegs.h"
+using namespace std;
+
+#include "emulation/BusAttachable.h"
 
 class Bus {
 public:
-    int init(RAM ram, shared_ptr<MMC> mmc, IORegs io);
+    int attach(shared_ptr<BusAttachable> attachment);
 
     void reset();
 
     bool read(u16_t addr, u8_t& data);
     bool read16(u16_t addr, u16_t& data);
+
     bool write(u16_t addr, u8_t data);
     bool write16(u16_t addr, u16_t data);
 
 private:
-    RAM ram;
-    IORegs io;
-    shared_ptr<MMC> mmc;
+    vector<shared_ptr<BusAttachable>> attachments;
 };

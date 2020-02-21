@@ -1,4 +1,7 @@
 #include "emulation/Console.h"
+#include "emulation/ROM.h"
+#include "emulation/MMC.h"
+#include "emulation/IORegs.h"
 #include "log.h"
 
 int Console::init(string romPath) {
@@ -7,15 +10,21 @@ int Console::init(string romPath) {
 
     disassembler.init(rom.prg, PRG_ROM_LOW.start);
 
-    shared_ptr<MMC> mmc;
-    if (!(mmc = MMC::fromROM(rom))) { return 1; }
+    // mmc
+    auto mmc = MMC::fromROM(rom);
+    if (!mmc) { return 1; }
+    if (bus.attach(mmc)) { return 1; }
 
-    ram.init();
+    // ram
+    ram = make_shared<RAM>();
+    ram->init();
+    if (bus.attach(ram)) { return 1; }
 
-    IORegs io;
-    io.init();
+    // io
+    auto io = make_shared<IORegs>();
+    io->init();
+    if (bus.attach(io)) { return 1; }
 
-    if (bus.init(ram, mmc, io)) { return 1; }
     cpu.init(&bus);
 
     return 0;
@@ -39,7 +48,7 @@ CPU& Console::getCPU() {
 }
 
 RAM& Console::getRAM() {
-    return ram;
+    return *ram;
 }
 
 void Console::input(JoyPadInput joypad) {

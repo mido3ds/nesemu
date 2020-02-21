@@ -4,6 +4,7 @@
 
 #include "stdtype.h"
 #include "emulation/Bus.h"
+#include "emulation/common.h"
 
 struct CPURegs {
     u16_t pc; // program counter
