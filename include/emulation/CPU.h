@@ -34,7 +34,7 @@ public:
     void reset();
     void clock();
 
-    CPURegs getRegs();
+    CPURegs& getRegs();
     u16_t getCycles();
 
 private:

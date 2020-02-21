@@ -15,6 +15,10 @@ int Console::init(string romPath) {
     if (!mmc) { return 1; }
     if (bus.attach(mmc)) { return 1; }
 
+    return init();
+}
+
+int Console::init() {
     // ram
     ram = make_shared<RAM>();
     ram->init();
