@@ -37,3 +37,4 @@
 *.nes
 
 vendors/
+.vscode
