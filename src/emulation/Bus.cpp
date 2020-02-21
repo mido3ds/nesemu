@@ -1,28 +1,27 @@
 #include "emulation/Bus.h"
 #include "log.h"
 
-int Bus::init(RAM ram, shared_ptr<MMC> mmc, IORegs io) {
-    if (!mmc) { return 1; }
-    
-    this->ram = ram;
-    this->mmc = mmc;
-    this->io = io;
+int Bus::attach(shared_ptr<BusAttachable> attachment) {
+    if (attachment) {
+        attachments.push_back(attachment);
+        return 0;
+    }
 
-    return 0;
+    ERROR("attaching null to bus");
+    return 1;
 }
 
 void Bus::reset() {
-    INFO("reset bus");
-    ram.reset();
-    mmc->reset();
-    io.reset();
+    for (auto& at:attachments) {
+        at->reset();
+    }
 }
 
 bool Bus::read(u16_t addr, u8_t& data) {
-    if (ram.read(addr, data) || 
-        mmc->read(addr, data) || 
-        io.read(addr, data)) { 
-        return true;
+    for (auto& at:attachments) {
+        if (at->read(addr, data)) {
+            return true;
+        }
     }
 
     ERROR("bus: read from unregistered address %d", addr);
@@ -37,10 +36,10 @@ bool Bus::read16(u16_t addr, u16_t& data) {
 }
 
 bool Bus::write(u16_t addr, u8_t data) {
-    if (ram.write(addr, data) || 
-        mmc->write(addr, data) || 
-        io.write(addr, data)) { 
-        return true;
+    for (auto& at:attachments) {
+        if (at->write(addr, data)) {
+            return true;
+        }
     }
 
     ERROR("bus: write to unregistered address %d", addr);

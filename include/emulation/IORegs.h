@@ -1,14 +1,12 @@
 #pragma once
 
-#include <thread>
+#include "emulation/BusAttachable.h"
 
-#include "stdtype.h"
-
-class IORegs {
+class IORegs: public BusAttachable {
 public:
     void init();
 
-    void reset();
-    bool read(u16_t addr, u8_t& data);
-    bool write(u16_t addr, u8_t data);
+    virtual void reset();
+    virtual bool read(u16_t addr, u8_t& data);
+    virtual bool write(u16_t addr, u8_t data);
 };

@@ -4,9 +4,6 @@
 #include <string>
 
 #include "emulation/RAM.h"
-#include "emulation/ROM.h"
-#include "emulation/MMC.h"
-#include "emulation/IORegs.h"
 #include "emulation/Bus.h"
 #include "emulation/CPU.h"
 #include "emulation/Disassembler.h"
@@ -39,7 +36,7 @@ public:
 
 private:
     Bus bus;
-    RAM ram;
+    shared_ptr<RAM> ram;
     CPU cpu;
     Disassembler disassembler;
 };
