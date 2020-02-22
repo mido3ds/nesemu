@@ -18,13 +18,16 @@ void Bus::reset() {
 }
 
 bool Bus::read(u16_t addr, u8_t& data) {
+    bool success = false;
     for (auto& at:attachments) {
         if (at->read(addr, data)) {
-            return true;
+            success = true;
         }
     }
 
-    ERROR("bus: read from unregistered address %d", addr);
+    if (success) { return true; }
+
+    WARNING("bus: read from unregistered address 0x%02X", addr);
     return false;
 }
 
@@ -36,13 +39,16 @@ bool Bus::read16(u16_t addr, u16_t& data) {
 }
 
 bool Bus::write(u16_t addr, u8_t data) {
+    bool success = false;
     for (auto& at:attachments) {
         if (at->write(addr, data)) {
-            return true;
+            success = true;
         }
     }
 
-    ERROR("bus: write to unregistered address %d", addr);
+    if (success) { return true; }
+
+    WARNING("bus: write to unregistered address 0x%02X", addr);
     return false;
 }
 

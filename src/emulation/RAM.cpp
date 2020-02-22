@@ -4,8 +4,6 @@ void RAM::init() {
     data.fill(0);
 }
 
-void RAM::reset() {}
-
 bool RAM::read(u16_t addr, u8_t& data) {
     if (addr <= 0x07FF || (addr >= 0x0800 && addr <= 0x1FFF)) {
         data = this->data[addr & 0x07FF];

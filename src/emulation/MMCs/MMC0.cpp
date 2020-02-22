@@ -28,3 +28,11 @@ bool MMC0::write(u16_t addr, u8_t data) {
 
     return false;
 }
+
+bool MMC0::ppuRead(u16_t addr, u8_t& data) {
+    // TODO
+}
+
+bool MMC0::ppuWrite(u16_t addr, u8_t data) {
+    // TODO
+}

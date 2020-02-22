@@ -2,7 +2,8 @@
 #include "emulation/instructions.h"
 #include "log.h"
 
-void CPU::init(Bus* bus) {
+int CPU::init(Bus* bus) {
+    if (!bus) { return 1; }
     this->bus = bus;
 
     // https://wiki.nesdev.com/w/index.php/CPU_power_up_state#At_power-up
@@ -23,6 +24,7 @@ void CPU::init(Bus* bus) {
 
     // https://wiki.nesdev.com/w/index.php/PPU_power_up_state
     // TODO: set all ppu state
+    return 0;
 }
 
 void CPU::reset() {
@@ -233,8 +235,8 @@ void CPU::write16(u16_t address, u16_t v) { bus->write16(address, v); }
 u16_t CPU::pop16() { return pop() | pop() << 8; }
 void CPU::push16(u16_t v) { push(v & 255); push((v >> 8) & 255); }
 
-CPURegs& CPU::getRegs() {
-    return regs;
+CPURegs* CPU::getRegs() {
+    return &regs;
 }
 
 u16_t CPU::getCycles() {

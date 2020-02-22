@@ -29,7 +29,13 @@ int Console::init() {
     io->init();
     if (bus.attach(io)) { return 1; }
 
-    cpu.init(&bus);
+    // ppu
+    ppu = make_shared<PPU>();
+    if (bus.attach(ppu)) { return 1; }
+
+    if (cpu.init(&bus)) { return 1; }
+
+    cycles = 0;
 
     return 0;
 }
@@ -37,22 +43,30 @@ int Console::init() {
 void Console::reset() {
     bus.reset();
     cpu.reset();
+    cycles = 0;
 }
 
 void Console::clock() {
-    cpu.clock();
+    ppu->clock();
+
+    // because ppu is 3x faster than cpu 
+    if (cycles % 3 == 0) {
+        cpu.clock();
+    }
+
+    cycles++;
 }
 
-Disassembler& Console::getDisassembler() {
-    return disassembler;
+Disassembler* Console::getDisassembler() {
+    return &disassembler;
 }
 
-CPU& Console::getCPU() {
-    return cpu;
+CPU* Console::getCPU() {
+    return &cpu;
 }
 
-RAM& Console::getRAM() {
-    return *ram;
+RAM* Console::getRAM() {
+    return ram.get();
 }
 
 void Console::input(JoyPadInput joypad) {
