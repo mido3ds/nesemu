@@ -1,4 +1,3 @@
-// TODO fix
 #include <cstring>
 
 #include "catch.hpp"
@@ -34,9 +33,9 @@ TEST_CASE("branch") {
     Console dev;
     dev.init();
 
-    auto cpu = dev.getCPU();
-    auto regs = cpu.getRegs();
-    auto memory = dev.getRAM();
+    auto& cpu = dev.getCPU();
+    auto& regs = cpu.getRegs();
+    auto& memory = dev.getRAM();
 
     memset(&regs, 0, sizeof regs);
     memory.init();
@@ -161,9 +160,9 @@ TEST_CASE("immediate-instructs") {
     Console dev;
     dev.init();
 
-    auto cpu = dev.getCPU();
-    auto regs = cpu.getRegs();
-    auto memory = dev.getRAM();
+    auto& cpu = dev.getCPU();
+    auto& regs = cpu.getRegs();
+    auto& memory = dev.getRAM();
 
     memory.init();
     memset(&regs, 0, sizeof regs);
@@ -221,9 +220,9 @@ TEST_CASE("implied-instructs") {
     Console dev;
     dev.init();
 
-    auto cpu = dev.getCPU();
-    auto regs = cpu.getRegs();
-    auto memory = dev.getRAM();
+    auto& cpu = dev.getCPU();
+    auto& regs = cpu.getRegs();
+    auto& memory = dev.getRAM();
 
     memset(&regs, 0, sizeof regs);
     memory.init();
@@ -242,9 +241,9 @@ TEST_CASE("jmp-bug") {
     Console dev;
     dev.init();
 
-    auto cpu = dev.getCPU();
-    auto regs = cpu.getRegs();
-    auto memory = dev.getRAM();
+    auto& cpu = dev.getCPU();
+    auto& regs = cpu.getRegs();
+    auto& memory = dev.getRAM();
 
     memset(&regs, 0, sizeof regs);
     memory.init();
