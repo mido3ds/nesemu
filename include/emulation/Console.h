@@ -6,6 +6,7 @@
 #include "emulation/RAM.h"
 #include "emulation/Bus.h"
 #include "emulation/CPU.h"
+#include "emulation/PPU.h"
 #include "emulation/Disassembler.h"
 
 using namespace std;
@@ -29,15 +30,18 @@ public:
     void reset();
     void clock();
 
-    Disassembler& getDisassembler();
-    CPU& getCPU();
-    RAM& getRAM();
+    Disassembler* getDisassembler();
+    CPU* getCPU();
+    RAM* getRAM();
 
     void input(JoyPadInput joypad);
 
 private:
     Bus bus;
+    shared_ptr<PPU> ppu;
     shared_ptr<RAM> ram;
     CPU cpu;
     Disassembler disassembler;
+
+    u64_t cycles = 0;
 };
