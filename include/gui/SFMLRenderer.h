@@ -6,8 +6,9 @@
 #include "stdtype.h"
 #include "emulation/common.h"
 #include "Config.h"
+#include "IRenderer.h"
 
-class Renderer {
+class SFMLRenderer: public IRenderer {
 private:
     sf::RenderWindow* window = nullptr;
     Config::Rect resolution, windSize;
@@ -15,11 +16,11 @@ private:
 public:
     int init(sf::RenderWindow* window, Config::Rect resolution, Config::Rect windSize);
 
-    void clear(Color c, u8_t a);
-    void pixel(int x, int y, Color c, u8_t a);
+    virtual void clear(Color c, u8_t a);
+    virtual void pixel(int x, int y, Color c, u8_t a);
 
-    int text(string s, int x, int y, f64_t scaleW, f64_t scaleH, sf::Font* font, Color c, int* newW, int* newH);
+    virtual int text(string s, int x, int y, f64_t scaleW, f64_t scaleH, Font* font, Color c, int* newW, int* newH);
 
     // present the renderer on its window
-    void show();
+    virtual void show();
 };

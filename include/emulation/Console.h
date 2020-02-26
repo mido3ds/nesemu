@@ -28,7 +28,7 @@ public:
     int init();
 
     void reset();
-    void clock();
+    void clock(IRenderer* renderer);
 
     Disassembler* getDisassembler();
     CPU* getCPU();

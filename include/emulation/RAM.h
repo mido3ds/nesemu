@@ -2,12 +2,14 @@
 
 #include <array>
 
-#include "emulation/BusAttachable.h"
+#include "emulation/ICPUBusAttachable.h"
 #include "stdtype.h"
 
-class RAM: public BusAttachable {
+class RAM: public ICPUBusAttachable {
 public:
     void init();
+
+    virtual void reset();
     
     virtual bool read(u16_t addr, u8_t& data);
     virtual bool write(u16_t addr, u8_t data);
