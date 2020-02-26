@@ -1,13 +1,14 @@
 #pragma once
 
 #include "emulation/Bus.h"
-#include "emulation/BusAttachable.h"
+#include "emulation/ICPUBusAttachable.h"
+#include "gui/IRenderer.h"
 
-class PPU: public BusAttachable {
+class PPU: public ICPUBusAttachable {
 public:
     int init(Bus* bus);
 
-    void clock();
+    void clock(IRenderer* renderer);
 
     virtual void reset();
     
@@ -16,4 +17,6 @@ public:
 
 private:
     Bus* bus;
+
+    u16_t cycles = 0;
 };

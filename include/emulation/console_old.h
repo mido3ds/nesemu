@@ -1,7 +1,7 @@
 // #pragma once
 
 // #include "emulation/common.h"
-// #include "gui/Renderer.h"
+// #include "gui/SFMLRenderer.h"
 // #include "emulation/rom.h"
 // // TODO: move ppu/apu/dma things when added
 // class Console_old {
@@ -181,7 +181,7 @@
 
 //     // cycle
 //     void oneCPUCycle();
-//     void onePPUCycle(Renderer* renderer);
+//     void onePPUCycle(SFMLRenderer* renderer);
 //     void oneAPUCycle();
 
 //     // instruction

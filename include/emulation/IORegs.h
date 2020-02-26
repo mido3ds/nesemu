@@ -1,8 +1,8 @@
 #pragma once
 
-#include "emulation/BusAttachable.h"
+#include "emulation/ICPUBusAttachable.h"
 
-class IORegs: public BusAttachable {
+class IORegs: public ICPUBusAttachable {
 public:
     void init();
 

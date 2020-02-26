@@ -4,7 +4,7 @@
 #include <SFML/Graphics.hpp>
 
 #include "stdtype.h"
-#include "gui/Renderer.h"
+#include "gui/SFMLRenderer.h"
 #include "emulation/Console.h"
 
 class App {
@@ -18,7 +18,7 @@ public:
 private:
     Console* dev;
     sf::RenderWindow mainWind, debugWind;
-    Renderer mainRenderer, debugRenderer;
+    SFMLRenderer mainRenderer, debugRenderer;
     sf::Font mainFont;
 
     bool quit = false, pause = false, 

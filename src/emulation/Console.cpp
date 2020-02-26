@@ -13,7 +13,8 @@ int Console::init(string romPath) {
     // mmc
     auto mmc = MMC::fromROM(rom);
     if (!mmc) { return 1; }
-    if (bus.attach(mmc)) { return 1; }
+    if (bus.attach(static_pointer_cast<ICPUBusAttachable>(mmc))) { return 1; }
+    if (bus.attach(static_pointer_cast<IPPUBusAttachable>(mmc))) { return 1; }
 
     return init();
 }
@@ -31,6 +32,7 @@ int Console::init() {
 
     // ppu
     ppu = make_shared<PPU>();
+    if (ppu->init(&bus)) { return 1; }
     if (bus.attach(ppu)) { return 1; }
 
     if (cpu.init(&bus)) { return 1; }
@@ -46,8 +48,8 @@ void Console::reset() {
     cycles = 0;
 }
 
-void Console::clock() {
-    ppu->clock();
+void Console::clock(IRenderer* renderer) {
+    ppu->clock(renderer);
 
     // because ppu is 3x faster than cpu 
     if (cycles % 3 == 0) {

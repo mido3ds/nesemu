@@ -141,34 +141,34 @@ int App::debuggerTick() {
     int i = 0;
 
     // fps
-    debugRenderer.text("FPS: "+to_string(int(fps)), 10,(i)*h,1,1, &mainFont,{255,0,0}, 0, 0);
+    debugRenderer.text("FPS: "+to_string(int(fps)), 10,(i)*h,1,1, (Font*)&mainFont,{255,0,0}, 0, 0);
 
     // mem
-    debugRenderer.text("MEM ", 10+w,(i)*h,1,1, &mainFont,{255,255,255}, 0, 0);
-    if (showMem) { debugRenderer.text("ON", 10+w+40,(i++)*h,1,1, &mainFont,{0,255,0}, 0, 0); }
-    else { debugRenderer.text("OFF", 10+w+40,(i++)*h,1,1, &mainFont,{255,0,0}, 0, 0); }
+    debugRenderer.text("MEM ", 10+w,(i)*h,1,1, (Font*)&mainFont,{255,255,255}, 0, 0);
+    if (showMem) { debugRenderer.text("ON", 10+w+40,(i++)*h,1,1, (Font*)&mainFont,{0,255,0}, 0, 0); }
+    else { debugRenderer.text("OFF", 10+w+40,(i++)*h,1,1, (Font*)&mainFont,{255,0,0}, 0, 0); }
     i++;
 
     // regs
     Color c{255,255,0};
     auto regs = dev->getCPU()->getRegs();
-    debugRenderer.text("SP: $" + hex8(regs->sp), 10,(i)*h,1,1, &mainFont,c, 0, 0);
-    debugRenderer.text("A: $" + hex8(regs->a), 10+w,(i++)*h,1,1, &mainFont,c, 0, 0);
+    debugRenderer.text("SP: $" + hex8(regs->sp), 10,(i)*h,1,1, (Font*)&mainFont,c, 0, 0);
+    debugRenderer.text("A: $" + hex8(regs->a), 10+w,(i++)*h,1,1, (Font*)(Font*)&mainFont,c, 0, 0);
 
-    debugRenderer.text("X: $" + hex8(regs->x), 10,(i)*h,1,1, &mainFont,c, 0, 0);
-    debugRenderer.text("Y: $" + hex8(regs->y), 10+w,(i++)*h,1,1, &mainFont,c, 0, 0);
+    debugRenderer.text("X: $" + hex8(regs->x), 10,(i)*h,1,1, (Font*)&mainFont,c, 0, 0);
+    debugRenderer.text("Y: $" + hex8(regs->y), 10+w,(i++)*h,1,1, (Font*)&mainFont,c, 0, 0);
     i++;
 
-    debugRenderer.text("C: " + to_string(regs->flags.bits.c), 10,(i)*h,1,1, &mainFont,c, 0, 0);
-    debugRenderer.text("Z: " + to_string(regs->flags.bits.z), 10+w*2.0/3,(i)*h,1,1, &mainFont,c, 0, 0);
-    debugRenderer.text("I: " + to_string(regs->flags.bits.i), 10+w*4.0/3,(i++)*h,1,1, &mainFont,c, 0, 0);
+    debugRenderer.text("C: " + to_string(regs->flags.bits.c), 10,(i)*h,1,1, (Font*)&mainFont,c, 0, 0);
+    debugRenderer.text("Z: " + to_string(regs->flags.bits.z), 10+w*2.0/3,(i)*h,1,1, (Font*)&mainFont,c, 0, 0);
+    debugRenderer.text("I: " + to_string(regs->flags.bits.i), 10+w*4.0/3,(i++)*h,1,1, (Font*)&mainFont,c, 0, 0);
 
-    debugRenderer.text("D: " + to_string(regs->flags.bits.d), 10,(i)*h,1,1, &mainFont,c, 0, 0);
-    debugRenderer.text("B: " + to_string(regs->flags.bits.b), 10+w*2.0/3,(i)*h,1,1, &mainFont,c, 0, 0);
-    debugRenderer.text("V: " + to_string(regs->flags.bits.v), 10+w*4.0/3,(i++)*h,1,1, &mainFont,c, 0, 0);
+    debugRenderer.text("D: " + to_string(regs->flags.bits.d), 10,(i)*h,1,1, (Font*)&mainFont,c, 0, 0);
+    debugRenderer.text("B: " + to_string(regs->flags.bits.b), 10+w*2.0/3,(i)*h,1,1, (Font*)&mainFont,c, 0, 0);
+    debugRenderer.text("V: " + to_string(regs->flags.bits.v), 10+w*4.0/3,(i++)*h,1,1, (Font*)&mainFont,c, 0, 0);
 
-    debugRenderer.text("N: " + to_string(regs->flags.bits.n), 10,(i)*h,1,1, &mainFont,c, 0, 0);
-    debugRenderer.text("PC: " + string("$")+hex16(regs->pc), 10+w*2.0/3,(i++)*h,1,1, &mainFont,{255,0,0}, 0, 0);
+    debugRenderer.text("N: " + to_string(regs->flags.bits.n), 10,(i)*h,1,1, (Font*)&mainFont,c, 0, 0);
+    debugRenderer.text("PC: " + string("$")+hex16(regs->pc), 10+w*2.0/3,(i++)*h,1,1, (Font*)&mainFont,{255,0,0}, 0, 0);
     i++;
     
     // assembly
@@ -184,7 +184,7 @@ int App::debuggerTick() {
             c.g = c.b = 0;
         }
 
-        debugRenderer.text(s, 10,(i++)*h,1,1, &mainFont,c, 0, 0);
+        debugRenderer.text(s, 10,(i++)*h,1,1, (Font*)&mainFont,c, 0, 0);
     }
 
     debugRenderer.show();
@@ -197,18 +197,18 @@ void App::renderMem() {
 
     for (int i = 0; i < MEM_WIDTH; i++) {
         int x = MEM_HPADDING+53+i*30;
-        mainRenderer.text(hex8(i), x, MEM_VPADDING, 1, 1, &mainFont, {255,255,255}, 0, 0);
+        mainRenderer.text(hex8(i), x, MEM_VPADDING, 1, 1, (Font*)&mainFont, {255,255,255}, 0, 0);
     }
 
     for (int j = 0; j < MEM_HEIGHT; j++) {
         int y = MEM_VPADDING+(j+1)*(Config::fontSize+1);
-        mainRenderer.text(hex16((memBeggining+j)*MEM_WIDTH), MEM_HPADDING, y, 1, 1, &mainFont, {255,255,255}, 0, 0);
+        mainRenderer.text(hex16((memBeggining+j)*MEM_WIDTH), MEM_HPADDING, y, 1, 1, (Font*)&mainFont, {255,255,255}, 0, 0);
 
         for (int i = 0; i < MEM_WIDTH; i++) {
             int x = MEM_HPADDING+53+i*30;
             u8_t data;
             if (dev->getRAM()->read((memBeggining+j)*MEM_WIDTH+i, data)) {
-                mainRenderer.text(hex8(data), x, y, 1, 1, &mainFont, {255,255,0}, 0, 0);
+                mainRenderer.text(hex8(data), x, y, 1, 1, (Font*)&mainFont, {255,255,0}, 0, 0);
             }
         }
     }
@@ -237,7 +237,7 @@ int App::mainTick() {
     dev->input(getInput());
 
     if (!inDebugMode || doOneInstr) {
-        dev->clock();
+        dev->clock(&mainRenderer);
     }
     doOneInstr = false;
 

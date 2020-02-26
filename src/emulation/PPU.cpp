@@ -2,17 +2,18 @@
 
 int PPU::init(Bus* bus) {
     if (!bus) { return 1; }
-    bus = bus;
+    this->bus = bus;
 
     return 0;
 }
 
-void PPU::clock() {
+void PPU::clock(IRenderer* renderer) {
     // TODO
 }
 
 void PPU::reset() {
     // TODO
+    cycles = 0;
 }
 
 bool PPU::read(u16_t addr, u8_t& data) {

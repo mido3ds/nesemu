@@ -1,8 +1,8 @@
-#include "gui/Renderer.h"
+#include "gui/SFMLRenderer.h"
 #include "log.h"
 #include "Config.h"
 
-int Renderer::init(sf::RenderWindow* window, Config::Rect resolution, Config::Rect windSize) {
+int SFMLRenderer::init(sf::RenderWindow* window, Config::Rect resolution, Config::Rect windSize) {
     if (resolution.w <= 0 || resolution.h <= 0 || 
         windSize.w <= 0 || windSize.h <= 0) {
         ERROR("invalid resolution or windsize");
@@ -21,7 +21,7 @@ int Renderer::init(sf::RenderWindow* window, Config::Rect resolution, Config::Re
     return 0;
 }
 
-void Renderer::pixel(int x, int y, Color c, u8_t a) {
+void SFMLRenderer::pixel(int x, int y, Color c, u8_t a) {
     // TODO: scale to resolution
     sf::CircleShape p(1);
     p.setFillColor(sf::Color(c.r, c.g, c.b, a));
@@ -30,18 +30,18 @@ void Renderer::pixel(int x, int y, Color c, u8_t a) {
     window->draw(p);
 }
 
-void Renderer::clear(Color c, u8_t a) {
+void SFMLRenderer::clear(Color c, u8_t a) {
     window->clear(sf::Color(c.r,c.g,c.b,a));
 }
 
-int Renderer::text(string s, int x, int y, f64_t scaleW, f64_t scaleH, sf::Font* font, Color c, int* newW, int* newH) {
+int SFMLRenderer::text(string s, int x, int y, f64_t scaleW, f64_t scaleH, Font* font, Color c, int* newW, int* newH) {
     if (!font) {
         ERROR("null font");
         return 1;
     }
 
     sf::Text text;
-    text.setFont(*font);
+    text.setFont(*((sf::Font*)font));
     text.setString(s);
     text.setPosition(x, y);
     text.setScale(scaleW, scaleH);
@@ -58,6 +58,6 @@ int Renderer::text(string s, int x, int y, f64_t scaleW, f64_t scaleH, sf::Font*
     return 0;
 }
 
-void Renderer::show() {
+void SFMLRenderer::show() {
     window->display();
 }
