@@ -4,11 +4,16 @@
 #include "emulation/IORegs.h"
 #include "log.h"
 
+
+#include <iostream>
 int Console::init(string romPath) {
     ROM rom;
     if (rom.init(romPath)) { return 1; }
 
     disassembler.init(rom.prg, PRG_ROM_LOW.start);
+    if (rom.prg.size() == PRG_ROM_LOW.size()) {
+        disassembler.init(rom.prg, PRG_ROM_UP.start);
+    }
 
     // mmc
     auto mmc = MMC::fromROM(rom);
