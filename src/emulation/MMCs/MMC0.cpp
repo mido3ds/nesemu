@@ -10,8 +10,8 @@ bool MMC0::valid(ROM const& rom) {
 void MMC0::reset() {}
 
 bool MMC0::read(u16_t addr, u8_t& data) {
-    if (addr >= 0x8000) {
-        data = rom.prg[(addr - 0x8000) % rom.prg.size()];
+    if (PRG_REGION.contains(addr)) {
+        data = rom.prg[(addr - PRG_ROM_LOW.start) % rom.prg.size()];
 
         return true;
     }
@@ -20,8 +20,8 @@ bool MMC0::read(u16_t addr, u8_t& data) {
 }
 
 bool MMC0::write(u16_t addr, u8_t data) {
-    if (addr >= 0x8000) {
-        rom.prg[(addr - 0x8000) % rom.prg.size()] = data;
+    if (PRG_REGION.contains(addr)) {
+        rom.prg[(addr - PRG_ROM_LOW.start) % rom.prg.size()] = data;
 
         return true;
     }
