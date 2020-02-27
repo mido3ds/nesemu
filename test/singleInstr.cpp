@@ -32,7 +32,7 @@ static void memWrite16(RAM* memory, u16_t a, u16_t data) {
 
 TEST_CASE("branch") {
     Console dev;
-    dev.init();
+    REQUIRE(dev.init() == 0);
 
     MockRenderer mockRenderer;
 
@@ -41,7 +41,6 @@ TEST_CASE("branch") {
     auto regs = cpu->getRegs();
 
     memset(regs, 0, sizeof(CPURegs));
-    memory->init();
 
     auto oldpc = 123;
     auto addr = 100;
@@ -161,7 +160,7 @@ TEST_CASE("branch") {
 
 TEST_CASE("immediate-instructs") {
     Console dev;
-    dev.init();
+    REQUIRE(dev.init() == 0);
 
     MockRenderer mockRenderer;
 
@@ -169,7 +168,6 @@ TEST_CASE("immediate-instructs") {
     auto memory = dev.getRAM();
     auto regs = cpu->getRegs();
 
-    memory->init();
     memset(regs, 0, sizeof(CPURegs));
     regs->pc = 0;
 
@@ -223,7 +221,7 @@ TEST_CASE("immediate-instructs") {
 
 TEST_CASE("implied-instructs") {
     Console dev;
-    dev.init();
+    REQUIRE(dev.init() == 0);
 
     MockRenderer mockRenderer;
 
@@ -232,7 +230,6 @@ TEST_CASE("implied-instructs") {
     auto regs = cpu->getRegs();
 
     memset(regs, 0, sizeof(CPURegs));
-    memory->init();
     regs->pc = 0;
 
     SECTION("PHP") {
@@ -246,7 +243,7 @@ TEST_CASE("implied-instructs") {
 
 TEST_CASE("jmp-bug") {
     Console dev;
-    dev.init();
+    REQUIRE(dev.init() == 0);
 
     MockRenderer mockRenderer;
 
@@ -255,7 +252,6 @@ TEST_CASE("jmp-bug") {
     auto regs = cpu->getRegs();
 
     memset(regs, 0, sizeof(CPURegs));
-    memory->init();
 
     SECTION("absolute-bug") {
         regs->pc = 0x00FE;
