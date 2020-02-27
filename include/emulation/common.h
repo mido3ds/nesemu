@@ -104,7 +104,8 @@ constexpr Color DEFAULT_COLOR = Color({0, 0, 0});
 constexpr Region
     ZERO_PAGE {0x0000, 0x0100-1},
     STACK {0x0100, 0x0200-1},
-    RRAM {0x0200, 0x0800-1},
+    RRAM {0x0200, 0x0800-1}, // real ram
+    RAM_REGION {0x0000, 0x1FFF}, // all ram, including mirrored parts
 
     IO_REGS0 {0x2000, 0x2008-1},
     IO_REGS1 {0x4000, 0x4020-1},
@@ -112,7 +113,8 @@ constexpr Region
     EX_ROM {0x4020, 0x6000-1},
     SRAM {0x6000, 0x8000-1},
     PRG_ROM_LOW {0x8000, 0xC000-1},
-    PRG_ROM_UP {0xC000, 0xFFFF};
+    PRG_ROM_UP {0xC000, 0xFFFF},
+    PRG_REGION {0x8000, 0xFFFF}; // all prg, with two parts
 
 // varm regions
 constexpr Region 
