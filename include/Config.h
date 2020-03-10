@@ -36,7 +36,6 @@ namespace Config {
     
     constexpr Rect mainWind{resolution.w * 3, resolution.h * 3}; 
     constexpr Rect debugWind{230, mainWind.h};
-    constexpr Rect memWind{mainWind.w, 100};
 
     constexpr char* fontPath = "zig.ttf";
     constexpr int fontSize = 13;
