@@ -79,3 +79,7 @@ RAM* Console::getRAM() {
 void Console::input(JoyPadInput joypad) {
     // TODO
 }
+
+PPU* Console::getPPU() {
+    return ppu.get();
+}

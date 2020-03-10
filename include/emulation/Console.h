@@ -32,6 +32,7 @@ public:
 
     Disassembler* getDisassembler();
     CPU* getCPU();
+    PPU* getPPU();
     RAM* getRAM();
 
     void input(JoyPadInput joypad);
