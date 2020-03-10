@@ -25,7 +25,12 @@ int App::init(string title, Console* dev) {
         title, sf::Style::Titlebar|sf::Style::Close);
     mainWind.setPosition(sf::Vector2i(0,0));
 
-    err = mainRenderer.init(&mainWind, Config::resolution, Config::mainWind);
+    err = memRenderer.init(&mainWind, Config::mainWind);
+    if (err != 0) {
+        return err;
+    }
+
+    err = devRenderer.init(&mainWind, Config::resolution);
     if (err != 0) {
         return err;
     }
@@ -37,7 +42,7 @@ int App::init(string title, Console* dev) {
     auto mpos = mainWind.getPosition();
     debugWind.setPosition(sf::Vector2i(mpos.x+Config::mainWind.w+5, mpos.y));
 
-    err = debugRenderer.init(&debugWind, Config::resolution, Config::debugWind);
+    err = debugRenderer.init(&debugWind, Config::debugWind);
     if (err != 0) {
         return err;
     }
@@ -193,27 +198,27 @@ int App::debuggerTick() {
 }
 
 void App::renderMem() {
-    mainRenderer.clear({0,0,0},0);
+    memRenderer.clear({0,0,0},0);
 
     for (int i = 0; i < MEM_WIDTH; i++) {
         int x = MEM_HPADDING+53+i*30;
-        mainRenderer.text(hex8(i), x, MEM_VPADDING, 1, 1, (Font*)&mainFont, {255,255,255}, 0, 0);
+        memRenderer.text(hex8(i), x, MEM_VPADDING, 1, 1, (Font*)&mainFont, {255,255,255}, 0, 0);
     }
 
     for (int j = 0; j < MEM_HEIGHT; j++) {
         int y = MEM_VPADDING+(j+1)*(Config::fontSize+1);
-        mainRenderer.text(hex16((memBeggining+j)*MEM_WIDTH), MEM_HPADDING, y, 1, 1, (Font*)&mainFont, {255,255,255}, 0, 0);
+        memRenderer.text(hex16((memBeggining+j)*MEM_WIDTH), MEM_HPADDING, y, 1, 1, (Font*)&mainFont, {255,255,255}, 0, 0);
 
         for (int i = 0; i < MEM_WIDTH; i++) {
             int x = MEM_HPADDING+53+i*30;
             u8_t data;
             if (dev->getRAM()->read((memBeggining+j)*MEM_WIDTH+i, data)) {
-                mainRenderer.text(hex8(data), x, y, 1, 1, (Font*)&mainFont, {255,255,0}, 0, 0);
+                memRenderer.text(hex8(data), x, y, 1, 1, (Font*)&mainFont, {255,255,0}, 0, 0);
             }
         }
     }
 
-    mainRenderer.show();
+    memRenderer.show();
 }
 
 JoyPadInput App::getInput() {
@@ -237,7 +242,7 @@ int App::mainTick() {
     dev->input(getInput());
 
     if (!inDebugMode || doOneInstr) {
-        dev->clock(&mainRenderer);
+        dev->clock(&devRenderer);
     }
     doOneInstr = false;
 
@@ -256,6 +261,8 @@ int App::mainTick() {
         }
 
         renderMem(); 
+    } else {
+        devRenderer.show();
     }
 
     return 0;
