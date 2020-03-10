@@ -18,5 +18,5 @@ public:
 private:
     Bus* bus;
 
-    u16_t cycles = 0;
+    u16_t cycles = 0, row = 0, col = 0;
 };

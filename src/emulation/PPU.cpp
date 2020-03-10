@@ -1,4 +1,6 @@
 #include "emulation/PPU.h"
+#include "Config.h"
+#include "log.h"
 
 int PPU::init(Bus* bus) {
     if (!bus) { return 1; }
@@ -9,6 +11,14 @@ int PPU::init(Bus* bus) {
 
 void PPU::clock(IRenderer* renderer) {
     // TODO
+    // for now we will draw random white-black pixels
+    renderer->pixel(col++, row, rand()%10 == 0? Color{0,0,0}:Color{255,255,255}, 255);
+    col %= Config::sys.resolution.width;
+
+    if (col == 0) {
+        row++;
+        row %= Config::sys.resolution.height;
+    }
 }
 
 void PPU::reset() {
