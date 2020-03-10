@@ -18,7 +18,7 @@ public:
 private:
     Console* dev;
     sf::RenderWindow mainWind, debugWind;
-    SFMLRenderer mainRenderer, debugRenderer;
+    SFMLRenderer memRenderer, debugRenderer, devRenderer;
     sf::Font mainFont;
 
     bool quit = false, pause = false, 
