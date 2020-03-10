@@ -11,10 +11,11 @@
 class SFMLRenderer: public IRenderer {
 private:
     sf::RenderWindow* window = nullptr;
-    Config::Rect resolution, windSize;
+    Config::Rect resolution;
+    sf::RenderTexture texture;
 
 public:
-    int init(sf::RenderWindow* window, Config::Rect resolution, Config::Rect windSize);
+    int init(sf::RenderWindow* window, Config::Rect resolution);
 
     virtual void clear(Color c, u8_t a);
     virtual void pixel(int x, int y, Color c, u8_t a);
