@@ -8,12 +8,13 @@
 #include "Config.h"
 #include "IRenderer.h"
 
-class SFMLRenderer: public IRenderer {
+class SFMLImageRenderer: public IRenderer {
 private:
     sf::RenderWindow* window = nullptr;
     Config::Rect resolution;
-    sf::RenderTexture texture;
+    sf::Image image;
     sf::Sprite sprite;
+    sf::Texture texture;
 
 public:
     int init(sf::RenderWindow* window, Config::Rect resolution);
