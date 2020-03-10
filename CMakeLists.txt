@@ -13,6 +13,12 @@ option(BUILD_TESTS "Enable testing" ON)
     set(CMAKE_BUILD_TYPE ${BUILD_TYPE})
 #
 
+# The additional / is important to remove the last character from the path.
+# Note that it does not matter if the OS uses / or \, because we are only
+# saving the path size.
+string(LENGTH "${CMAKE_SOURCE_DIR}/" SOURCE_PATH_SIZE)
+add_definitions("-DSOURCE_PATH_SIZE=${SOURCE_PATH_SIZE}")
+
 ## executable
     add_executable(nesemu)
 
