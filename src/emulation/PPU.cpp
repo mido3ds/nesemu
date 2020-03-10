@@ -12,12 +12,10 @@ int PPU::init(Bus* bus) {
 void PPU::clock(IRenderer* renderer) {
     // TODO
     // for now we will draw random white-black pixels
-    renderer->pixel(col++, row, rand()%10 == 0? Color{0,0,0}:Color{255,255,255}, 255);
-    col %= Config::sys.resolution.width;
-
-    if (col == 0) {
-        row++;
-        row %= Config::sys.resolution.height;
+    for (int i = 0; i < Config::sys.resolution.height; i++) {
+        for (int j = 0; j < Config::sys.resolution.width; j++) {
+            renderer->pixel(j, i, rand()%10 == 0? Color{0,0,0}:Color{255,255,255}, 255);
+        }
     }
 }
 

@@ -5,6 +5,7 @@
 
 #include "stdtype.h"
 #include "gui/SFMLRenderer.h"
+#include "gui/SFMLImageRenderer.h"
 #include "emulation/Console.h"
 
 class App {
@@ -18,7 +19,8 @@ public:
 private:
     Console* dev;
     sf::RenderWindow mainWind, debugWind;
-    SFMLRenderer memRenderer, debugRenderer, devRenderer;
+    SFMLRenderer memRenderer, debugRenderer;
+    SFMLImageRenderer devRenderer;
     sf::Font mainFont;
 
     bool quit = false, pause = false, 

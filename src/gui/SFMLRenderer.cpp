@@ -64,7 +64,7 @@ int SFMLRenderer::text(string s, int x, int y, f64_t scaleW, f64_t scaleH, Font*
 }
 
 void SFMLRenderer::show() {
-    sf::Sprite sprite(texture.getTexture());
+    sprite.setTexture(texture.getTexture());
     sprite.setScale(1.0, -1.0);
     sprite.setPosition(0, window->getSize().y);
 
