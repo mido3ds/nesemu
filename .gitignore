@@ -35,6 +35,7 @@
 
 *.rom
 *.nes
+!nestest.nes
 
 vendors/
 .vscode
