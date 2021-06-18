@@ -66,7 +66,7 @@ tuple<string, int> Disassembler::dissasmble(u8_t const* mem, u32_t size) {
 
     int bytes = 1;
     ostringstream ss;
-    char a[4], b[4];
+    char a[5] = {0}, b[5] = {0};
 
     auto name = instructionSet[mem[0]].name;
     if (name == "???") {
