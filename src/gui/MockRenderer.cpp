@@ -24,7 +24,8 @@ bool MockRenderer::hasPixeled(PixelOperation& po) {
 }
 
 int MockRenderer::text(string s, int x, int y, f64_t scaleW, f64_t scaleH, Font* font, Color c, int* newW, int* newH) {
-    textOps.push({s, x, y, scaleW, scaleH, font, c, newW, newH});
+    textOps.push(TextOperation {s, x, y, scaleW, scaleH, font, c, newW, newH});
+	return 0;
 }
 bool MockRenderer::hasTexted(TextOperation& to) {
     if (textOps.size() > 0) {

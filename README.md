@@ -1,49 +1,26 @@
 # NESemu [WIP]
-NES emulator in c++
+NES emulator in written C++
 
 ## Requirements:
 
-| Requirement |  Version  |
-|-------------|-----------|
-| cmake       | `+3.12.1` |
-| SFML        | `+2.5.0`  |
+- cmake `+3.12.1`
+- g++ or clang or MSVC
+- ninja (optional) `+1.10.2`
 
-On debian based distro, you can install them with:
 ```sh
-$ sudo apt update && sudo apt install -y \
-    cmake                \
-    libsfml-dev          \
-    libsfml-audio2.5     \
-    libsfml-dev          \
-    libsfml-doc          \
-    libsfml-graphics2.5  \
-    libsfml-network2.5   \
-    libsfml-system2.5    \
-    libsfml-window2.5
+cmake -S. -Bbuild -GNinja -DCMAKE_BUILD_TYPE:STRING=Debug
 ```
-
-## After Clone:
-
-Install requirements, then:
-
-```
-$ mkdir build && cd build
-$ cmake ..
-```
-
-## Build:
-
-`$ make` 
 
 ## Run:
 
-`$ ./nesemu /path/to/rom.nes` 
+```sh
+cmake --build build --target nesemu
+./build/bin/Debug/nesemu /path/to/rom.nes
+```
 
-## Build & Run All Tests:
+## Test:
 
-`$ make test && ./test` 
-
-## Build & Run Speicific Test:
-
-`$ make test && ./test <name of test without file suffix>` 
-
+```sh
+cmake --build build --target test
+./build/bin/Debug/test
+```

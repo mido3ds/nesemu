@@ -5,6 +5,7 @@
 #include <string>
 #include <functional>
 #include <thread>
+#include <array>
 
 #include "stdtype.h"
 

@@ -1,12 +1,34 @@
 cmake_minimum_required(VERSION 3.9)
 project(NESemu LANGUAGES CXX VERSION 0.0.1)
 
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/$<CONFIG>")
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/$<CONFIG>")
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/$<CONFIG>")
+
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+set(CMAKE_INSTALL_RPATH "$ORIGIN")
+set(CMAKE_BUILD_RPATH "$ORIGIN")
+set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
+
+list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
+
+# dependencies
+include(CPM)
+CPMAddPackage(
+	NAME             sfml
+	GIT_REPOSITORY   https://github.com/SFML/SFML
+	GIT_TAG          2.5.1
+	GIT_SHALLOW      TRUE
+)
+find_package(SFML COMPONENTS window audio system REQUIRED)
+
 # vars
 set(BUILD_TYPE "Debug" CACHE STRING "Build type [Release-Debug]")
 option(BUILD_TESTS "Enable testing" ON)
 
 ## compiler options
-    set(CMAKE_CXX_STANDARD 14)
+    set(CMAKE_CXX_STANDARD 20)
     set(CMAKE_CXX_STANDARD_REQUIRED YES)
     set(CMAKE_CXX_EXTENSIONS NO)
 
@@ -37,8 +59,7 @@ add_definitions("-DSOURCE_PATH_SIZE=${SOURCE_PATH_SIZE}")
 
     ## dependecies
         # SFML
-        find_package(SFML COMPONENTS window audio system REQUIRED)
-        target_link_libraries(nesemu PRIVATE sfml-window sfml-graphics sfml-audio)
+		target_link_libraries(nesemu PRIVATE sfml-window sfml-graphics sfml-audio)
     #
 
     # copy files
@@ -51,17 +72,17 @@ add_definitions("-DSOURCE_PATH_SIZE=${SOURCE_PATH_SIZE}")
 ## test
     if(BUILD_TESTS)
         add_executable(test)
-        
+
         ## sources
             file(GLOB_RECURSE PROJECT_SOURCES src/*.cpp src/*.cxx src/*.cc src/*.c)
             file(GLOB_RECURSE MAIN_PATH src/main.*)
             list(REMOVE_ITEM PROJECT_SOURCES "${MAIN_PATH}")
 
             file(GLOB_RECURSE TEST_SOURCES test/*.cpp test/*.cxx test/*.cc test/*.c)
-            
+
             target_sources(test PRIVATE ${TEST_SOURCES} ${PROJECT_SOURCES})
         #
-            
+
         ## headers
             target_include_directories(test PRIVATE test include/)
 
@@ -73,7 +94,6 @@ add_definitions("-DSOURCE_PATH_SIZE=${SOURCE_PATH_SIZE}")
 
         ## dependecies
             # SFML
-            find_package(SFML COMPONENTS window audio system REQUIRED)
             target_link_libraries(test PRIVATE sfml-window sfml-graphics sfml-audio)
         #
     endif()

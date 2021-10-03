@@ -1,6 +1,5 @@
 #include <chrono>
 #include <sstream>
-#include <unistd.h>
 
 #include "gui/App.h"
 #include "log.h"
@@ -21,7 +20,7 @@ int App::init(string title, Console* dev) {
     }
 
     // main window
-    mainWind.create(sf::VideoMode(Config::mainWind.w, Config::mainWind.h), 
+    mainWind.create(sf::VideoMode(Config::mainWind.w, Config::mainWind.h),
         title, sf::Style::Titlebar|sf::Style::Close);
     mainWind.setPosition(sf::Vector2i(0,0));
 
@@ -36,7 +35,7 @@ int App::init(string title, Console* dev) {
     }
 
     // debug window
-    debugWind.create(sf::VideoMode(Config::debugWind.w, Config::debugWind.h), 
+    debugWind.create(sf::VideoMode(Config::debugWind.w, Config::debugWind.h),
         "Debugger", sf::Style::Titlebar|sf::Style::Close);
     debugWind.setVisible(debugging);
     auto mpos = mainWind.getPosition();
@@ -141,7 +140,7 @@ int App::debuggerTick() {
 
     debugRenderer.clear({0,0,0},0);
 
-    const int h = Config::fontSize+1, 
+    const int h = Config::fontSize+1,
         w = Config::debugWind.w/2;
     int i = 0;
 
@@ -175,12 +174,12 @@ int App::debuggerTick() {
     debugRenderer.text("N: " + to_string(regs->flags.bits.n), 10,(i)*h,1,1, (Font*)&mainFont,c, 0, 0);
     debugRenderer.text("PC: " + string("$")+hex16(regs->pc), 10+w*2.0/3,(i++)*h,1,1, (Font*)&mainFont,{255,0,0}, 0, 0);
     i++;
-    
+
     // assembly
     const int n = 18;
     int j = 1;
     for (auto& s: dev->getDisassembler()->get(regs->pc, n)) {
-        c = {r:255, g:255, b:255};
+        c = {.r=255, .g=255, .b=255};
         if (j++ == n+1) {
             c.b=0;
         }
@@ -193,7 +192,7 @@ int App::debuggerTick() {
     }
 
     debugRenderer.show();
-    
+
     return 0;
 }
 
@@ -222,16 +221,15 @@ void App::renderMem() {
 }
 
 JoyPadInput App::getInput() {
-    const auto keyb = sf::Keyboard::isKeyPressed;
     return JoyPadInput{
-        a       : keyb(Config::a),
-        b       : keyb(Config::b),
-        select  : keyb(Config::select),
-        start   : keyb(Config::start),
-        up      : keyb(Config::up),
-        down    : keyb(Config::down),
-        left    : keyb(Config::left),
-        right   : keyb(Config::right)
+        .a       = sf::Keyboard::isKeyPressed(Config::a),
+        .b       = sf::Keyboard::isKeyPressed(Config::b),
+        .select  = sf::Keyboard::isKeyPressed(Config::select),
+        .start   = sf::Keyboard::isKeyPressed(Config::start),
+        .up      = sf::Keyboard::isKeyPressed(Config::up),
+        .down    = sf::Keyboard::isKeyPressed(Config::down),
+        .left    = sf::Keyboard::isKeyPressed(Config::left),
+        .right   = sf::Keyboard::isKeyPressed(Config::right)
     };
 }
 
@@ -246,7 +244,7 @@ int App::mainTick() {
     }
     doOneInstr = false;
 
-    if (showMem) { 
+    if (showMem) {
         const auto keyb = sf::Keyboard::isKeyPressed;
         int scrolMultiplier = keyb(sf::Keyboard::LControl) || keyb(sf::Keyboard::RControl) ? MEM_HEIGHT/2:1;
 
@@ -260,7 +258,7 @@ int App::mainTick() {
             }
         }
 
-        renderMem(); 
+        renderMem();
     } else {
         devRenderer.show();
     }

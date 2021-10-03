@@ -1,6 +1,7 @@
 #pragma once
 
 #include <functional>
+#include <array>
 
 #include "emulation/common.h"
 #include "emulation/CPU.h"
