@@ -8,13 +8,13 @@ NES emulator in written C++
 - ninja (optional) `+1.10.2`
 
 ```sh
-cmake -S. -Bbuild -GNinja -DCMAKE_BUILD_TYPE:STRING=Debug
+cmake -S. -Bbuild -GNinja
 ```
 
 ## Run:
 
 ```sh
-cmake --build build --target nesemu
+cmake --build build --target nesemu -j
 ./build/bin/Debug/nesemu /path/to/rom.nes
 ```
 

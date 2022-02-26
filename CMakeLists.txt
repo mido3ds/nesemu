@@ -13,6 +13,8 @@ set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
+option(BUILD_TESTS "Enable testing" ON)
+
 # dependencies
 include(CPM)
 CPMAddPackage(
@@ -21,19 +23,12 @@ CPMAddPackage(
 	GIT_TAG          2.5.1
 	GIT_SHALLOW      TRUE
 )
-find_package(SFML COMPONENTS window audio system REQUIRED)
-
-# vars
-set(BUILD_TYPE "Debug" CACHE STRING "Build type [Release-Debug]")
-option(BUILD_TESTS "Enable testing" ON)
-
-## compiler options
-    set(CMAKE_CXX_STANDARD 20)
-    set(CMAKE_CXX_STANDARD_REQUIRED YES)
-    set(CMAKE_CXX_EXTENSIONS NO)
-
-    set(CMAKE_BUILD_TYPE ${BUILD_TYPE})
-#
+CPMAddPackage(
+	NAME             freetype
+	GIT_REPOSITORY   https://github.com/freetype/freetype.git
+	GIT_TAG          VER-2-11-1
+	GIT_SHALLOW      TRUE
+)
 
 # The additional / is important to remove the last character from the path.
 # Note that it does not matter if the OS uses / or \, because we are only
@@ -59,7 +54,7 @@ add_definitions("-DSOURCE_PATH_SIZE=${SOURCE_PATH_SIZE}")
 
     ## dependecies
         # SFML
-		target_link_libraries(nesemu PRIVATE sfml-window sfml-graphics sfml-audio)
+		target_link_libraries(nesemu PRIVATE sfml-window sfml-graphics sfml-audio freetype)
     #
 
     # copy files
@@ -67,6 +62,13 @@ add_definitions("-DSOURCE_PATH_SIZE=${SOURCE_PATH_SIZE}")
     foreach(FILE_ ${FILES_TO_COPY})
         configure_file(${FILE_} ${FILE_} COPYONLY)
     endforeach()
+
+	set_property(TARGET nesemu
+		PROPERTY
+			CXX_STANDARD 20
+			CMAKE_CXX_STANDARD_REQUIRED YES
+			CMAKE_CXX_EXTENSIONS NO
+	)
 #
 
 ## test
@@ -96,5 +98,12 @@ add_definitions("-DSOURCE_PATH_SIZE=${SOURCE_PATH_SIZE}")
             # SFML
             target_link_libraries(test PRIVATE sfml-window sfml-graphics sfml-audio)
         #
+
+		set_property(TARGET nesemu
+			PROPERTY
+				CXX_STANDARD 20
+				CMAKE_CXX_STANDARD_REQUIRED YES
+				CMAKE_CXX_EXTENSIONS NO
+		)
     endif()
 #

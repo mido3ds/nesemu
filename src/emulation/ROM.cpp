@@ -38,7 +38,8 @@ int ROM::init(string path) {
     }
 
     // copy rest of header
-    memcpy(&header, buffer+4, 16-4);
+	header = *(Header*) (buffer+4);
+	static_assert(sizeof(header) == 16-4);
 
     // no trainer
     if (header.flags6.bits.hasTrainer) {

@@ -18,7 +18,7 @@ public:
     vector<u8_t> prg, chr;
 
 private:
-    struct {
+    struct Header {
         u8_t numPRGs = 0;
         u8_t numCHRs = 0;
 
@@ -58,9 +58,7 @@ private:
         } flags7;
 
         // Flags 8, 9 and 10 are not supported
-        u8_t:8;
-        u8_t:8;
-        u8_t:8;
+		u8_t _padding[8];
     } header;
 
     u32_t getPRGRomSize() const;
