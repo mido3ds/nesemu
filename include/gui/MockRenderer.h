@@ -10,7 +10,7 @@ struct TextOperation { string s; int x; int y; f64_t scaleW; f64_t scaleH; Font*
 
 class MockRenderer: public IRenderer {
 private:
-    int clearOps = 0; 
+    int clearOps = 0;
     int showOps = 0;
     queue<PixelOperation> pixelOps;
     queue<TextOperation> textOps;

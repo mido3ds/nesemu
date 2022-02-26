@@ -2,7 +2,7 @@
 #include "emulation/common.h"
 
 bool MMC0::valid(ROM const& rom) {
-    return rom.getMapperNumber() == 0 && 
+    return rom.getMapperNumber() == 0 &&
         (rom.prg.size() % (16*1024) == 0) &&
         (rom.chr.size() == (8*1024));
 }

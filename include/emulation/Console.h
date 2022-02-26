@@ -12,7 +12,7 @@
 using namespace std;
 
 struct JoyPadInput {
-    bool a; 
+    bool a;
     bool b;
     bool select;
     bool start;

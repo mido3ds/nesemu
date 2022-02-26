@@ -11,7 +11,7 @@
 // u8_t Console::read(u16_t address) {
 //     if (address == PPU_STS_REG) { return readPPUStatusRegister(); }
 //     if (address == VRAM_IO_REG) {
-//         if (vramAddrReg1.state & VRamAddrReg1::CAN_READ 
+//         if (vramAddrReg1.state & VRamAddrReg1::CAN_READ
 //         || (vramAddrReg1.state & VRamAddrReg1::READ_BUFFERED && vramAddrReg1.addr >= IMG_PLT.start)) {
 //             auto v = vram[vramAddrReg1.addr];
 //             vramAddrReg1.addr += controlReg->getPPUIncrementRate();
@@ -20,7 +20,7 @@
 
 //         if (vramAddrReg1.state & VRamAddrReg1::READ_BUFFERED) {
 //             vramAddrReg1.state |= VRamAddrReg1::CAN_READ;
-//         }  
+//         }
 //     }
 
 //     return memory[address];
@@ -29,7 +29,7 @@
 // void Console::write(u16_t address, u8_t value)  {
 //     memory[address] = value;
 
-//     // apply mirroring 
+//     // apply mirroring
 //     for (auto mirror: MEM_MIRRORS) {
 //         for (auto mirrorAddr: mirror.getAdresses(address)) {
 //             memory[mirrorAddr] = value;
@@ -62,7 +62,7 @@
 // void Console::writeVRam(u16_t address, u8_t value) {
 //     vram[address] = value;
 
-//     // apply mirroring 
+//     // apply mirroring
 //     for (auto mirror: VRAM_MIRRORS) {
 //         for (auto mirrorAddr: mirror.getAdresses(address)) {
 //             vram[mirrorAddr] = value;

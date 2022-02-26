@@ -12,11 +12,11 @@ using namespace std;
 
 void ADC(CPU& cpu) {
     auto v = cpu.getArgValue();
-    
+
     u16_t result = cpu.regs.a + v + cpu.regs.flags.bits.c;
 
-    cpu.regs.flags.bits.c = (u16_t)result > UINT8_MAX; 
-    cpu.regs.flags.bits.v = (i16_t)result > INT8_MAX || (i16_t)result < INT8_MIN; 
+    cpu.regs.flags.bits.c = (u16_t)result > UINT8_MAX;
+    cpu.regs.flags.bits.v = (i16_t)result > INT8_MAX || (i16_t)result < INT8_MIN;
 
     cpu.regs.a = (u8_t)result;
 
@@ -64,7 +64,7 @@ void AXS(CPU& cpu) {
 }
 
 void BCC(CPU& cpu) {
-    if (!cpu.regs.flags.bits.c) { 
+    if (!cpu.regs.flags.bits.c) {
         auto fetched = (i8_t)cpu.getArgValue();
         cpu.regs.pc += fetched;
         cpu.cycles++;
@@ -74,7 +74,7 @@ void BCC(CPU& cpu) {
 }
 
 void BCS(CPU& cpu) {
-    if (cpu.regs.flags.bits.c) { 
+    if (cpu.regs.flags.bits.c) {
         auto fetched = (i8_t)cpu.getArgValue();
         cpu.regs.pc += fetched;
         cpu.cycles++;
@@ -84,7 +84,7 @@ void BCS(CPU& cpu) {
 }
 
 void BEQ(CPU& cpu) {
-    if (cpu.regs.flags.bits.z) { 
+    if (cpu.regs.flags.bits.z) {
         auto fetched = (i8_t)cpu.getArgValue();
         cpu.regs.pc += fetched;
         cpu.cycles++;
@@ -102,7 +102,7 @@ void BIT(CPU& cpu) {
 }
 
 void BMI(CPU& cpu) {
-    if (cpu.regs.flags.bits.n) { 
+    if (cpu.regs.flags.bits.n) {
         auto fetched = (i8_t)cpu.getArgValue();
         cpu.regs.pc += fetched;
         cpu.cycles++;
@@ -112,7 +112,7 @@ void BMI(CPU& cpu) {
 }
 
 void BNE(CPU& cpu) {
-    if (!cpu.regs.flags.bits.z) { 
+    if (!cpu.regs.flags.bits.z) {
         auto fetched = (i8_t)cpu.getArgValue();
         cpu.regs.pc += fetched;
         cpu.cycles++;
@@ -122,7 +122,7 @@ void BNE(CPU& cpu) {
 }
 
 void BPL(CPU& cpu) {
-    if (!cpu.regs.flags.bits.n) { 
+    if (!cpu.regs.flags.bits.n) {
         auto fetched = (i8_t)cpu.getArgValue();
         cpu.regs.pc += fetched;
         cpu.cycles++;
@@ -136,13 +136,13 @@ void BRK(CPU& cpu) {
 
     cpu.push(cpu.regs.pc);
     cpu.push(cpu.regs.flags.byte);
-    cpu.regs.pc = cpu.read16(IRQ); 
+    cpu.regs.pc = cpu.read16(IRQ);
     cpu.regs.flags.bits.b = 1;
     cpu.regs.flags.bits.i = 1;
 }
 
 void BVC(CPU& cpu) {
-    if (!cpu.regs.flags.bits.v) { 
+    if (!cpu.regs.flags.bits.v) {
         auto fetched = (i8_t)cpu.getArgValue();
         cpu.regs.pc += fetched;
         cpu.cycles++;
@@ -152,7 +152,7 @@ void BVC(CPU& cpu) {
 }
 
 void BVS(CPU& cpu) {
-    if (cpu.regs.flags.bits.v) { 
+    if (cpu.regs.flags.bits.v) {
         auto fetched = (i8_t)cpu.getArgValue();
         cpu.regs.pc += fetched;
         cpu.cycles++;
@@ -310,7 +310,7 @@ void LDY(CPU& cpu) {
 void LSR(CPU& cpu) {
     auto v = cpu.getArgValue();
     cpu.regs.flags.bits.c = v & 1;
-            
+
     v >>= 1;
 
     cpu.regs.flags.bits.z = v == 0;
@@ -353,7 +353,7 @@ void ROL(CPU& cpu) {
     auto v = cpu.getArgValue();
     u8_t oldCarry = cpu.regs.flags.bits.c;
     cpu.regs.flags.bits.c = v >> 7;
-    
+
     v <<= 1;
     v |= oldCarry;
 
@@ -367,7 +367,7 @@ void ROR(CPU& cpu) {
     auto v = cpu.getArgValue();
     u8_t oldCarry = cpu.regs.flags.bits.c;
     cpu.regs.flags.bits.c = v & 1;
-    
+
     v >>= 1;
     v |= oldCarry << 7;
 
@@ -398,8 +398,8 @@ void SBC(CPU& cpu) {
     auto v = cpu.getArgValue();
     u16_t result = cpu.regs.a - v - (~ cpu.regs.flags.bits.c);
 
-    cpu.regs.flags.bits.c = (u16_t)result > UINT8_MAX; 
-    cpu.regs.flags.bits.v = (i16_t)result > INT8_MAX || (i16_t)result < INT8_MAX; 
+    cpu.regs.flags.bits.c = (u16_t)result > UINT8_MAX;
+    cpu.regs.flags.bits.v = (i16_t)result > INT8_MAX || (i16_t)result < INT8_MAX;
 
     cpu.regs.a = (u8_t)result;
 

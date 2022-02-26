@@ -48,6 +48,6 @@ void SFMLImageRenderer::show() {
     window->clear();
     window->draw(sprite);
     window->display();
-    
+
     window->setView(window->getDefaultView());
 }

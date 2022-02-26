@@ -74,6 +74,6 @@ Color Color::fromPalatte(const u8_t palatte) {
         Color({0x00, 0x00, 0x00}),
         Color({0x00, 0x00, 0x00})
     };
-    
+
     return colorPalatte[palatte];
 }

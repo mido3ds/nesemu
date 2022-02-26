@@ -23,7 +23,7 @@ private:
     SFMLImageRenderer devRenderer;
     sf::Font mainFont;
 
-    bool quit = false, pause = false, 
+    bool quit = false, pause = false,
         debugging = true, showMem = true,
         inDebugMode = true, doOneInstr = false;
 

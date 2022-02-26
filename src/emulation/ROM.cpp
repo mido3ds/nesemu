@@ -23,9 +23,9 @@ int ROM::init(string path) {
     u8_t* buffer = nullptr;
 
     INFO("reading rom from %s", path.c_str());
-    
+
     tie(buffer, size) = readBinaryFile(path);
-    if (size == 0 || buffer == nullptr) {  
+    if (size == 0 || buffer == nullptr) {
         ERROR("couldn't load rom from path %s", path.c_str());
         return 1;
     }
@@ -46,10 +46,10 @@ int ROM::init(string path) {
         WARNING("emulator doesnt support trainers, ignoring trainer");
     }
 
-    // cpy PRG 
+    // cpy PRG
     u8_t* prgPtr = buffer+16;
-    if (header.flags6.bits.hasTrainer) { 
-        prgPtr += 512; 
+    if (header.flags6.bits.hasTrainer) {
+        prgPtr += 512;
     }
 
     auto prgSize = getPRGRomSize();
@@ -69,7 +69,7 @@ int ROM::init(string path) {
         ERROR("no CHR ROM");
         return 1;
     }
-    
+
     chr.clear();
     chr.insert(chr.end(), chrPtr, chrPtr+chrSize);
 

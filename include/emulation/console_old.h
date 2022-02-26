@@ -22,7 +22,7 @@
 //                 u8_t i:1; // interrupt disable
 //                 u8_t d:1; // decimal mode
 //                 u8_t b:1; // break command
-//                 u8_t:1; 
+//                 u8_t:1;
 //                 u8_t v:1; // overflow flag
 //                 u8_t n:1; // negative flag
 //             } bits;
@@ -88,8 +88,8 @@
 //             u8_t:1;
 //             u8_t:1;
 //             u8_t ignoreVramWrites:1;
-//             u8_t spritesMoreThan8:1;    
-//             u8_t sprite0Hit:1; // set when a non-transparent pixel of 
+//             u8_t spritesMoreThan8:1;
+//             u8_t sprite0Hit:1; // set when a non-transparent pixel of
 //                                 // sprite 0 overlaps a non-transparent background pixel
 //             u8_t vblank:1; // set when V-Blank is occurring
 //         } bits;
@@ -107,11 +107,11 @@
 //             u8_t:3;
 //         } bits;
 //         u8_t byte;
-//     } *joypadReg0 = (JoyPadReg*)(memory.data() + 0x4016), 
+//     } *joypadReg0 = (JoyPadReg*)(memory.data() + 0x4016),
 //     *joypadReg1 = (JoyPadReg*)(memory.data() + 0x4017);
 
 //     struct JoyPad {
-//         bool a; 
+//         bool a;
 //         bool b;
 //         bool select;
 //         bool start;
@@ -126,17 +126,17 @@
 //         u16_t addr;
 
 //         // possible states, multiple ones could be combined
-//         static constexpr u8_t 
+//         static constexpr u8_t
 //             EMPTY=0x00,  // addr is not yet initialized
 //             LSN=0x01, // leaset significant nibble (4 bits) has been loaded
 //             FULL=0x02, // most signifcant nibble (4 bits) has been loaded
-//             CAN_READ=0x04, 
-//             CAN_WRITE=0x08, 
+//             CAN_READ=0x04,
+//             CAN_WRITE=0x08,
 //             READ_BUFFERED=0x10; // you can only read colr-palette
 
 //         // bitset indicates the state of VRAM_ADDR_REG1 register
-//         u8_t state = EMPTY; 
-//     } vramAddrReg1; 
+//         u8_t state = EMPTY;
+//     } vramAddrReg1;
 
 // /////////////////////////// Methods ///////////////////////////
 

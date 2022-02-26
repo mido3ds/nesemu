@@ -19,7 +19,7 @@ struct CPURegs {
             u8_t i:1; // interrupt disable
             u8_t d:1; // decimal mode
             u8_t b:1; // break command
-            u8_t:1; 
+            u8_t:1;
             u8_t v:1; // overflow flag
             u8_t n:1; // negative flag
         } bits;
@@ -28,7 +28,7 @@ struct CPURegs {
 };
 
 class CPU {
-public: 
+public:
     int init(Bus* bus);
 
     void reset();

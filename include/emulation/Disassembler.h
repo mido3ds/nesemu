@@ -7,7 +7,7 @@
 
 class Disassembler {
 public:
-    // `addr` is the starting address of data 
+    // `addr` is the starting address of data
     void init(const vector<u8_t>& data, u16_t addr);
 
     // if addr is in data range, returns `n` assembly

@@ -25,7 +25,7 @@ static void memWrite(RAM* memory, u16_t a, u8_t data) {
     memory->write(a, data);
 }
 
-static void memWrite16(RAM* memory, u16_t a, u16_t data) {    
+static void memWrite16(RAM* memory, u16_t a, u16_t data) {
     memory->write(a, data);
     memory->write(a+1, data >> 8);
 }
@@ -54,7 +54,7 @@ TEST_CASE("branch") {
         memWrite(memory, regs->pc+1, addr);
 
         dev.clock(&mockRenderer);
-        
+
         REQUIRE(regs->pc == oldpc+addr+2);
         REQUIRE(oldflags == regs->flags.byte);
         REQUIRE(cpu->getCycles() == instructionSet[BCC].cycles+1);
@@ -70,7 +70,7 @@ TEST_CASE("branch") {
         memWrite(memory, regs->pc+1, addr);
 
         dev.clock(&mockRenderer);
-        
+
         REQUIRE(regs->pc == oldpc+2);
         REQUIRE(oldflags == regs->flags.byte);
         REQUIRE(cpu->getCycles() == instructionSet[BCC].cycles);
@@ -87,7 +87,7 @@ TEST_CASE("branch") {
         memWrite(memory, regs->pc+1, addr);
 
         dev.clock(&mockRenderer);
-        
+
         REQUIRE(regs->pc == oldpc+addr+2);
         REQUIRE(oldflags == regs->flags.byte);
         REQUIRE(cpu->getCycles() == instructionSet[BCC].cycles+1+1); // added penalty
@@ -103,7 +103,7 @@ TEST_CASE("branch") {
         memWrite(memory, regs->pc+1, addr);
 
         dev.clock(&mockRenderer);
-        
+
         REQUIRE(regs->pc == oldpc+addr+2);
         REQUIRE(oldflags == regs->flags.byte);
         REQUIRE(cpu->getCycles() == instructionSet[BEQ].cycles+1);
@@ -119,7 +119,7 @@ TEST_CASE("branch") {
         memWrite(memory, regs->pc+1, addr);
 
         dev.clock(&mockRenderer);
-        
+
         REQUIRE(regs->pc == oldpc+2);
         REQUIRE(oldflags == regs->flags.byte);
         REQUIRE(cpu->getCycles() == instructionSet[BEQ].cycles);
@@ -135,7 +135,7 @@ TEST_CASE("branch") {
         memWrite(memory, regs->pc+1, addr);
 
         dev.clock(&mockRenderer);
-        
+
         REQUIRE(regs->pc == oldpc+addr+2);
         REQUIRE(oldflags == regs->flags.byte);
         REQUIRE(cpu->getCycles() == instructionSet[BEQ].cycles+1);
@@ -151,7 +151,7 @@ TEST_CASE("branch") {
         memWrite(memory, regs->pc+1, addr);
 
         dev.clock(&mockRenderer);
-        
+
         REQUIRE(regs->pc == oldpc+2);
         REQUIRE(oldflags == regs->flags.byte);
         REQUIRE(cpu->getCycles() == instructionSet[BEQ].cycles);

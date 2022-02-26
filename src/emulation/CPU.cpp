@@ -16,10 +16,10 @@ int CPU::init(Bus* bus) {
 
     cycles = 0;
 
-    // TODO: All 15 bits of noise channel LFSR = $0000[4]. 
+    // TODO: All 15 bits of noise channel LFSR = $0000[4].
     //The first time the LFSR is clocked from the all-0s state, it will shift in a 1.
 
-    // TODO: 2A03G: APU Frame Counter reset. 
+    // TODO: 2A03G: APU Frame Counter reset.
     // (but 2A03letterless: APU frame counter powers up at a value equivalent to 15)
 
     // https://wiki.nesdev.com/w/index.php/PPU_power_up_state
@@ -30,7 +30,7 @@ int CPU::init(Bus* bus) {
 void CPU::reset() {
     regs.pc = read16(RH);
     INFO("PC = memory[0xFFFC] = 0x%04X", regs.pc);
-    
+
     regs.sp = 0xFD;
     regs.flags.byte = 0;
     regs.a = regs.x = regs.y = 0;
@@ -61,7 +61,7 @@ void CPU::clock() {
 }
 
 void CPU::prepareArg(AddressMode mode) {
-    // TODO: optimize using function instead 
+    // TODO: optimize using function instead
     // of switch case
     switch (mode) {
     case AddressMode::Implicit:
@@ -224,7 +224,7 @@ u16_t CPU::indirectIndexedAddress(const u8_t bb, const u8_t i) {
 
 u8_t CPU::fetch() { return read(regs.pc++); }
 
-u16_t CPU::read16(u16_t address) { 
+u16_t CPU::read16(u16_t address) {
     u16_t data;
     bus->read16(address, data);
     return data;

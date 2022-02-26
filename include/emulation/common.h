@@ -27,7 +27,7 @@ enum class AddressMode {
 struct Region {
     u16_t start, end;
 
-    constexpr bool contains(u16_t addr) const {return addr <= end && addr >= start;}  
+    constexpr bool contains(u16_t addr) const {return addr <= end && addr >= start;}
     constexpr u16_t size() const {return (end + 1) - start;}
 };
 
@@ -88,7 +88,7 @@ constexpr u32_t MEM_SIZE = 0xFFFF + 1;
 
 typedef array<u8_t, MEM_SIZE> MemType;
 
-// Video systems info 
+// Video systems info
 constexpr struct VideoSystem {
     int cpuCycles; // in nanoseconds
     int fps;
@@ -118,7 +118,7 @@ constexpr Region
     PRG_REGION {0x8000, 0xFFFF}; // all prg, with two parts
 
 // varm regions
-constexpr Region 
+constexpr Region
     /* pattern tables */
     PATT_TBL0 {0x0000, 0x1000-1},
     PATT_TBL1 {0x1000, 0x2000-1},
@@ -134,7 +134,7 @@ constexpr Region
     ATT_TBL3 {0x2FC0, 0x3000-1},
 
     /* palettes */
-    IMG_PLT {0x3F00, 0x3F10-1}, 
+    IMG_PLT {0x3F00, 0x3F10-1},
     SPR_PLT {0x3F10, 0x3F20-1};
 
 constexpr array<Mirror, 2> MEM_MIRRORS {
@@ -150,13 +150,13 @@ constexpr array<Mirror, 3> VRAM_MIRRORS {
 
 // interrupt vector table
 constexpr u16_t
-    IRQ = 0xFFFE, 
-    NMI = 0xFFFA, 
+    IRQ = 0xFFFE,
+    NMI = 0xFFFA,
     RH = 0xFFFC;
 
 // registers addresses
 constexpr u16_t PPU_CTRL_REG0 = 0x2000,
-                PPU_CTRL_REG1 = 0x2001, 
+                PPU_CTRL_REG1 = 0x2001,
                 PPU_STS_REG   = 0x2002,
                 PPU_SCRL_REG  = 0x2006,
 

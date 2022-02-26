@@ -56,7 +56,7 @@ void Console::reset() {
 void Console::clock(IRenderer* renderer) {
     ppu->clock(renderer);
 
-    // because ppu is 3x faster than cpu 
+    // because ppu is 3x faster than cpu
     if (cycles % 3 == 0) {
         cpu.clock();
     }

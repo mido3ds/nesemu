@@ -12,7 +12,7 @@ using namespace std;
 class ROM {
 public:
     int init(string path);
-    
+
     u16_t getMapperNumber() const;
 
     vector<u8_t> prg, chr;
