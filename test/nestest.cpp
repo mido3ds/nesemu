@@ -29,6 +29,7 @@ ostream& operator<<(ostream& os, const TestLogLine& line) {
         ", cycles: " << line.cycles <<
         ", ppu: {x: " << int(line.ppu.x) <<
         ", y: " << int(line.ppu.y) << "}}";
+	return os;
 }
 
 struct { u16_t x, y; } ppu; // TODO: ??

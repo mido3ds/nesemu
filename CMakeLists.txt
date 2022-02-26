@@ -99,11 +99,13 @@ add_definitions("-DSOURCE_PATH_SIZE=${SOURCE_PATH_SIZE}")
             target_link_libraries(test PRIVATE sfml-window sfml-graphics sfml-audio)
         #
 
-		set_property(TARGET nesemu
+		set_property(TARGET test
 			PROPERTY
 				CXX_STANDARD 20
 				CMAKE_CXX_STANDARD_REQUIRED YES
 				CMAKE_CXX_EXTENSIONS NO
 		)
+
+		target_compile_options(test PRIVATE $<$<CXX_COMPILER_ID:MSVC>:/bigobj>)
     endif()
 #

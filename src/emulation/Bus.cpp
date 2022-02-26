@@ -46,7 +46,7 @@ bool Bus::read(u16_t addr, u8_t& data) {
 }
 
 bool Bus::read16(u16_t addr, u16_t& data) {
-    u8_t low, up;
+    u8_t low = 0, up = 0;
     bool res = read(addr, low) && read(addr+1, up);
     data = low | up << 8;
     return res;
