@@ -73,6 +73,13 @@ add_definitions("-DSOURCE_PATH_SIZE=${SOURCE_PATH_SIZE}")
 
 ## test
     if(BUILD_TESTS)
+		CPMAddPackage(
+			NAME             Catch2
+			GIT_REPOSITORY   https://github.com/catchorg/Catch2.git
+			GIT_TAG          v2.13.8
+			GIT_SHALLOW      TRUE
+		)
+
         add_executable(test)
 
         ## sources
@@ -96,7 +103,7 @@ add_definitions("-DSOURCE_PATH_SIZE=${SOURCE_PATH_SIZE}")
 
         ## dependecies
             # SFML
-            target_link_libraries(test PRIVATE sfml-window sfml-graphics sfml-audio)
+            target_link_libraries(test PRIVATE sfml-window sfml-graphics sfml-audio Catch2)
         #
 
 		set_property(TARGET test

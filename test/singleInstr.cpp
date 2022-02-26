@@ -1,6 +1,6 @@
 #include <cstring>
 
-#include "catch.hpp"
+#include <catch2/catch.hpp>
 
 #include "emulation/Console.h"
 #include "emulation/instructions.h"

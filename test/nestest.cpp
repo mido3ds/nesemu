@@ -1,6 +1,6 @@
 #include <ostream>
 
-#include "catch.hpp"
+#include <catch2/catch.hpp>
 #include "nestest.h"
 
 #include "emulation/Console.h"
