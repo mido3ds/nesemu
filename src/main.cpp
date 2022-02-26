@@ -30,3 +30,28 @@ int main(int argc, char** argv) {
     
     return app.mainLoop();
 }
+
+/*
+TODO:
+- refactor
+	- move test here
+	- imgui
+		- include
+		- use with sfml
+		- only one window
+		- move all UI to it
+	- sfml -> SDL
+	- mn
+	- no smart ptrs
+	- no dynamic dispatch
+	- panic instead of handle errors
+	- remove stdtype.h
+	- remove log.h
+
+- complete all nestest.nes
+- support illegal NES instructions
+- handle reset correctly (how?)
+- handle NMI correctly (how?)
+- handle IRQ correctly (how?)
+- perform one PPU cycle
+*/
