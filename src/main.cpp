@@ -30,6 +30,7 @@ int main(int argc, char** argv) {
 /*
 TODO:
 - refactor
+	- declare files by name in cmake
 	- move test here
 	- imgui
 		- include
