@@ -19,7 +19,7 @@ struct SFMLImageRenderer: public IRenderer {
     virtual void clear(Color c, uint8_t a);
     virtual void pixel(int x, int y, Color c, uint8_t a);
 
-    virtual int text(string s, int x, int y, double scaleW, double scaleH, Font* font, Color c, int* newW, int* newH);
+    virtual int text(const Str& s, int x, int y, double scaleW, double scaleH, Font* font, Color c, int* newW, int* newH);
 
     // present the renderer on its window
     virtual void show();

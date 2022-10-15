@@ -1,5 +1,4 @@
 #include "gui/SFMLImageRenderer.h"
-#include "log.h"
 #include "Config.h"
 
 int SFMLImageRenderer::init(sf::RenderWindow* window, Config::Rect resolution) {
@@ -34,7 +33,7 @@ void SFMLImageRenderer::clear(Color c, uint8_t a) {
     image.create(resolution.w, resolution.h);
 }
 
-int SFMLImageRenderer::text(string s, int x, int y, double scaleW, double scaleH, Font* font, Color c, int* newW, int* newH) {
+int SFMLImageRenderer::text(const Str& s, int x, int y, double scaleW, double scaleH, Font* font, Color c, int* newW, int* newH) {
     ERROR("SFMLImageRenderer doesnt render text!");
     return 1;
 }

@@ -1,6 +1,6 @@
 #include "emulation/CPU.h"
 #include "emulation/instructions.h"
-#include "log.h"
+#include "utils.h"
 
 int CPU::init(Bus* bus) {
     if (!bus) { return 1; }

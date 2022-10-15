@@ -2,10 +2,10 @@
 #include <string>
 #include <functional>
 
+#include "utils.h"
 #include "emulation/common.h"
 #include "emulation/CPU.h"
 #include "emulation/instructions.h"
-#include "log.h"
 
 using namespace std;
 

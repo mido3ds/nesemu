@@ -1,10 +1,14 @@
 #include <cstring>
 
-#include <catch2/catch.hpp>
-
 #include "emulation/Console.h"
 #include "emulation/instructions.h"
 #include "gui/MockRenderer.h"
+
+// already defined at catch
+// TODO: better fix
+#undef INFO
+
+#include <catch2/catch.hpp>
 
 static uint8_t memRead(RAM& memory, uint16_t a) {
     uint8_t data;

@@ -4,9 +4,9 @@
 #include <cstring>
 #include <iterator>
 
+#include "utils.h"
 #include "emulation/Disassembler.h"
 #include "emulation/instructions.h"
-#include "log.h"
 
 void Disassembler::init(const vector<uint8_t>& data, uint16_t addr) {
     uint8_t const* mem = data.data();

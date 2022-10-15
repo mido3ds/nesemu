@@ -1,8 +1,8 @@
 #include <chrono>
 #include <sstream>
 
+#include "utils.h"
 #include "gui/App.h"
-#include "log.h"
 #include "Config.h"
 
 #define MEM_WIDTH 16
@@ -10,7 +10,7 @@
 #define MEM_HPADDING 5
 #define MEM_VPADDING 5
 
-int App::init(string title, Console* dev) {
+int App::init(StrView title, Console* dev) {
     int err;
 
     this->dev = dev;
@@ -21,7 +21,7 @@ int App::init(string title, Console* dev) {
 
     // main window
     mainWind.create(sf::VideoMode(Config::mainWind.w, Config::mainWind.h),
-        title, sf::Style::Titlebar|sf::Style::Close);
+        sf::String(title.begin()), sf::Style::Titlebar|sf::Style::Close);
     mainWind.setPosition(sf::Vector2i(0,0));
 
     err = memRenderer.init(&mainWind, Config::mainWind);
@@ -73,13 +73,15 @@ void App::toggleDebugger() {
     debugWind.setPosition(sf::Vector2i(mpos.x+Config::mainWind.w+5, mpos.y));
 }
 
-static string hex8(uint8_t v) {
+// TODO: remove
+static Str hex8(uint8_t v) {
     char buffer[10] = {0};
     sprintf(buffer, "%02X", v);
     return buffer;
 }
 
-static string hex16(uint16_t v) {
+// TODO: remove
+static Str hex16(uint16_t v) {
     char buffer[10] = {0};
     sprintf(buffer, "%04X", v);
     return buffer;
@@ -145,7 +147,7 @@ int App::debuggerTick() {
     int i = 0;
 
     // fps
-    debugRenderer.text("FPS: "+to_string(int(fps)), 10,(i)*h,1,1, (Font*)&mainFont,{255,0,0}, 0, 0);
+    debugRenderer.text(str_tmpf("FPS: {}", int(fps)), 10,(i)*h,1,1, (Font*)&mainFont,{255,0,0}, 0, 0);
 
     // mem
     debugRenderer.text("MEM ", 10+w,(i)*h,1,1, (Font*)&mainFont,{255,255,255}, 0, 0);
@@ -156,23 +158,23 @@ int App::debuggerTick() {
     // regs
     Color c{255,255,0};
     const auto regs = &dev->cpu.regs;
-    debugRenderer.text("SP: $" + hex8(regs->sp), 10,(i)*h,1,1, (Font*)&mainFont,c, 0, 0);
-    debugRenderer.text("A: $" + hex8(regs->a), 10+w,(i++)*h,1,1, (Font*)(Font*)&mainFont,c, 0, 0);
+    debugRenderer.text(str_tmpf("SP: ${}", hex8(regs->sp)), 10,(i)*h,1,1, (Font*)&mainFont,c, 0, 0);
+    debugRenderer.text(str_tmpf("A: ${}", hex8(regs->a)), 10+w,(i++)*h,1,1, (Font*)(Font*)&mainFont,c, 0, 0);
 
-    debugRenderer.text("X: $" + hex8(regs->x), 10,(i)*h,1,1, (Font*)&mainFont,c, 0, 0);
-    debugRenderer.text("Y: $" + hex8(regs->y), 10+w,(i++)*h,1,1, (Font*)&mainFont,c, 0, 0);
+    debugRenderer.text(str_tmpf("X: ${}", hex8(regs->x)), 10,(i)*h,1,1, (Font*)&mainFont,c, 0, 0);
+    debugRenderer.text(str_tmpf("Y: ${}", hex8(regs->y)), 10+w,(i++)*h,1,1, (Font*)&mainFont,c, 0, 0);
     i++;
 
-    debugRenderer.text("C: " + to_string(regs->flags.bits.c), 10,(i)*h,1,1, (Font*)&mainFont,c, 0, 0);
-    debugRenderer.text("Z: " + to_string(regs->flags.bits.z), 10+w*2.0/3,(i)*h,1,1, (Font*)&mainFont,c, 0, 0);
-    debugRenderer.text("I: " + to_string(regs->flags.bits.i), 10+w*4.0/3,(i++)*h,1,1, (Font*)&mainFont,c, 0, 0);
+    debugRenderer.text(str_tmpf("C: {}", regs->flags.bits.c), 10,(i)*h,1,1, (Font*)&mainFont,c, 0, 0);
+    debugRenderer.text(str_tmpf("Z: {}", regs->flags.bits.z), 10+w*2.0/3,(i)*h,1,1, (Font*)&mainFont,c, 0, 0);
+    debugRenderer.text(str_tmpf("I: {}", regs->flags.bits.i), 10+w*4.0/3,(i++)*h,1,1, (Font*)&mainFont,c, 0, 0);
 
-    debugRenderer.text("D: " + to_string(regs->flags.bits.d), 10,(i)*h,1,1, (Font*)&mainFont,c, 0, 0);
-    debugRenderer.text("B: " + to_string(regs->flags.bits.b), 10+w*2.0/3,(i)*h,1,1, (Font*)&mainFont,c, 0, 0);
-    debugRenderer.text("V: " + to_string(regs->flags.bits.v), 10+w*4.0/3,(i++)*h,1,1, (Font*)&mainFont,c, 0, 0);
+    debugRenderer.text(str_tmpf("D: {}", regs->flags.bits.d), 10,(i)*h,1,1, (Font*)&mainFont,c, 0, 0);
+    debugRenderer.text(str_tmpf("B: {}", regs->flags.bits.b), 10+w*2.0/3,(i)*h,1,1, (Font*)&mainFont,c, 0, 0);
+    debugRenderer.text(str_tmpf("V: {}", regs->flags.bits.v), 10+w*4.0/3,(i++)*h,1,1, (Font*)&mainFont,c, 0, 0);
 
-    debugRenderer.text("N: " + to_string(regs->flags.bits.n), 10,(i)*h,1,1, (Font*)&mainFont,c, 0, 0);
-    debugRenderer.text("PC: " + string("$")+hex16(regs->pc), 10+w*2.0/3,(i++)*h,1,1, (Font*)&mainFont,{255,0,0}, 0, 0);
+    debugRenderer.text(str_tmpf("N: {}", regs->flags.bits.n), 10,(i)*h,1,1, (Font*)&mainFont,c, 0, 0);
+    debugRenderer.text(str_tmpf("PC: ${}", hex16(regs->pc)), 10+w*2.0/3,(i++)*h,1,1, (Font*)&mainFont,{255,0,0}, 0, 0);
     i++;
 
     // assembly
@@ -188,7 +190,7 @@ int App::debuggerTick() {
             c.g = c.b = 0;
         }
 
-        debugRenderer.text(s, 10,(i++)*h,1,1, (Font*)&mainFont,c, 0, 0);
+        debugRenderer.text(Str(s), 10,(i++)*h,1,1, (Font*)&mainFont,c, 0, 0);
     }
 
     debugRenderer.show();
@@ -273,6 +275,8 @@ int App::mainLoop() {
     int err;
 
     while (!quit && mainWind.isOpen()) {
+        memory::reset_tmp();
+
         auto t1 = high_resolution_clock::now();
 
         if ((err = mainTick())) { return err; }

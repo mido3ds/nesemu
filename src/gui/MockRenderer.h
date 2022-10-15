@@ -6,7 +6,7 @@
 #include "gui/IRenderer.h"
 
 struct PixelOperation { int x; int y; Color c; uint8_t a; };
-struct TextOperation { string s; int x; int y; double scaleW; double scaleH; Font* font; Color c; int* newW; int* newH; };
+struct TextOperation { Str s; int x; int y; double scaleW; double scaleH; Font* font; Color c; int* newW; int* newH; };
 
 struct MockRenderer: public IRenderer {
     int clearOps = 0;
@@ -20,7 +20,7 @@ struct MockRenderer: public IRenderer {
     virtual void pixel(int x, int y, Color c, uint8_t a);
     bool hasPixeled(PixelOperation& po);
 
-    virtual int text(string s, int x, int y, double scaleW, double scaleH, Font* font, Color c, int* newW, int* newH);
+    virtual int text(const Str& s, int x, int y, double scaleW, double scaleH, Font* font, Color c, int* newW, int* newH);
     bool hasTexted(TextOperation& to);
 
     // present the renderer on its window

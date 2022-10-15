@@ -4,7 +4,6 @@
 // #include <iterator>
 
 // #include "emulation/console.h"
-// #include "log.h"
 
 // TODO: move those to ppu and dma
 

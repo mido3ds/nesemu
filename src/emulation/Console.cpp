@@ -2,8 +2,6 @@
 #include "emulation/ROM.h"
 #include "emulation/MMC.h"
 #include "emulation/IORegs.h"
-#include "log.h"
-
 
 #include <iostream>
 int Console::init(string romPath) {

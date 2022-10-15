@@ -1,5 +1,5 @@
 #include "emulation/common.h"
-#include "log.h"
+#include "utils.h"
 
 // nes color palatte -> RGB color
 Color Color::fromPalatte(const uint8_t palatte) {

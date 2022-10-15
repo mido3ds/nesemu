@@ -281,6 +281,38 @@ log_error(StrView fmt, TArgs&&... args) {
 
 /////////////////////////////////////////////////////////////////////////////////
 
+#ifdef DEBUG
+#define INFO(fmt, ...) do {\
+    constexpr StrView __path = __FILE__;\
+    const auto __new_fmt = str_tmpf("[{}:{}] {}", __path.substr(SOURCE_PATH_SIZE, __path.size()-SOURCE_PATH_SIZE), __LINE__, (fmt));\
+    log_info(__new_fmt, ##__VA_ARGS__);\
+} while (0)
+#else
+#define INFO(...)
+#endif
+
+#define __RED_CLR__     "\033[0;31m"
+#define __YELLOW_CLR__  "\033[0;33m"
+#define __RESET_CLR__   "\033[0m"
+
+#ifndef IGNORE_WARNINGS
+#define WARNING(fmt, ...) do {\
+    constexpr StrView __path = __FILE__;\
+    const auto __new_fmt = str_tmpf("[{}:{}] " __YELLOW_CLR__ "{}" __RESET_CLR__, __path.substr(SOURCE_PATH_SIZE, __path.size()-SOURCE_PATH_SIZE), __LINE__, (fmt));\
+    log_warning(__new_fmt, ##__VA_ARGS__);\
+} while (0)
+#else
+#define WARNING(...)
+#endif
+
+#define ERROR(fmt, ...) do {\
+    constexpr StrView __path = __FILE__;\
+    const auto __new_fmt = str_tmpf("[{}:{}] " __RED_CLR__ "{}" __RESET_CLR__, __path.substr(SOURCE_PATH_SIZE, __path.size()-SOURCE_PATH_SIZE), __LINE__, (fmt));\
+    log_error(__new_fmt, ##__VA_ARGS__);\
+} while (0)
+
+/////////////////////////////////////////////////////////////////////////////////
+
 template <typename F>
 struct Deferrer_ {
 	F f;

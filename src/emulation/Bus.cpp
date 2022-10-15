@@ -1,5 +1,5 @@
 #include "emulation/Bus.h"
-#include "log.h"
+#include "utils.h"
 
 int Bus::attach(shared_ptr<ICPUBusAttachable> attachment) {
     if (attachment) {

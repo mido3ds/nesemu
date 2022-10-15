@@ -1,6 +1,5 @@
 #include "emulation/PPU.h"
 #include "Config.h"
-#include "log.h"
 
 int PPU::init(Bus* bus) {
     if (!bus) { return 1; }

@@ -3,12 +3,13 @@
 #include <SFML/Window.hpp>
 #include <SFML/Graphics.hpp>
 
+#include "utils.h"
 #include "gui/SFMLRenderer.h"
 #include "gui/SFMLImageRenderer.h"
 #include "emulation/Console.h"
 
 struct App {
-    int init(string title, Console* dev);
+    int init(StrView title, Console* dev);
 
     int mainLoop();
 

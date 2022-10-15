@@ -1,5 +1,4 @@
-#include <string>
-
+#include "utils.h"
 #include "gui/App.h"
 #include "emulation/Console.h"
 
@@ -7,15 +6,13 @@ int testMain(int argc, char** argv);
 
 int main(int argc, char** argv) {
     if (argc == 1) {
-        printf("Usage: NesEmu /path/to/rom | test\n");
+        fmt::print(stderr, "Usage: NesEmu /path/to/rom | test\n");
         return 1;
     }
 
-    if (string(argv[1]) == "test") {
+    if (argv[1] == "test"_str_lit) {
         return testMain(argc-1, argv+1);
     }
-
-    const auto title = "NESEMU - " + string(argv[1]);
 
     Console dev;
     if (auto err = dev.init(argv[1])) {
@@ -23,7 +20,7 @@ int main(int argc, char** argv) {
     }
 
     App app;
-    if (auto err = app.init(title, &dev)) {
+    if (auto err = app.init(str_tmpf("NESEMU - {}", argv[1]).c_str(), &dev)) {
         return err;
     }
 
@@ -43,7 +40,6 @@ TODO:
 	- no smart ptrs
 	- no dynamic dispatch
 	- panic instead of handle errors
-	- remove log.h
 
 - complete all nestest.nes
 - support illegal NES instructions

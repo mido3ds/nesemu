@@ -67,8 +67,6 @@ target_sources(nesemu
         src/test/nestest.h
         src/test/testMain.cpp
         src/test/nestest.cpp
-        src/log.h
-        src/log.cpp
         src/gui/MockRenderer.h
         src/gui/App.h
         src/gui/SFMLImageRenderer.cpp

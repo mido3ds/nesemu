@@ -1,6 +1,6 @@
 #include "emulation/MMC.h"
 #include "emulation/MMCs/MMC0.h"
-#include "log.h"
+#include "utils.h"
 
 shared_ptr<MMC> MMC::fromROM(ROM rom) {
     if (MMC0::valid(rom)) {

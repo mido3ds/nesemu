@@ -1,5 +1,4 @@
 #include "gui/SFMLRenderer.h"
-#include "log.h"
 #include "Config.h"
 
 int SFMLRenderer::init(sf::RenderWindow* window, Config::Rect resolution) {
@@ -39,7 +38,7 @@ void SFMLRenderer::clear(Color c, uint8_t a) {
     texture.clear(sf::Color(c.r,c.g,c.b,a));
 }
 
-int SFMLRenderer::text(string s, int x, int y, double scaleW, double scaleH, Font* font, Color c, int* newW, int* newH) {
+int SFMLRenderer::text(const Str& s, int x, int y, double scaleW, double scaleH, Font* font, Color c, int* newW, int* newH) {
     if (!font) {
         ERROR("null font");
         return 1;
@@ -47,7 +46,7 @@ int SFMLRenderer::text(string s, int x, int y, double scaleW, double scaleH, Fon
 
     sf::Text text;
     text.setFont(*((sf::Font*)font));
-    text.setString(s);
+    text.setString(s.c_str());
     text.setPosition(x, y);
     text.setScale(scaleW, scaleH);
     text.setColor(sf::Color(c.r,c.g,c.b));

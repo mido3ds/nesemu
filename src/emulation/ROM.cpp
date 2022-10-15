@@ -1,8 +1,8 @@
 #include <fstream>
 #include <tuple>
 
+#include "utils.h"
 #include "emulation/ROM.h"
-#include "log.h"
 
 tuple<uint8_t*, size_t> readBinaryFile(string path) {
     ifstream file(path, ios::in|ios::binary|ios::ate);
