@@ -44,7 +44,6 @@ TODO:
 	- no smart ptrs
 	- no dynamic dispatch
 	- panic instead of handle errors
-	- remove stdtype.h
 	- remove log.h
 
 - complete all nestest.nes
