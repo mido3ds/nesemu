@@ -3,24 +3,27 @@
 #include "gui/App.h"
 #include "emulation/Console.h"
 
-int main(int argc, char** argv) {
-    int err;
+int testMain(int argc, char** argv);
 
-    if (argc != 2) {
-        printf("Usage: NesEmu /path/to/rom\n");
+int main(int argc, char** argv) {
+    if (argc == 1) {
+        printf("Usage: NesEmu /path/to/rom | test\n");
         return 1;
     }
 
-    string title = "NESEMU - " + string(argv[1]);
+    if (string(argv[1]) == "test") {
+        return testMain(argc-1, argv+1);
+    }
+
+    const auto title = "NESEMU - " + string(argv[1]);
 
     Console dev;
-    if (err = dev.init(argv[1])) {
+    if (auto err = dev.init(argv[1])) {
         return err;
     }
 
     App app;
-    err = app.init(title, &dev);
-    if (err != 0) {
+    if (auto err = app.init(title, &dev)) {
         return err;
     }
 
@@ -31,7 +34,6 @@ int main(int argc, char** argv) {
 TODO:
 - refactor
 	- declare files by name in cmake
-	- move test here
 	- imgui
 		- include
 		- use with sfml

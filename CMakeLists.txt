@@ -39,6 +39,12 @@ CPMAddPackage(
 	GIT_TAG          VER-2-11-1
 	GIT_SHALLOW      TRUE
 )
+CPMAddPackage(
+    NAME             Catch2
+    GIT_REPOSITORY   https://github.com/catchorg/Catch2.git
+    GIT_TAG          v2.13.8
+    GIT_SHALLOW      TRUE
+)
 
 # The additional / is important to remove the last character from the path.
 # Note that it does not matter if the OS uses / or \, because we are only
@@ -46,101 +52,47 @@ CPMAddPackage(
 string(LENGTH "${CMAKE_SOURCE_DIR}/" SOURCE_PATH_SIZE)
 add_definitions("-DSOURCE_PATH_SIZE=${SOURCE_PATH_SIZE}")
 
-## executable
-    add_executable(nesemu)
+add_executable(nesemu)
 
-    ## sources
-        file(GLOB_RECURSE PROJECT_SOURCES src/*.cpp src/*.cxx src/*.cc src/*.c)
-        target_sources(nesemu PUBLIC ${PROJECT_SOURCES})
-    #
+## sources
+file(GLOB_RECURSE PROJECT_SOURCES src/*.cpp src/*.cxx src/*.cc src/*.c)
+target_sources(nesemu PUBLIC ${PROJECT_SOURCES})
 
-    ## headers
-        target_include_directories(nesemu PRIVATE include/)
+## headers
+target_include_directories(nesemu PRIVATE include/)
 
-        # make headers available for IDEs
-        file(GLOB_RECURSE PROJECT_HEADERS include/*.hpp include/*.h)
-        target_sources(nesemu PRIVATE ${PROJECT_HEADERS})
-    #
+# make headers available for IDEs
+file(GLOB_RECURSE PROJECT_HEADERS include/*.hpp include/*.h)
+target_sources(nesemu PRIVATE ${PROJECT_HEADERS})
 
-    ## dependecies
-        # SFML
-		target_link_libraries(nesemu PRIVATE sfml-window sfml-graphics sfml-audio freetype)
-    #
+## dependecies
+target_link_libraries(nesemu PRIVATE sfml-window sfml-graphics sfml-audio freetype Catch2)
 
-    # copy files
-    file(GLOB FILES_TO_COPY RELATIVE "${CMAKE_SOURCE_DIR}" *.ttf *.nes)
-    foreach(FILE_ ${FILES_TO_COPY})
-        configure_file(${FILE_} ${FILE_} COPYONLY)
-    endforeach()
+# copy files
+file(GLOB FILES_TO_COPY RELATIVE "${CMAKE_SOURCE_DIR}" *.ttf *.nes)
+foreach(FILE_ ${FILES_TO_COPY})
+    configure_file(${FILE_} ${FILE_} COPYONLY)
+endforeach()
 
-	set_property(TARGET nesemu
-		PROPERTY
-			CXX_STANDARD 20
-			CMAKE_CXX_STANDARD_REQUIRED YES
-			CMAKE_CXX_EXTENSIONS NO
-	)
+set_property(TARGET nesemu
+    PROPERTY
+        CXX_STANDARD 20
+        CMAKE_CXX_STANDARD_REQUIRED YES
+        CMAKE_CXX_EXTENSIONS NO
+)
 
-    target_compile_definitions(nesemu
-	    PRIVATE
-		    ASSETS_DIR="${CMAKE_SOURCE_DIR}/assets"
-    )
+target_compile_definitions(nesemu
+    PRIVATE
+        ASSETS_DIR="${CMAKE_SOURCE_DIR}/assets"
+)
 
-    if (${NESEMU_PEDANTIC_BUILD})
-        target_compile_options(nesemu
-                PRIVATE
-                        $<$<CXX_COMPILER_ID:MSVC>:/W4 /NODEFAULTLIB:library>
-                        $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wall -Wextra -pedantic -Wno-nested-anon-types>
-        )
-    endif()
-#
+# TODO: why is this? maybe because of nestestlines.cpp? if so, then i have to remove it
+# target_compile_options(nesemu PRIVATE $<$<CXX_COMPILER_ID:MSVC>:/bigobj>)
 
-## test
-    if(BUILD_TESTS)
-		CPMAddPackage(
-			NAME             Catch2
-			GIT_REPOSITORY   https://github.com/catchorg/Catch2.git
-			GIT_TAG          v2.13.8
-			GIT_SHALLOW      TRUE
-		)
-
-        add_executable(test)
-
-        ## sources
-            file(GLOB_RECURSE PROJECT_SOURCES src/*.cpp src/*.cxx src/*.cc src/*.c)
-            file(GLOB_RECURSE MAIN_PATH src/main.*)
-            list(REMOVE_ITEM PROJECT_SOURCES "${MAIN_PATH}")
-
-            file(GLOB_RECURSE TEST_SOURCES test/*.cpp test/*.cxx test/*.cc test/*.c)
-
-            target_sources(test PRIVATE ${TEST_SOURCES} ${PROJECT_SOURCES})
-        #
-
-        ## headers
-            target_include_directories(test PRIVATE test include/)
-
-            file(GLOB_RECURSE TEST_HEADERS test/*.hpp test/*.h)
-            target_sources(test PRIVATE ${TEST_HEADERS})
-        #
-
-        target_compile_definitions(test PRIVATE -DTEST)
-
-        ## dependecies
-            # SFML
-            target_link_libraries(test PRIVATE sfml-window sfml-graphics sfml-audio Catch2)
-        #
-
-		set_property(TARGET test
-			PROPERTY
-				CXX_STANDARD 20
-				CMAKE_CXX_STANDARD_REQUIRED YES
-				CMAKE_CXX_EXTENSIONS NO
-		)
-
-        target_compile_definitions(test
+if (${NESEMU_PEDANTIC_BUILD})
+    target_compile_options(nesemu
             PRIVATE
-                ASSETS_DIR="${CMAKE_SOURCE_DIR}/assets"
-        )
-
-		target_compile_options(test PRIVATE $<$<CXX_COMPILER_ID:MSVC>:/bigobj>)
-    endif()
-#
+                    $<$<CXX_COMPILER_ID:MSVC>:/W4 /NODEFAULTLIB:library>
+                    $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wall -Wextra -pedantic -Wno-nested-anon-types>
+    )
+endif()

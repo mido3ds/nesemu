@@ -13,7 +13,7 @@ using std::string;
 #define __FILENAME__ __FILE__ + SOURCE_PATH_SIZE
 void setPath(string path, size_t size, int line);
 
-#ifndef TEST
+#ifndef DEBUG
 void logInfo(string format, ...);
 #define INFO(...) setPath(__FILE__, SOURCE_PATH_SIZE, __LINE__); logInfo(__VA_ARGS__)
 #else
