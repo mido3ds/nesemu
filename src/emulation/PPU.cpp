@@ -24,7 +24,7 @@ void PPU::reset() {
     cycles = 0;
 }
 
-bool PPU::read(u16_t addr, u8_t& data) {
+bool PPU::read(uint16_t addr, uint8_t& data) {
     // TODO
     switch (addr) {
     case 0x0000: // Control
@@ -47,7 +47,7 @@ bool PPU::read(u16_t addr, u8_t& data) {
     return false;
 }
 
-bool PPU::write(u16_t addr, u8_t data) {
+bool PPU::write(uint16_t addr, uint8_t data) {
     // TODO
     switch (addr) {
     case 0x0000: // Control

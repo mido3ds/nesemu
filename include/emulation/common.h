@@ -6,15 +6,14 @@
 #include <functional>
 #include <thread>
 #include <array>
-
-#include "stdtype.h"
+#include <cstdint>
 
 using namespace std;
 
 struct Color {
-    u8_t r, g, b;
+    uint8_t r, g, b;
 
-    static Color fromPalatte(const u8_t palatte);
+    static Color fromPalatte(const uint8_t palatte);
 };
 
 enum class AddressMode {
@@ -25,34 +24,34 @@ enum class AddressMode {
 };
 
 struct Region {
-    u16_t start, end;
+    uint16_t start, end;
 
-    constexpr bool contains(u16_t addr) const {return addr <= end && addr >= start;}
-    constexpr u16_t size() const {return (end + 1) - start;}
+    constexpr bool contains(uint16_t addr) const {return addr <= end && addr >= start;}
+    constexpr uint16_t size() const {return (end + 1) - start;}
 };
 
 struct Mirror {
     Region source, dest;
 
-    vector<u16_t> getAdresses(const u16_t address) const;
+    vector<uint16_t> getAdresses(const uint16_t address) const;
 };
 
-enum class SpriteType : u8_t {S8x8 = 0, S8x16 = 1};
-enum class ColorMode : u8_t {Color = 0, Monochrome = 1};
+enum class SpriteType : uint8_t {S8x8 = 0, S8x16 = 1};
+enum class ColorMode : uint8_t {Color = 0, Monochrome = 1};
 
 struct SpriteInfo {
-    u8_t y; // Y-coordinate of the top left of the sprite minus 1
-    u8_t i; // Index number of the sprite in the pattern tables.
+    uint8_t y; // Y-coordinate of the top left of the sprite minus 1
+    uint8_t i; // Index number of the sprite in the pattern tables.
 
     union {
         struct {
-            u8_t color:2; // Most significant two bits of the colour
-            u8_t:3;
-            u8_t pritority:1; // Indicates whether this sprite has priority over the background
-            u8_t hFlip:1; // Indicates whether to flip the sprite horizontally
-            u8_t vFlip:1; // Indicates whether to flip the sprite vertically}
+            uint8_t color:2; // Most significant two bits of the colour
+            uint8_t:3;
+            uint8_t pritority:1; // Indicates whether this sprite has priority over the background
+            uint8_t hFlip:1; // Indicates whether to flip the sprite horizontally
+            uint8_t vFlip:1; // Indicates whether to flip the sprite vertically}
         } bits;
-        u8_t byte;
+        uint8_t byte;
     } attr;
 };
 
@@ -72,29 +71,29 @@ union PatternTablePointer {
     enum class TableHalf {LEFT, RIGHT};
 
     struct {
-        u8_t rowInTile:3;
+        uint8_t rowInTile:3;
         BitPlane bitPlane:1;
-        u8_t tileCol:4;
-        u8_t tileRow:4;
+        uint8_t tileCol:4;
+        uint8_t tileRow:4;
         TableHalf tableHalf:1;
-        u8_t:3;
+        uint8_t:3;
     } bits;
-    const u16_t word = 0;
+    const uint16_t word = 0;
 };
 
-constexpr u8_t SPRITE_8x8_SIZE = 16;
-constexpr u8_t SPRITE_8x16_SIZE = 2 * SPRITE_8x8_SIZE;
-constexpr u32_t MEM_SIZE = 0xFFFF + 1;
+constexpr uint8_t SPRITE_8x8_SIZE = 16;
+constexpr uint8_t SPRITE_8x16_SIZE = 2 * SPRITE_8x8_SIZE;
+constexpr uint32_t MEM_SIZE = 0xFFFF + 1;
 
-typedef array<u8_t, MEM_SIZE> MemType;
+typedef array<uint8_t, MEM_SIZE> MemType;
 
 // Video systems info
 constexpr struct VideoSystem {
     int cpuCycles; // in nanoseconds
     int fps;
-    f32_t timePerFrame; // in milliseconds
+    float timePerFrame; // in milliseconds
     int scanlinesPerFrame;
-    f32_t cpuCyclesPerScanline;
+    float cpuCyclesPerScanline;
     struct {int width, height;} resolution;
 } NTSC {559, 60, 16.67f, 262, 113.33f, {256, 224}},
 PAL {601, 50, 20, 312, 106.56f, {256, 240}};
@@ -149,13 +148,13 @@ constexpr array<Mirror, 3> VRAM_MIRRORS {
 };
 
 // interrupt vector table
-constexpr u16_t
+constexpr uint16_t
     IRQ = 0xFFFE,
     NMI = 0xFFFA,
     RH = 0xFFFC;
 
 // registers addresses
-constexpr u16_t PPU_CTRL_REG0 = 0x2000,
+constexpr uint16_t PPU_CTRL_REG0 = 0x2000,
                 PPU_CTRL_REG1 = 0x2001,
                 PPU_STS_REG   = 0x2002,
                 PPU_SCRL_REG  = 0x2006,

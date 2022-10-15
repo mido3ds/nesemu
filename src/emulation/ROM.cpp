@@ -4,7 +4,7 @@
 #include "emulation/ROM.h"
 #include "log.h"
 
-tuple<u8_t*, size_t> readBinaryFile(string path) {
+tuple<uint8_t*, size_t> readBinaryFile(string path) {
     ifstream file(path, ios::in|ios::binary|ios::ate);
     if (!file.is_open()) return make_tuple(nullptr, 0);
 
@@ -15,12 +15,12 @@ tuple<u8_t*, size_t> readBinaryFile(string path) {
     file.read(buffer, size);
     file.close();
 
-    return make_tuple((u8_t*) buffer, size);
+    return make_tuple((uint8_t*) buffer, size);
 }
 
 int ROM::init(string path) {
     size_t size = 0;
-    u8_t* buffer = nullptr;
+    uint8_t* buffer = nullptr;
 
     INFO("reading rom from %s", path.c_str());
 
@@ -47,7 +47,7 @@ int ROM::init(string path) {
     }
 
     // cpy PRG
-    u8_t* prgPtr = buffer+16;
+    uint8_t* prgPtr = buffer+16;
     if (header.flags6.bits.hasTrainer) {
         prgPtr += 512;
     }
@@ -62,7 +62,7 @@ int ROM::init(string path) {
     prg.insert(prg.end(), prgPtr, prgPtr+prgSize);
 
     // cpy CHR
-    u8_t* chrPtr = prgPtr+prgSize;
+    uint8_t* chrPtr = prgPtr+prgSize;
 
     auto chrSize = getCHRRomSize();
     if (chrPtr+chrSize > buffer+size) {
@@ -98,14 +98,14 @@ int ROM::init(string path) {
     return 0;
 }
 
-u16_t ROM::getMapperNumber() const {
+uint16_t ROM::getMapperNumber() const {
     return header.flags6.bits.lowerMapperNum | header.flags7.bits.upperMapperNum << 8;
 }
 
-u32_t ROM::getPRGRomSize() const {
+uint32_t ROM::getPRGRomSize() const {
     return header.numPRGs*16*1024; // 16 KB
 }
 
-u32_t ROM::getCHRRomSize() const {
+uint32_t ROM::getCHRRomSize() const {
     return header.numCHRs*8*1024; // 8 KB
 }

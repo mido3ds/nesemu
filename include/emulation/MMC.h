@@ -7,10 +7,8 @@
 #include "emulation/ICPUBusAttachable.h"
 #include "emulation/IPPUBusAttachable.h"
 
-class MMC: public ICPUBusAttachable, public IPPUBusAttachable {
-public:
-    static shared_ptr<MMC> fromROM(ROM rom);
-
-protected:
+struct MMC: public ICPUBusAttachable, public IPPUBusAttachable {
     ROM rom;
+
+    static shared_ptr<MMC> fromROM(ROM rom);
 };

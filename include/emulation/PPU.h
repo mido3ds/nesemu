@@ -4,19 +4,17 @@
 #include "emulation/ICPUBusAttachable.h"
 #include "gui/IRenderer.h"
 
-class PPU: public ICPUBusAttachable {
-public:
+struct PPU: public ICPUBusAttachable {
+    Bus* bus;
+
+    uint16_t cycles = 0, row = 0, col = 0;
+
     int init(Bus* bus);
 
     void clock(IRenderer* renderer);
 
     virtual void reset();
 
-    virtual bool read(u16_t addr, u8_t& data);
-    virtual bool write(u16_t addr, u8_t data);
-
-private:
-    Bus* bus;
-
-    u16_t cycles = 0, row = 0, col = 0;
+    virtual bool read(uint16_t addr, uint8_t& data);
+    virtual bool write(uint16_t addr, uint8_t data);
 };

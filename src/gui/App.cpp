@@ -73,13 +73,13 @@ void App::toggleDebugger() {
     debugWind.setPosition(sf::Vector2i(mpos.x+Config::mainWind.w+5, mpos.y));
 }
 
-static string hex8(u8_t v) {
+static string hex8(uint8_t v) {
     char buffer[10] = {0};
     sprintf(buffer, "%02X", v);
     return buffer;
 }
 
-static string hex16(u16_t v) {
+static string hex16(uint16_t v) {
     char buffer[10] = {0};
     sprintf(buffer, "%04X", v);
     return buffer;
@@ -155,7 +155,7 @@ int App::debuggerTick() {
 
     // regs
     Color c{255,255,0};
-    auto regs = dev->getCPU()->getRegs();
+    const auto regs = &dev->cpu.regs;
     debugRenderer.text("SP: $" + hex8(regs->sp), 10,(i)*h,1,1, (Font*)&mainFont,c, 0, 0);
     debugRenderer.text("A: $" + hex8(regs->a), 10+w,(i++)*h,1,1, (Font*)(Font*)&mainFont,c, 0, 0);
 
@@ -178,7 +178,7 @@ int App::debuggerTick() {
     // assembly
     const int n = 18;
     int j = 1;
-    for (auto& s: dev->getDisassembler()->get(regs->pc, n)) {
+    for (auto& s: dev->disassembler.get(regs->pc, n)) {
         c = {.r=255, .g=255, .b=255};
         if (j++ == n+1) {
             c.b=0;
@@ -206,12 +206,12 @@ void App::renderMem() {
 
     for (int j = 0; j < MEM_HEIGHT; j++) {
         int y = MEM_VPADDING+(j+1)*(Config::fontSize+1);
-        memRenderer.text(hex16((memBeggining+j)*MEM_WIDTH), MEM_HPADDING, y, 1, 1, (Font*)&mainFont, {255,255,255}, 0, 0);
+        memRenderer.text(hex16((memoryStart+j)*MEM_WIDTH), MEM_HPADDING, y, 1, 1, (Font*)&mainFont, {255,255,255}, 0, 0);
 
         for (int i = 0; i < MEM_WIDTH; i++) {
             int x = MEM_HPADDING+53+i*30;
-            u8_t data;
-            if (dev->getRAM()->read((memBeggining+j)*MEM_WIDTH+i, data)) {
+            uint8_t data;
+            if (dev->ram->read((memoryStart+j)*MEM_WIDTH+i, data)) {
                 memRenderer.text(hex8(data), x, y, 1, 1, (Font*)&mainFont, {255,255,0}, 0, 0);
             }
         }
@@ -249,12 +249,12 @@ int App::mainTick() {
         int scrolMultiplier = keyb(sf::Keyboard::LControl) || keyb(sf::Keyboard::RControl) ? MEM_HEIGHT/2:1;
 
         if (keyb(Config::scrollMemDown)) {
-            if ((memBeggining+scrolMultiplier+MEM_HEIGHT)*MEM_WIDTH <= 0x0800) {
-                memBeggining += scrolMultiplier;
+            if ((memoryStart+scrolMultiplier+MEM_HEIGHT)*MEM_WIDTH <= 0x0800) {
+                memoryStart += scrolMultiplier;
             }
         } else if (keyb(Config::scrollMemUp)) {
-            if (memBeggining >= scrolMultiplier) {
-                memBeggining -= scrolMultiplier;
+            if (memoryStart >= scrolMultiplier) {
+                memoryStart -= scrolMultiplier;
             }
         }
 

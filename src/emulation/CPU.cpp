@@ -49,13 +49,13 @@ void CPU::clock() {
 
     prepareArg(inst.mode);
     auto oldpc = regs.pc;
-    cpp = true;
+    crossPagePenalty = true;
 
     inst.exec(*this);
 
     cycles += inst.cycles;
 
-    if (cpp && inst.crossPagePenalty == 1) {
+    if (crossPagePenalty && inst.crossPagePenalty == 1) {
         cycles += (regs.pc>>8 == oldpc>>8) ? 0:1;
     }
 }
@@ -145,15 +145,15 @@ void CPU::reprepareJMPArg() {
     argValue = read(argAddr);
 }
 
-u8_t CPU::getArgValue() {
+uint8_t CPU::getArgValue() {
     return argValue;
 }
 
-u16_t CPU::getArgAddr() {
+uint16_t CPU::getArgAddr() {
     return argAddr;
 }
 
-void CPU::writeArg(u8_t v) {
+void CPU::writeArg(uint8_t v) {
     switch (this->mode) {
     case AddressMode::Accumulator:
         argValue = regs.a;
@@ -168,77 +168,65 @@ void CPU::writeArg(u8_t v) {
     }
 }
 
-void CPU::noCrossPage() {
-    cpp = false;
-}
-
-u8_t CPU::read(u16_t address) {
-    u8_t data;
+uint8_t CPU::read(uint16_t address) {
+    uint8_t data;
     bus->read(address, data);
     return data;
 }
 
-void CPU::write(u16_t address, u8_t value)  {
+void CPU::write(uint16_t address, uint8_t value)  {
     bus->write(address, value);
 }
 
-void CPU::push(u8_t v) {
+void CPU::push(uint8_t v) {
     write(STACK.start | regs.sp, v);
     regs.sp--;
 }
 
-u8_t CPU::pop() {
+uint8_t CPU::pop() {
     regs.sp++;
-    u8_t v = read(STACK.start | regs.sp);
+    uint8_t v = read(STACK.start | regs.sp);
     return v;
 }
 
-u16_t CPU::zeroPageAddress(const u8_t bb) {
+uint16_t CPU::zeroPageAddress(const uint8_t bb) {
     return bb;
 }
 
-u16_t CPU::indexedZeroPageAddress(const u8_t bb, const u8_t i) {
+uint16_t CPU::indexedZeroPageAddress(const uint8_t bb, const uint8_t i) {
     return (bb+i) & 0xFF;
 }
 
-u16_t CPU::absoluteAddress(const u8_t bb, const u8_t cc) {
+uint16_t CPU::absoluteAddress(const uint8_t bb, const uint8_t cc) {
     return cc << 8 | bb;
 }
 
-u16_t CPU::indexedAbsoluteAddress(const u8_t bb, const u8_t cc, const u8_t i) {
+uint16_t CPU::indexedAbsoluteAddress(const uint8_t bb, const uint8_t cc, const uint8_t i) {
     return absoluteAddress(bb, cc) + i;
 }
 
-u16_t CPU::indirectAddress(const u8_t bb, const u8_t cc) {
-    u16_t ccbb = absoluteAddress(bb, cc);
+uint16_t CPU::indirectAddress(const uint8_t bb, const uint8_t cc) {
+    uint16_t ccbb = absoluteAddress(bb, cc);
     return absoluteAddress(read(ccbb), read(ccbb+1));
 }
 
-u16_t CPU::indexedIndirectAddress(const u8_t bb, const u8_t i) {
+uint16_t CPU::indexedIndirectAddress(const uint8_t bb, const uint8_t i) {
     return absoluteAddress(read((bb+i) & 0x00FF), read((bb+i+1) & 0x00FF));
 }
 
-u16_t CPU::indirectIndexedAddress(const u8_t bb, const u8_t i) {
+uint16_t CPU::indirectIndexedAddress(const uint8_t bb, const uint8_t i) {
     return absoluteAddress(read(bb), read(bb+1)) + i;
 }
 
-u8_t CPU::fetch() { return read(regs.pc++); }
+uint8_t CPU::fetch() { return read(regs.pc++); }
 
-u16_t CPU::read16(u16_t address) {
-    u16_t data;
+uint16_t CPU::read16(uint16_t address) {
+    uint16_t data;
     bus->read16(address, data);
     return data;
 }
 
-void CPU::write16(u16_t address, u16_t v) { bus->write16(address, v); }
+void CPU::write16(uint16_t address, uint16_t v) { bus->write16(address, v); }
 
-u16_t CPU::pop16() { return pop() | pop() << 8; }
-void CPU::push16(u16_t v) { push(v & 255); push((v >> 8) & 255); }
-
-CPURegs* CPU::getRegs() {
-    return &regs;
-}
-
-u16_t CPU::getCycles() {
-    return cycles;
-}
+uint16_t CPU::pop16() { return pop() | pop() << 8; }
+void CPU::push16(uint16_t v) { push(v & 255); push((v >> 8) & 255); }

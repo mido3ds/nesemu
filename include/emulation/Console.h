@@ -22,27 +22,19 @@ struct JoyPadInput {
     bool right;
 };
 
-class Console {
-public:
+struct Console {
+    CPU cpu;
+    shared_ptr<PPU> ppu;
+    shared_ptr<RAM> ram;
+    Bus bus;
+    uint64_t cycles = 0;
+    Disassembler disassembler;
+
     int init(string romPath); // with rom
     int init();
 
     void reset();
     void clock(IRenderer* renderer);
 
-    Disassembler* getDisassembler();
-    CPU* getCPU();
-    PPU* getPPU();
-    RAM* getRAM();
-
     void input(JoyPadInput joypad);
-
-private:
-    Bus bus;
-    shared_ptr<PPU> ppu;
-    shared_ptr<RAM> ram;
-    CPU cpu;
-    Disassembler disassembler;
-
-    u64_t cycles = 0;
 };

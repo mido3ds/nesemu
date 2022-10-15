@@ -5,7 +5,6 @@
 #include "emulation/common.h"
 #include "emulation/CPU.h"
 #include "emulation/instructions.h"
-#include "stdtype.h"
 #include "log.h"
 
 using namespace std;
@@ -13,12 +12,12 @@ using namespace std;
 void ADC(CPU& cpu) {
     auto v = cpu.getArgValue();
 
-    u16_t result = cpu.regs.a + v + cpu.regs.flags.bits.c;
+    uint16_t result = cpu.regs.a + v + cpu.regs.flags.bits.c;
 
-    cpu.regs.flags.bits.c = (u16_t)result > UINT8_MAX;
-    cpu.regs.flags.bits.v = (i16_t)result > INT8_MAX || (i16_t)result < INT8_MIN;
+    cpu.regs.flags.bits.c = (uint16_t)result > UINT8_MAX;
+    cpu.regs.flags.bits.v = (int16_t)result > INT8_MAX || (int16_t)result < INT8_MIN;
 
-    cpu.regs.a = (u8_t)result;
+    cpu.regs.a = (uint8_t)result;
 
     cpu.regs.flags.bits.z = cpu.regs.a == 0;
     cpu.regs.flags.bits.n = cpu.regs.a >> 7;
@@ -65,31 +64,31 @@ void AXS(CPU& cpu) {
 
 void BCC(CPU& cpu) {
     if (!cpu.regs.flags.bits.c) {
-        auto fetched = (i8_t)cpu.getArgValue();
+        auto fetched = (int8_t)cpu.getArgValue();
         cpu.regs.pc += fetched;
         cpu.cycles++;
     } else {
-        cpu.noCrossPage();
+        cpu.crossPagePenalty = false;
     }
 }
 
 void BCS(CPU& cpu) {
     if (cpu.regs.flags.bits.c) {
-        auto fetched = (i8_t)cpu.getArgValue();
+        auto fetched = (int8_t)cpu.getArgValue();
         cpu.regs.pc += fetched;
         cpu.cycles++;
     } else {
-        cpu.noCrossPage();
+        cpu.crossPagePenalty = false;
     }
 }
 
 void BEQ(CPU& cpu) {
     if (cpu.regs.flags.bits.z) {
-        auto fetched = (i8_t)cpu.getArgValue();
+        auto fetched = (int8_t)cpu.getArgValue();
         cpu.regs.pc += fetched;
         cpu.cycles++;
     } else {
-        cpu.noCrossPage();
+        cpu.crossPagePenalty = false;
     }
 }
 
@@ -103,31 +102,31 @@ void BIT(CPU& cpu) {
 
 void BMI(CPU& cpu) {
     if (cpu.regs.flags.bits.n) {
-        auto fetched = (i8_t)cpu.getArgValue();
+        auto fetched = (int8_t)cpu.getArgValue();
         cpu.regs.pc += fetched;
         cpu.cycles++;
     } else {
-        cpu.noCrossPage();
+        cpu.crossPagePenalty = false;
     }
 }
 
 void BNE(CPU& cpu) {
     if (!cpu.regs.flags.bits.z) {
-        auto fetched = (i8_t)cpu.getArgValue();
+        auto fetched = (int8_t)cpu.getArgValue();
         cpu.regs.pc += fetched;
         cpu.cycles++;
     } else {
-        cpu.noCrossPage();
+        cpu.crossPagePenalty = false;
     }
 }
 
 void BPL(CPU& cpu) {
     if (!cpu.regs.flags.bits.n) {
-        auto fetched = (i8_t)cpu.getArgValue();
+        auto fetched = (int8_t)cpu.getArgValue();
         cpu.regs.pc += fetched;
         cpu.cycles++;
     } else {
-        cpu.noCrossPage();
+        cpu.crossPagePenalty = false;
     }
 }
 
@@ -143,21 +142,21 @@ void BRK(CPU& cpu) {
 
 void BVC(CPU& cpu) {
     if (!cpu.regs.flags.bits.v) {
-        auto fetched = (i8_t)cpu.getArgValue();
+        auto fetched = (int8_t)cpu.getArgValue();
         cpu.regs.pc += fetched;
         cpu.cycles++;
     } else {
-        cpu.noCrossPage();
+        cpu.crossPagePenalty = false;
     }
 }
 
 void BVS(CPU& cpu) {
     if (cpu.regs.flags.bits.v) {
-        auto fetched = (i8_t)cpu.getArgValue();
+        auto fetched = (int8_t)cpu.getArgValue();
         cpu.regs.pc += fetched;
         cpu.cycles++;
     } else {
-        cpu.noCrossPage();
+        cpu.crossPagePenalty = false;
     }
 }
 
@@ -179,7 +178,7 @@ void CLV(CPU& cpu) {
 
 void CMP(CPU& cpu) {
     auto v = cpu.getArgValue();
-    u8_t result = cpu.regs.a - v;
+    uint8_t result = cpu.regs.a - v;
     cpu.regs.flags.bits.c = result > 0;
     cpu.regs.flags.bits.z = result == 0;
     cpu.regs.flags.bits.n = result >> 7;
@@ -187,7 +186,7 @@ void CMP(CPU& cpu) {
 
 void CPX(CPU& cpu) {
     auto v = cpu.getArgValue();
-    u8_t result = cpu.regs.x - v;
+    uint8_t result = cpu.regs.x - v;
     cpu.regs.flags.bits.c = result > 0;
     cpu.regs.flags.bits.z = result == 0;
     cpu.regs.flags.bits.n = result >> 7;
@@ -195,7 +194,7 @@ void CPX(CPU& cpu) {
 
 void CPY(CPU& cpu) {
     auto v = cpu.getArgValue();
-    u8_t result = cpu.regs.y - v;
+    uint8_t result = cpu.regs.y - v;
     cpu.regs.flags.bits.c = result > 0;
     cpu.regs.flags.bits.z = result == 0;
     cpu.regs.flags.bits.n = result >> 7;
@@ -351,7 +350,7 @@ void RLA(CPU& cpu) {
 
 void ROL(CPU& cpu) {
     auto v = cpu.getArgValue();
-    u8_t oldCarry = cpu.regs.flags.bits.c;
+    uint8_t oldCarry = cpu.regs.flags.bits.c;
     cpu.regs.flags.bits.c = v >> 7;
 
     v <<= 1;
@@ -365,7 +364,7 @@ void ROL(CPU& cpu) {
 
 void ROR(CPU& cpu) {
     auto v = cpu.getArgValue();
-    u8_t oldCarry = cpu.regs.flags.bits.c;
+    uint8_t oldCarry = cpu.regs.flags.bits.c;
     cpu.regs.flags.bits.c = v & 1;
 
     v >>= 1;
@@ -396,12 +395,12 @@ void SAX(CPU& cpu) {
 
 void SBC(CPU& cpu) {
     auto v = cpu.getArgValue();
-    u16_t result = cpu.regs.a - v - (~ cpu.regs.flags.bits.c);
+    uint16_t result = cpu.regs.a - v - (~ cpu.regs.flags.bits.c);
 
-    cpu.regs.flags.bits.c = (u16_t)result > UINT8_MAX;
-    cpu.regs.flags.bits.v = (i16_t)result > INT8_MAX || (i16_t)result < INT8_MAX;
+    cpu.regs.flags.bits.c = (uint16_t)result > UINT8_MAX;
+    cpu.regs.flags.bits.v = (int16_t)result > INT8_MAX || (int16_t)result < INT8_MAX;
 
-    cpu.regs.a = (u8_t)result;
+    cpu.regs.a = (uint8_t)result;
 
     cpu.regs.flags.bits.z = cpu.regs.a == 0;
     cpu.regs.flags.bits.n = cpu.regs.a >> 7;

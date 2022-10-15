@@ -6,14 +6,14 @@
 #include "emulation/instructions.h"
 #include "gui/MockRenderer.h"
 
-static u8_t memRead(RAM* memory, u16_t a) {
-    u8_t data;
+static uint8_t memRead(RAM* memory, uint16_t a) {
+    uint8_t data;
     memory->read(a, data);
     return data;
 }
 
-static u16_t memRead16(RAM* memory, u16_t a) {
-    u8_t up, low;
+static uint16_t memRead16(RAM* memory, uint16_t a) {
+    uint8_t up, low;
 
     memory->read(a, up);
     memory->read(a, low);
@@ -21,11 +21,11 @@ static u16_t memRead16(RAM* memory, u16_t a) {
     return low | up << 8;
 }
 
-static void memWrite(RAM* memory, u16_t a, u8_t data) {
+static void memWrite(RAM* memory, uint16_t a, uint8_t data) {
     memory->write(a, data);
 }
 
-static void memWrite16(RAM* memory, u16_t a, u16_t data) {
+static void memWrite16(RAM* memory, uint16_t a, uint16_t data) {
     memory->write(a, data);
     memory->write(a+1, data >> 8);
 }
@@ -36,8 +36,8 @@ TEST_CASE("branch") {
 
     MockRenderer mockRenderer;
 
-    auto cpu = dev.getCPU();
-    auto memory = dev.getRAM();
+    auto cpu = dev.cpu();
+    auto memory = dev.ram();
     auto regs = cpu->getRegs();
 
     memset(regs, 0, sizeof(CPURegs));
@@ -164,8 +164,8 @@ TEST_CASE("immediate-instructs") {
 
     MockRenderer mockRenderer;
 
-    auto cpu = dev.getCPU();
-    auto memory = dev.getRAM();
+    auto cpu = dev.cpu();
+    auto memory = dev.ram();
     auto regs = cpu->getRegs();
 
     memset(regs, 0, sizeof(CPURegs));
@@ -213,7 +213,7 @@ TEST_CASE("immediate-instructs") {
         memWrite(memory, 0, 0x69);
         memWrite(memory, 1, -10);
         dev.clock(&mockRenderer);
-        REQUIRE(regs->a == u8_t(4-10));
+        REQUIRE(regs->a == uint8_t(4-10));
         REQUIRE(regs->flags.bits.c == 0);
         REQUIRE(regs->flags.bits.v == 1);
     }
@@ -225,8 +225,8 @@ TEST_CASE("implied-instructs") {
 
     MockRenderer mockRenderer;
 
-    auto cpu = dev.getCPU();
-    auto memory = dev.getRAM();
+    auto cpu = dev.cpu();
+    auto memory = dev.ram();
     auto regs = cpu->getRegs();
 
     memset(regs, 0, sizeof(CPURegs));
@@ -247,8 +247,8 @@ TEST_CASE("jmp-bug") {
 
     MockRenderer mockRenderer;
 
-    auto cpu = dev.getCPU();
-    auto memory = dev.getRAM();
+    auto cpu = dev.cpu();
+    auto memory = dev.ram();
     auto regs = cpu->getRegs();
 
     memset(regs, 0, sizeof(CPURegs));

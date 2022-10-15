@@ -1,11 +1,10 @@
 #pragma once
 
-#include "stdtype.h"
+#include <cstdint>
 
-class ICPUBusAttachable {
-public:
+struct ICPUBusAttachable {
     virtual void reset() =0;
 
-    virtual bool read(u16_t addr, u8_t& data) =0;
-    virtual bool write(u16_t addr, u8_t data) =0;
+    virtual bool read(uint16_t addr, uint8_t& data) =0;
+    virtual bool write(uint16_t addr, uint8_t data) =0;
 };

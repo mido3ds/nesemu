@@ -3,21 +3,18 @@
 #include <map>
 
 #include "emulation/ROM.h"
-#include "stdtype.h"
 
-class Disassembler {
-public:
+struct Disassembler {
+    std::map<uint16_t, string> assembly;
+
     // `addr` is the starting address of data
-    void init(const vector<u8_t>& data, u16_t addr);
+    void init(const vector<uint8_t>& data, uint16_t addr);
 
     // if addr is in data range, returns `n` assembly
     // otherwise returns "???"
-    vector<string> get(const u16_t addr, const u16_t n) const;
+    vector<string> get(const uint16_t addr, const uint16_t n) const;
 
     // dissasmble one instruction with size <= `size`
     // returns assembly and number of consumed bytes
-    static tuple<string, int> dissasmble(u8_t const* mem, u32_t size);
-
-private:
-    std::map<u16_t, string> assembly;
+    static tuple<string, int> dissasmble(uint8_t const* mem, uint32_t size);
 };

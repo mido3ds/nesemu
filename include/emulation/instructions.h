@@ -10,7 +10,7 @@ struct Instruction {
     function<void(CPU&)> exec;
     string name;
     AddressMode mode;
-    u16_t cycles;
+    uint16_t cycles;
     bool crossPagePenalty;
 };
 

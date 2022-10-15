@@ -1,11 +1,8 @@
 #pragma once
 
-#include "stdtype.h"
-
-class IPPUBusAttachable {
-public:
+struct IPPUBusAttachable {
     virtual void reset() =0;
 
-    virtual bool ppuRead(u16_t addr, u8_t& data) =0;
-    virtual bool ppuWrite(u16_t addr, u8_t data) =0;
+    virtual bool ppuRead(uint16_t addr, uint8_t& data) =0;
+    virtual bool ppuWrite(uint16_t addr, uint8_t data) =0;
 };

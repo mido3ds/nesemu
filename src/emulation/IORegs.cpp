@@ -8,12 +8,12 @@ void IORegs::reset() {
     // TODO
 }
 
-bool IORegs::read(u16_t addr, u8_t& data) {
+bool IORegs::read(uint16_t addr, uint8_t& data) {
     // TODO
     return false;
 }
 
-bool IORegs::write(u16_t addr, u8_t data) {
+bool IORegs::write(uint16_t addr, uint8_t data) {
     // TODO
     return false;
 }

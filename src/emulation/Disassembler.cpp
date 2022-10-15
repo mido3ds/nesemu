@@ -8,8 +8,8 @@
 #include "emulation/instructions.h"
 #include "log.h"
 
-void Disassembler::init(const vector<u8_t>& data, u16_t addr) {
-    u8_t const* mem = data.data();
+void Disassembler::init(const vector<uint8_t>& data, uint16_t addr) {
+    uint8_t const* mem = data.data();
     int size = data.size();
 
     while (size > 0) {
@@ -25,13 +25,13 @@ void Disassembler::init(const vector<u8_t>& data, u16_t addr) {
     }
 }
 
-static string addAddress(u16_t addr, string s) {
+static string addAddress(uint16_t addr, string s) {
     char adrPart[10];
     sprintf(adrPart, "$%04X", addr);
     return string(adrPart) + ": " + s;
 }
 
-vector<string> Disassembler::get(const u16_t addr, const u16_t n) const {
+vector<string> Disassembler::get(const uint16_t addr, const uint16_t n) const {
     vector<string> ret(2*n+1, "$????: ???");
 
     auto tmpItr = assembly.lower_bound(addr);
@@ -61,7 +61,7 @@ vector<string> Disassembler::get(const u16_t addr, const u16_t n) const {
     return ret;
 }
 
-tuple<string, int> Disassembler::dissasmble(u8_t const* mem, u32_t size) {
+tuple<string, int> Disassembler::dissasmble(uint8_t const* mem, uint32_t size) {
     if (mem == nullptr || size == 0) { return make_tuple("???", 0); }
 
     int bytes = 1;
@@ -106,7 +106,7 @@ tuple<string, int> Disassembler::dissasmble(u8_t const* mem, u32_t size) {
         bytes++;
         break;
     case AddressMode::Relative:
-        if (size >= 2) { sprintf(a, "%+d", i8_t(mem[1])); }
+        if (size >= 2) { sprintf(a, "%+d", int8_t(mem[1])); }
         else           { strcpy(a, "??"); }
 
         ss << " " << a;

@@ -26,15 +26,15 @@ int SFMLImageRenderer::init(sf::RenderWindow* window, Config::Rect resolution) {
     return 0;
 }
 
-void SFMLImageRenderer::pixel(int x, int y, Color c, u8_t a) {
+void SFMLImageRenderer::pixel(int x, int y, Color c, uint8_t a) {
     image.setPixel(x, y, sf::Color(c.r, c.g, c.b, a));
 }
 
-void SFMLImageRenderer::clear(Color c, u8_t a) {
+void SFMLImageRenderer::clear(Color c, uint8_t a) {
     image.create(resolution.w, resolution.h);
 }
 
-int SFMLImageRenderer::text(string s, int x, int y, f64_t scaleW, f64_t scaleH, Font* font, Color c, int* newW, int* newH) {
+int SFMLImageRenderer::text(string s, int x, int y, double scaleW, double scaleH, Font* font, Color c, int* newW, int* newH) {
     ERROR("SFMLImageRenderer doesnt render text!");
     return 1;
 }

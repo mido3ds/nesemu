@@ -28,18 +28,18 @@ int SFMLRenderer::init(sf::RenderWindow* window, Config::Rect resolution) {
     return 0;
 }
 
-void SFMLRenderer::pixel(int x, int y, Color c, u8_t a) {
+void SFMLRenderer::pixel(int x, int y, Color c, uint8_t a) {
     sf::CircleShape p(1);
     p.setFillColor(sf::Color(c.r, c.g, c.b, a));
     p.setPosition(x, y);
     texture.draw(p);
 }
 
-void SFMLRenderer::clear(Color c, u8_t a) {
+void SFMLRenderer::clear(Color c, uint8_t a) {
     texture.clear(sf::Color(c.r,c.g,c.b,a));
 }
 
-int SFMLRenderer::text(string s, int x, int y, f64_t scaleW, f64_t scaleH, Font* font, Color c, int* newW, int* newH) {
+int SFMLRenderer::text(string s, int x, int y, double scaleW, double scaleH, Font* font, Color c, int* newW, int* newH) {
     if (!font) {
         ERROR("null font");
         return 1;

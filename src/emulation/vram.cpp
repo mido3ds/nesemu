@@ -8,7 +8,7 @@
 
 // TODO: move those to ppu and dma
 
-// u8_t Console::read(u16_t address) {
+// uint8_t Console::read(uint16_t address) {
 //     if (address == PPU_STS_REG) { return readPPUStatusRegister(); }
 //     if (address == VRAM_IO_REG) {
 //         if (vramAddrReg1.state & VRamAddrReg1::CAN_READ
@@ -26,7 +26,7 @@
 //     return memory[address];
 // }
 
-// void Console::write(u16_t address, u8_t value)  {
+// void Console::write(uint16_t address, uint8_t value)  {
 //     memory[address] = value;
 
 //     // apply mirroring
@@ -38,7 +38,7 @@
 
 //     if (address == SPRITE_DMA_REG) {
 //         // DMA from memory -> sprram
-//         memcpy(sprram.data(), memory.data() + 0x100 * u8_t(value), sprram.size());
+//         memcpy(sprram.data(), memory.data() + 0x100 * uint8_t(value), sprram.size());
 //     } else if (address == SPRRAM_IO_REG) {
 //         sprram[memory[SPRRAM_ADDR_REG]] = value;
 //     } else if (address == VRAM_ADDR_REG1) {
@@ -52,14 +52,14 @@
 //     }
 // }
 
-// u16_t Console::readVRam16(u16_t address) { return readVRam(address) | readVRam(address+1) << 8; }
-// void Console::writeVRam16(u16_t address, u16_t v) { writeVRam(address, v & 255); writeVRam(address+1, (v >> 8) & 255); }
+// uint16_t Console::readVRam16(uint16_t address) { return readVRam(address) | readVRam(address+1) << 8; }
+// void Console::writeVRam16(uint16_t address, uint16_t v) { writeVRam(address, v & 255); writeVRam(address+1, (v >> 8) & 255); }
 
-// u8_t Console::readVRam(u16_t address) {
+// uint8_t Console::readVRam(uint16_t address) {
 //     return vram[address];
 // }
 
-// void Console::writeVRam(u16_t address, u8_t value) {
+// void Console::writeVRam(uint16_t address, uint8_t value) {
 //     vram[address] = value;
 
 //     // apply mirroring
@@ -76,15 +76,15 @@
 //     }
 // }
 
-// u16_t Console::getSpriteAddr(SpriteInfo* inf, SpriteType type) {
+// uint16_t Console::getSpriteAddr(SpriteInfo* inf, SpriteType type) {
 //     if (type == SpriteType::S8x8) return PATT_TBL0.start + inf->i * SPRITE_8x8_SIZE;
 //     if (inf->i % 2 == 0) return PATT_TBL0.start + inf->i * SPRITE_8x16_SIZE;
 //     return PATT_TBL1.start + inf->i * SPRITE_8x16_SIZE;
 // }
 
-// u8_t Console::readPPUStatusRegister() {
+// uint8_t Console::readPPUStatusRegister() {
 //     memory[VRAM_ADDR_REG0] = memory[VRAM_ADDR_REG1] = 0;
-//     u8_t old = ppuStatusReg->byte;
+//     uint8_t old = ppuStatusReg->byte;
 //     ppuStatusReg->byte &= ~(1 << 4);
 //     return old;
 // }

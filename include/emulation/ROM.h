@@ -4,23 +4,16 @@
 #include <vector>
 #include <thread>
 
-#include "stdtype.h"
 #include "emulation/common.h"
 
 using namespace std;
 
-class ROM {
-public:
-    int init(string path);
+struct ROM {
+    vector<uint8_t> prg, chr;
 
-    u16_t getMapperNumber() const;
-
-    vector<u8_t> prg, chr;
-
-private:
     struct Header {
-        u8_t numPRGs = 0;
-        u8_t numCHRs = 0;
+        uint8_t numPRGs = 0;
+        uint8_t numCHRs = 0;
 
         // 76543210
         // ||||||||
@@ -32,13 +25,13 @@ private:
         // ++++----- Lower nybble of mapper number
         union {
             struct {
-                u8_t mirroring:1;
+                uint8_t mirroring:1;
                 bool hasBatteryBackedPRGRAM:1;
                 bool hasTrainer:1;
                 bool ignoreMirroringControl:1;
-                u8_t lowerMapperNum:4;
+                uint8_t lowerMapperNum:4;
             } bits;
-            u8_t byte;
+            uint8_t byte;
         } flags6;
 
         // 76543210
@@ -49,18 +42,22 @@ private:
         // ++++----- Upper nybble of mapper number
         union {
             struct {
-                u8_t vsUnisystem:1;
+                uint8_t vsUnisystem:1;
                 bool hasPlayChoice:1;
-                u8_t nes2format:2;
-                u8_t upperMapperNum:4;
+                uint8_t nes2format:2;
+                uint8_t upperMapperNum:4;
             } bits;
-            u8_t byte;
+            uint8_t byte;
         } flags7;
 
         // Flags 8, 9 and 10 are not supported
-		u8_t _padding[8];
+		uint8_t _padding[8];
     } header;
 
-    u32_t getPRGRomSize() const;
-    u32_t getCHRRomSize() const;
+    uint32_t getPRGRomSize() const;
+    uint32_t getCHRRomSize() const;
+
+    int init(string path);
+
+    uint16_t getMapperNumber() const;
 };

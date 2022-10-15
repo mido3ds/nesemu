@@ -5,13 +5,13 @@
 
 #include "emulation/Console.h"
 
-static string hex8(u8_t v) {
+static string hex8(uint8_t v) {
     char buffer[10] = {0};
     sprintf(buffer, "%02X", v);
     return buffer;
 }
 
-static string hex16(u16_t v) {
+static string hex16(uint16_t v) {
     char buffer[10] = {0};
     sprintf(buffer, "%04X", v);
     return buffer;
@@ -32,18 +32,18 @@ ostream& operator<<(ostream& os, const TestLogLine& line) {
 	return os;
 }
 
-struct { u16_t x, y; } ppu; // TODO: ??
+struct { uint16_t x, y; } ppu; // TODO: ??
 
 TEST_CASE("nestest") {
     Console dev;
     REQUIRE(dev.init(ASSETS_DIR "/nestest.nes") == 0);
 
-    auto cpu = dev.getCPU();
-    auto memory = dev.getRAM();
+    auto cpu = dev.cpu();
+    auto memory = dev.ram();
     auto regs = cpu->getRegs();
 
     regs->pc = 0xC000;
-    u64_t cycles = 7;
+    uint64_t cycles = 7;
 
     for (auto& line: testLogs) {
         CAPTURE(line);

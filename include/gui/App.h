@@ -3,20 +3,17 @@
 #include <SFML/Window.hpp>
 #include <SFML/Graphics.hpp>
 
-#include "stdtype.h"
 #include "gui/SFMLRenderer.h"
 #include "gui/SFMLImageRenderer.h"
 #include "emulation/Console.h"
 
-class App {
-public:
+struct App {
     int init(string title, Console* dev);
 
     int mainLoop();
 
     ~App();
 
-private:
     Console* dev;
     sf::RenderWindow mainWind, debugWind;
     SFMLRenderer memRenderer, debugRenderer;
@@ -27,8 +24,8 @@ private:
         debugging = true, showMem = true,
         inDebugMode = true, doOneInstr = false;
 
-    u16_t memBeggining = 0;
-    f64_t fps;
+    uint16_t memoryStart = 0;
+    double fps;
 
     void toggleDebugger();
     void renderMem();

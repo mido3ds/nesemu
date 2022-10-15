@@ -1,6 +1,6 @@
 #include "gui/MockRenderer.h"
 
-void MockRenderer::clear(Color c, u8_t a) {
+void MockRenderer::clear(Color c, uint8_t a) {
     clearOps++;
 }
 bool MockRenderer::hasCleared() {
@@ -11,7 +11,7 @@ bool MockRenderer::hasCleared() {
     return false;
 }
 
-void MockRenderer::pixel(int x, int y, Color c, u8_t a) {
+void MockRenderer::pixel(int x, int y, Color c, uint8_t a) {
     pixelOps.push({x, y, c, a});
 }
 bool MockRenderer::hasPixeled(PixelOperation& po) {
@@ -23,7 +23,7 @@ bool MockRenderer::hasPixeled(PixelOperation& po) {
     return false;
 }
 
-int MockRenderer::text(string s, int x, int y, f64_t scaleW, f64_t scaleH, Font* font, Color c, int* newW, int* newH) {
+int MockRenderer::text(string s, int x, int y, double scaleW, double scaleH, Font* font, Color c, int* newW, int* newH) {
     textOps.push(TextOperation {s, x, y, scaleW, scaleH, font, c, newW, newH});
 	return 0;
 }

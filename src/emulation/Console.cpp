@@ -64,22 +64,6 @@ void Console::clock(IRenderer* renderer) {
     cycles++;
 }
 
-Disassembler* Console::getDisassembler() {
-    return &disassembler;
-}
-
-CPU* Console::getCPU() {
-    return &cpu;
-}
-
-RAM* Console::getRAM() {
-    return ram.get();
-}
-
 void Console::input(JoyPadInput joypad) {
     // TODO
-}
-
-PPU* Console::getPPU() {
-    return ppu.get();
 }

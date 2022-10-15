@@ -9,7 +9,7 @@ bool MMC0::valid(ROM const& rom) {
 
 void MMC0::reset() {}
 
-bool MMC0::read(u16_t addr, u8_t& data) {
+bool MMC0::read(uint16_t addr, uint8_t& data) {
     if (PRG_REGION.contains(addr)) {
         data = rom.prg[(addr - PRG_ROM_LOW.start) % rom.prg.size()];
 
@@ -19,7 +19,7 @@ bool MMC0::read(u16_t addr, u8_t& data) {
     return false;
 }
 
-bool MMC0::write(u16_t addr, u8_t data) {
+bool MMC0::write(uint16_t addr, uint8_t data) {
     if (PRG_REGION.contains(addr)) {
         rom.prg[(addr - PRG_ROM_LOW.start) % rom.prg.size()] = data;
 
@@ -29,12 +29,12 @@ bool MMC0::write(u16_t addr, u8_t data) {
     return false;
 }
 
-bool MMC0::ppuRead(u16_t addr, u8_t& data) {
+bool MMC0::ppuRead(uint16_t addr, uint8_t& data) {
     // TODO
 	return false;
 }
 
-bool MMC0::ppuWrite(u16_t addr, u8_t data) {
+bool MMC0::ppuWrite(uint16_t addr, uint8_t data) {
     // TODO
 	return false;
 }

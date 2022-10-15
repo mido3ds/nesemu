@@ -2,7 +2,7 @@
 #include "log.h"
 
 // nes color palatte -> RGB color
-Color Color::fromPalatte(const u8_t palatte) {
+Color Color::fromPalatte(const uint8_t palatte) {
     if (palatte > 0x3F) {
         ERROR("invalid palatte color(0x%02x), returning default color", palatte);
         return DEFAULT_COLOR;
