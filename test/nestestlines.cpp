@@ -1,3 +1,4 @@
+#if 0 // TODO enable this when it's fast enough to compile this file, or read it
 #include "nestest.h"
 
 const TestLogs testLogs{
@@ -8993,3 +8994,4 @@ const TestLogs testLogs{
     TestLogLine{.pc=0xC6A2,  .inst_bytes="60      ",  .inst_asm="RTS", .a=0x00, .x=0xFF, .y=0x15, .p=0x27, .sp=0xFB, .ppu={170,233}, .cycles=26548},
     TestLogLine{.pc=0xC66E,  .inst_bytes="60      ",  .inst_asm="RTS", .a=0x00, .x=0xFF, .y=0x15, .p=0x27, .sp=0xFD, .ppu={188,233}, .cycles=26554}
 };
+#endif

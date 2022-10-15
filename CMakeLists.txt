@@ -136,6 +136,11 @@ add_definitions("-DSOURCE_PATH_SIZE=${SOURCE_PATH_SIZE}")
 				CMAKE_CXX_EXTENSIONS NO
 		)
 
+        target_compile_definitions(test
+            PRIVATE
+                ASSETS_DIR="${CMAKE_SOURCE_DIR}/assets"
+        )
+
 		target_compile_options(test PRIVATE $<$<CXX_COMPILER_ID:MSVC>:/bigobj>)
     endif()
 #

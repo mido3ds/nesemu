@@ -3,8 +3,6 @@
 #include <string>
 #include <array>
 
-
-
 using namespace std;
 
 struct TestLogLine {
