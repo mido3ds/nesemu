@@ -30,6 +30,7 @@ int main(int argc, char** argv) {
 /*
 TODO:
 - refactor
+    - don't copy files to build, put them in assets and refer to them directly
 	- declare files by name in cmake
 	- move test here
 	- imgui

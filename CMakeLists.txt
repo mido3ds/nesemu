@@ -1,6 +1,16 @@
 cmake_minimum_required(VERSION 3.9)
 project(NESemu LANGUAGES CXX VERSION 0.0.1)
 
+option(NESEMU_PEDANTIC_BUILD "Enable pedantic warnings during build" OFF)
+
+if (CMAKE_BUILD_TYPE STREQUAL "")
+        set(CMAKE_BUILD_TYPE Debug)
+endif()
+
+if (CPM_SOURCE_CACHE STREQUAL "")
+        message(WARNING "CPM_SOURCE_CACHE is empty, this will download locally all packages")
+endif()
+
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/$<CONFIG>")
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/$<CONFIG>")
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/$<CONFIG>")
@@ -69,6 +79,14 @@ add_definitions("-DSOURCE_PATH_SIZE=${SOURCE_PATH_SIZE}")
 			CMAKE_CXX_STANDARD_REQUIRED YES
 			CMAKE_CXX_EXTENSIONS NO
 	)
+
+    if (${NESEMU_PEDANTIC_BUILD})
+        target_compile_options(nesemu
+                PRIVATE
+                        $<$<CXX_COMPILER_ID:MSVC>:/W4 /NODEFAULTLIB:library>
+                        $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wall -Wextra -pedantic -Wno-nested-anon-types>
+        )
+    endif()
 #
 
 ## test
