@@ -80,6 +80,11 @@ add_definitions("-DSOURCE_PATH_SIZE=${SOURCE_PATH_SIZE}")
 			CMAKE_CXX_EXTENSIONS NO
 	)
 
+    target_compile_definitions(nesemu
+	    PRIVATE
+		    ASSETS_DIR="${CMAKE_SOURCE_DIR}/assets"
+    )
+
     if (${NESEMU_PEDANTIC_BUILD})
         target_compile_options(nesemu
                 PRIVATE

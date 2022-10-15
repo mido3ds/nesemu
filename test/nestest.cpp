@@ -36,7 +36,7 @@ struct { u16_t x, y; } ppu; // TODO: ??
 
 TEST_CASE("nestest") {
     Console dev;
-    REQUIRE(dev.init("nestest.nes") == 0);
+    REQUIRE(dev.init(ASSETS_DIR "/nestest.nes") == 0);
 
     auto cpu = dev.getCPU();
     auto memory = dev.getRAM();
