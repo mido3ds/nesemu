@@ -23,10 +23,14 @@ set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
-option(BUILD_TESTS "Enable testing" ON)
-
 # dependencies
 include(CPM)
+CPMAddPackage(
+	NAME             fmt
+	GIT_REPOSITORY   https://github.com/fmtlib/fmt.git
+	GIT_TAG          8.1.1
+	GIT_SHALLOW      TRUE
+)
 CPMAddPackage(
 	NAME             sfml
 	GIT_REPOSITORY   https://github.com/SFML/SFML
@@ -55,20 +59,71 @@ add_definitions("-DSOURCE_PATH_SIZE=${SOURCE_PATH_SIZE}")
 add_executable(nesemu)
 
 ## sources
-file(GLOB_RECURSE PROJECT_SOURCES src/*.cpp src/*.cxx src/*.cc src/*.c src/*.hpp src/*.h)
-target_sources(nesemu PUBLIC ${PROJECT_SOURCES})
+target_sources(nesemu
+    PRIVATE
+        src/utils.cpp
+        src/test/singleInstr.cpp
+        src/test/nestestlines.cpp
+        src/test/nestest.h
+        src/test/testMain.cpp
+        src/test/nestest.cpp
+        src/log.h
+        src/log.cpp
+        src/gui/MockRenderer.h
+        src/gui/App.h
+        src/gui/SFMLImageRenderer.cpp
+        src/gui/SFMLRenderer.cpp
+        src/gui/SFMLImageRenderer.h
+        src/gui/SFMLRenderer.h
+        src/gui/IRenderer.h
+        src/gui/App.cpp
+        src/gui/MockRenderer.cpp
+        src/emulation/common.h
+        src/emulation/ICPUBusAttachable.h
+        src/emulation/instructions.h
+        src/emulation/Bus.cpp
+        src/emulation/Console.h
+        src/emulation/vram.cpp
+        src/emulation/Disassembler.cpp
+        src/emulation/Console.cpp
+        src/emulation/MMCs/MMC0.cpp
+        src/emulation/MMCs/MMC0.h
+        src/emulation/ROM.cpp
+        src/emulation/RAM.h
+        src/emulation/Disassembler.h
+        src/emulation/CPU.h
+        src/emulation/IPPUBusAttachable.h
+        src/emulation/instructions.cpp
+        src/emulation/ROM.h
+        src/emulation/IORegs.h
+        src/emulation/PPU.cpp
+        src/emulation/PPU.h
+        src/emulation/Bus.h
+        src/emulation/CPU.cpp
+        src/emulation/console_old.h
+        src/emulation/common.cpp
+        src/emulation/MMC.h
+        src/emulation/MMC.cpp
+        src/emulation/RAM.cpp
+        src/emulation/IORegs.cpp
+        src/utils.h
+        src/Config.h
+        src/main.cpp
+)
 
 ## headers
 target_include_directories(nesemu PRIVATE src/)
 
 ## dependecies
-target_link_libraries(nesemu PRIVATE sfml-window sfml-graphics sfml-audio freetype Catch2)
-
-# copy files
-file(GLOB FILES_TO_COPY RELATIVE "${CMAKE_SOURCE_DIR}" *.ttf *.nes)
-foreach(FILE_ ${FILES_TO_COPY})
-    configure_file(${FILE_} ${FILE_} COPYONLY)
-endforeach()
+target_link_libraries(nesemu
+    PRIVATE
+        fmt
+        sfml-window
+        sfml-graphics
+        sfml-audio
+        freetype
+        Catch2
+)
 
 set_property(TARGET nesemu
     PROPERTY
@@ -80,6 +135,15 @@ set_property(TARGET nesemu
 target_compile_definitions(nesemu
     PRIVATE
         ASSETS_DIR="${CMAKE_SOURCE_DIR}/assets"
+        $<$<PLATFORM_ID:Windows>:UNICODE;_UNICODE>
+		$<$<PLATFORM_ID:Windows>:OS_WINDOWS=1>
+		$<$<PLATFORM_ID:Linux>:OS_LINUX=1>
+		$<$<PLATFORM_ID:Darwin>:OS_MACOS=1>
+		$<$<CXX_COMPILER_ID:Clang>:COMPILER_CLANG=1>
+		$<$<CXX_COMPILER_ID:AppleClang>:COMPILER_CLANG=1>
+		$<$<CXX_COMPILER_ID:GNU>:COMPILER_GNU=1>
+		$<$<CXX_COMPILER_ID:MSVC>:COMPILER_MSVC=1>
+		$<$<CONFIG:DEBUG>:DEBUG>
 )
 
 # TODO: why is this? maybe because of nestestlines.cpp? if so, then i have to remove it

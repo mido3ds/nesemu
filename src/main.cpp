@@ -33,14 +33,13 @@ int main(int argc, char** argv) {
 /*
 TODO:
 - refactor
-	- declare files by name in cmake
 	- imgui
 		- include
 		- use with sfml
 		- only one window
 		- move all UI to it
 	- sfml -> SDL
-	- mn
+	- my utils
 	- no smart ptrs
 	- no dynamic dispatch
 	- panic instead of handle errors
