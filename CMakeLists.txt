@@ -55,15 +55,11 @@ add_definitions("-DSOURCE_PATH_SIZE=${SOURCE_PATH_SIZE}")
 add_executable(nesemu)
 
 ## sources
-file(GLOB_RECURSE PROJECT_SOURCES src/*.cpp src/*.cxx src/*.cc src/*.c)
+file(GLOB_RECURSE PROJECT_SOURCES src/*.cpp src/*.cxx src/*.cc src/*.c src/*.hpp src/*.h)
 target_sources(nesemu PUBLIC ${PROJECT_SOURCES})
 
 ## headers
-target_include_directories(nesemu PRIVATE include/)
-
-# make headers available for IDEs
-file(GLOB_RECURSE PROJECT_HEADERS include/*.hpp include/*.h)
-target_sources(nesemu PRIVATE ${PROJECT_HEADERS})
+target_include_directories(nesemu PRIVATE src/)
 
 ## dependecies
 target_link_libraries(nesemu PRIVATE sfml-window sfml-graphics sfml-audio freetype Catch2)

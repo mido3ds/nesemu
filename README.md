@@ -1,4 +1,4 @@
-# NESemu [WIP]
+# NESemu
 NES emulator in written C++
 
 ## Requirements:
@@ -22,6 +22,6 @@ cmake --build build --target nesemu -j
 ## Test:
 
 ```sh
-cmake --build build --target test
-./build/bin/Debug/test
+cmake --build build --target nesemu -j
+./build/bin/Debug/nesemu test
 ```
