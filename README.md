@@ -6,6 +6,7 @@ NES emulator in written C++
 - cmake `+3.12.1`
 - g++ or clang or MSVC
 - ninja (optional) `+1.10.2`
+- OpenAL
 
 ```sh
 cmake -S. -Bbuild -GNinja

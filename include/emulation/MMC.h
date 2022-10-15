@@ -1,6 +1,7 @@
 #pragma once
 
 #include <thread>
+#include <memory>
 
 #include "emulation/ROM.h"
 #include "emulation/ICPUBusAttachable.h"
