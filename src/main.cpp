@@ -217,16 +217,16 @@ int main(int argc, char** argv) {
             const int n = 18;
             int j = 1;
             for (auto& s: dev.disassembler.get(regs->pc, n)) {
-                c = {.r=255, .g=255, .b=255};
+                c = Color {.r=255, .g=255, .b=255};
                 if (j++ == n+1) {
-                    c.b=0;
+                    c.b = 0;
                 }
 
                 if (s.size() >= 8 && s[7] == '$') {
                     c.g = c.b = 0;
                 }
 
-                debugRenderer.text(Str(s), 10,(i++)*h,1,1, (Font*)&mainFont,c, 0, 0);
+                debugRenderer.text(s, 10,(i++)*h,1,1, (Font*)&mainFont,c, 0, 0);
             }
 
             debugRenderer.show();

@@ -80,13 +80,11 @@ target_sources(nesemu
         src/emulation/Bus.cpp
         src/emulation/Console.h
         src/emulation/vram.cpp
-        src/emulation/Disassembler.cpp
         src/emulation/Console.cpp
         src/emulation/MMCs/MMC0.cpp
         src/emulation/MMCs/MMC0.h
         src/emulation/ROM.cpp
         src/emulation/RAM.h
-        src/emulation/Disassembler.h
         src/emulation/CPU.h
         src/emulation/IPPUBusAttachable.h
         src/emulation/instructions.cpp

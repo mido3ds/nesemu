@@ -1,12 +1,12 @@
 #pragma once
 
 #include <thread>
+#include <map>
 
 #include "emulation/RAM.h"
 #include "emulation/Bus.h"
 #include "emulation/CPU.h"
 #include "emulation/PPU.h"
-#include "emulation/Disassembler.h"
 
 struct JoyPadInput {
     bool a;
@@ -17,6 +17,17 @@ struct JoyPadInput {
     bool down;
     bool left;
     bool right;
+};
+
+struct Disassembler {
+    std::pmr::map<uint16_t, Str> assembly;
+
+    // `addr` is the starting address of data
+    void init(const Vec<uint8_t>& data, uint16_t addr);
+
+    // if addr is in data range, returns `n` assembly
+    // otherwise returns "???"
+    Vec<Str> get(const uint16_t addr, const uint16_t n) const;
 };
 
 struct Console {
