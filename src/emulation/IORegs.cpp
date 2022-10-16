@@ -1,9 +1,5 @@
 #include "emulation/IORegs.h"
 
-void IORegs::init() {
-    // TODO
-}
-
 void IORegs::reset() {
     // TODO
 }

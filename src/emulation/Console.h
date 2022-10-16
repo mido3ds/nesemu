@@ -10,6 +10,33 @@
 #include "emulation/MMC0.h"
 #include "emulation/IORegs.h"
 
+struct Disassembler {
+    std::pmr::map<uint16_t, Str> assembly;
+};
+
+// `addr` is the starting address of data
+Disassembler disassembler_new(const Vec<uint8_t>& data, uint16_t addr);
+
+// if addr is in data range, returns `n` assembly
+// otherwise returns "???"
+Vec<Str> disassembler_get(const Disassembler& self, const uint16_t addr, const uint16_t n);
+
+struct Console {
+    CPU cpu;
+    PPU ppu;
+    RAM ram;
+    Bus bus;
+    MMC0 mmc0;
+    IORegs io;
+    uint64_t cycles;
+    Disassembler disassembler;
+};
+
+void console_init(Console& self);
+void console_load_rom(Console& self, StrView romPath);
+void console_reset(Console& self);
+void console_clock(Console& self, IRenderer* renderer);
+
 struct JoyPadInput {
     bool a;
     bool b;
@@ -21,32 +48,4 @@ struct JoyPadInput {
     bool right;
 };
 
-struct Disassembler {
-    std::pmr::map<uint16_t, Str> assembly;
-
-    // `addr` is the starting address of data
-    void init(const Vec<uint8_t>& data, uint16_t addr);
-
-    // if addr is in data range, returns `n` assembly
-    // otherwise returns "???"
-    Vec<Str> get(const uint16_t addr, const uint16_t n) const;
-};
-
-struct Console {
-    CPU cpu;
-    PPU ppu;
-    RAM ram;
-    Bus bus;
-    MMC0 mmc0;
-    IORegs io;
-    uint64_t cycles = 0;
-    Disassembler disassembler;
-
-    void init(StrView romPath); // with rom
-    void init();
-
-    void reset();
-    void clock(IRenderer* renderer);
-
-    void input(JoyPadInput joypad);
-};
+void console_input(Console& self, JoyPadInput joypad);

@@ -1,10 +1,6 @@
 #include "emulation/RAM.h"
 #include "emulation/common.h"
 
-void RAM::init() {
-    data.fill(0);
-}
-
 void RAM::reset() {}
 
 bool RAM::read(uint16_t addr, uint8_t& data) {

@@ -1,12 +1,14 @@
 #include "emulation/PPU.h"
 #include "Config.h"
 
-void PPU::init(Bus* bus) {
-    this->bus = bus;
+PPU ppu_new(Bus* bus) {
     my_assert(bus);
+    PPU self {};
+    self.bus = bus;
+    return self;
 }
 
-void PPU::clock(IRenderer* renderer) {
+void ppu_clock(PPU& self, IRenderer* renderer) {
     // TODO
     // for now we will draw random white-black pixels
     for (int i = 0; i < Config::sys.resolution.height; i++) {

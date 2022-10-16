@@ -27,11 +27,6 @@ struct CPURegs {
 };
 
 struct CPU {
-    void init(Bus* bus);
-
-    void reset();
-    void clock();
-
     CPURegs regs;
 
     uint16_t cycles = 0;
@@ -40,13 +35,13 @@ struct CPU {
     /*addressing modes for 6502
     from Appendix E: http://www.nesdev.com/NESDoc.pdf
     */
-    uint16_t zeroPageAddress(const uint8_t bb);
-    uint16_t indexedZeroPageAddress(const uint8_t bb, const uint8_t i);
-    uint16_t absoluteAddress(const uint8_t bb, const uint8_t cc);
-    uint16_t indexedAbsoluteAddress(const uint8_t bb, const uint8_t cc, const uint8_t i);
-    uint16_t indirectAddress(const uint8_t bb, const uint8_t cc);
-    uint16_t indexedIndirectAddress(const uint8_t bb, const uint8_t i);
-    uint16_t indirectIndexedAddress(const uint8_t bb, const uint8_t i);
+    uint16_t zero_page_address(const uint8_t bb);
+    uint16_t indexed_zero_page_address(const uint8_t bb, const uint8_t i);
+    uint16_t absolute_address(const uint8_t bb, const uint8_t cc);
+    uint16_t indexed_absolute_address(const uint8_t bb, const uint8_t cc, const uint8_t i);
+    uint16_t indirect_address(const uint8_t bb, const uint8_t cc);
+    uint16_t indexed_indirect_address(const uint8_t bb, const uint8_t i);
+    uint16_t indirect_indexed_address(const uint8_t bb, const uint8_t i);
 
     // ram
     uint8_t read(uint16_t address);
@@ -63,10 +58,16 @@ struct CPU {
     uint16_t pop16();
 
     // for instructions
-    uint8_t getArgValue();
-    uint16_t getArgAddr();
-    void writeArg(uint8_t v); uint8_t argValue; uint16_t argAddr; AddressMode mode;
-    void prepareArg(AddressMode mode);
-    void reprepareJMPArg();
-    bool crossPagePenalty;
+    uint8_t arg_value;
+    uint16_t arg_addr;
+    AddressMode mode;
+
+    void write_arg(uint8_t v); 
+    void prepare_arg(AddressMode mode);
+    void reprepare_jmp_arg();
+    bool cross_page_penalty;
 };
+
+CPU cpu_new(Bus* bus);
+void cpu_reset(CPU& self);
+void cpu_clock(CPU& self);

@@ -12,8 +12,8 @@ struct Instruction {
     StrView name;
     AddressMode mode;
     uint16_t cycles;
-    bool crossPagePenalty;
+    bool cross_page_penalty;
 };
 
 typedef Arr<Instruction, 0xFF+1> InstructionSet;
-extern const InstructionSet instructionSet;
+extern const InstructionSet instruction_set;

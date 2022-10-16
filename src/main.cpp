@@ -23,46 +23,47 @@ int main(int argc, char** argv) {
         return testMain(argc-1, argv+1);
     }
 
-    Console dev;
-    dev.init(argv[1]);
+    Console dev {};
+    console_init(dev);
+    console_load_rom(dev, argv[1]);
 
-    sf::RenderWindow mainWind, debugWind;
-    SFMLRenderer memRenderer, debugRenderer;
-    SFMLImageRenderer devRenderer;
-    sf::Font mainFont;
+    sf::RenderWindow main_wind, debug_wind;
+    SFMLRenderer mem_renderer, debug_renderer;
+    SFMLImageRenderer dev_renderer;
+    sf::Font main_font;
 
-    bool shouldQuit = false, shouldPause = false,
-        showDebugWind = true, showMem = true,
-        inDebugMode = true, doOneInstr = false;
+    bool should_quit = false, should_pause = false,
+        show_debug_wind = true, show_mem = true,
+        in_debug_mode = true, do_one_instr = false;
 
-    uint16_t memoryStart = 0;
+    uint16_t memory_start = 0;
     double fps = 0;
 
     // main window
     auto title = str_tmpf("NESEMU - {}", argv[1]);
-    mainWind.create(sf::VideoMode(Config::mainWind.w, Config::mainWind.h), 
+    main_wind.create(sf::VideoMode(Config::main_wind.w, Config::main_wind.h), 
         title.c_str(), sf::Style::Titlebar|sf::Style::Close);
-    mainWind.setPosition(sf::Vector2i(0,0));
+    main_wind.setPosition(sf::Vector2i(0,0));
 
-    memRenderer.init(&mainWind, Config::mainWind);
-    devRenderer.init(&mainWind, Config::resolution);
+    mem_renderer.init(&main_wind, Config::main_wind);
+    dev_renderer.init(&main_wind, Config::resolution);
 
     // debug window
-    debugWind.create(sf::VideoMode(Config::debugWind.w, Config::debugWind.h),
+    debug_wind.create(sf::VideoMode(Config::debug_wind.w, Config::debug_wind.h),
         "Debugger", sf::Style::Titlebar|sf::Style::Close);
-    debugWind.setVisible(showDebugWind);
-    auto mpos = mainWind.getPosition();
-    debugWind.setPosition(sf::Vector2i(mpos.x+Config::mainWind.w+5, mpos.y));
+    debug_wind.setVisible(show_debug_wind);
+    auto mpos = main_wind.getPosition();
+    debug_wind.setPosition(sf::Vector2i(mpos.x+Config::main_wind.w+5, mpos.y));
 
-    debugRenderer.init(&debugWind, Config::debugWind);
+    debug_renderer.init(&debug_wind, Config::debug_wind);
 
     // font
-    if (!mainFont.loadFromFile(Config::fontPath)) {
+    if (!main_font.loadFromFile(Config::font_path)) {
         ERROR("cant load main font");
         return 1;
     }
 
-    while (!shouldQuit && mainWind.isOpen()) {
+    while (!should_quit && main_wind.isOpen()) {
         memory::reset_tmp();
 
         // fps
@@ -75,49 +76,49 @@ int main(int argc, char** argv) {
 
         // handle events
         sf::Event event;
-        while (mainWind.pollEvent(event) || debugWind.pollEvent(event)) {
+        while (main_wind.pollEvent(event) || debug_wind.pollEvent(event)) {
             switch (event.type) {
             case sf::Event::Closed:
-                shouldQuit = true;
+                should_quit = true;
                 break;
             case sf::Event::KeyPressed:
                 switch (event.key.code) {
                 case Config::reset:
-                    dev.reset();
+                    console_reset(dev);
                     break;
                 case Config::exit:
-                    shouldQuit = true;
+                    should_quit = true;
                     break;
                 case Config::pause:
-                    shouldPause = !shouldPause;
+                    should_pause = !should_pause;
 
-                    if (shouldPause) { INFO("pause"); }
+                    if (should_pause) { INFO("pause"); }
                     else       { INFO("unpause"); }
                     break;
                 case Config::debug: {
                     // toggle debuger
-                    showDebugWind = !showDebugWind;
-                    debugWind.setVisible(showDebugWind);
-                    auto mpos = mainWind.getPosition();
-                    debugWind.setPosition(sf::Vector2i(mpos.x+Config::mainWind.w+5, mpos.y));
+                    show_debug_wind = !show_debug_wind;
+                    debug_wind.setVisible(show_debug_wind);
+                    auto mpos = main_wind.getPosition();
+                    debug_wind.setPosition(sf::Vector2i(mpos.x+Config::main_wind.w+5, mpos.y));
                     break;
                 }
-                case Config::showMem:
-                    showMem = !showMem;
+                case Config::show_mem:
+                    show_mem = !show_mem;
                     break;
-                case Config::toggleStepping:
-                    inDebugMode = !inDebugMode;
+                case Config::toggle_stepping:
+                    in_debug_mode = !in_debug_mode;
                     break;
-                case Config::nextInstr:
-                    doOneInstr = true;
+                case Config::next_instr:
+                    do_one_instr = true;
                     break;
                 }
                 break;
             }
         }
 
-        if (!shouldPause) {
-            dev.input(JoyPadInput {
+        if (!should_pause) {
+            console_input(dev, JoyPadInput {
                 .a       = sf::Keyboard::isKeyPressed(Config::a),
                 .b       = sf::Keyboard::isKeyPressed(Config::b),
                 .select  = sf::Keyboard::isKeyPressed(Config::select),
@@ -128,95 +129,95 @@ int main(int argc, char** argv) {
                 .right   = sf::Keyboard::isKeyPressed(Config::right)
             });
 
-            if (!inDebugMode || doOneInstr) {
-                dev.clock(&devRenderer);
+            if (!in_debug_mode || do_one_instr) {
+                console_clock(dev, &dev_renderer);
             }
-            doOneInstr = false;
+            do_one_instr = false;
         }
 
         // main window
-        if (showMem) {
+        if (show_mem) {
             const auto keyb = sf::Keyboard::isKeyPressed;
             int scrolMultiplier = keyb(sf::Keyboard::LControl) || keyb(sf::Keyboard::RControl) ? MEM_HEIGHT/2:1;
 
-            if (keyb(Config::scrollMemDown)) {
-                if ((memoryStart+scrolMultiplier+MEM_HEIGHT)*MEM_WIDTH <= 0x0800) {
-                    memoryStart += scrolMultiplier;
+            if (keyb(Config::scroll_mem_down)) {
+                if ((memory_start+scrolMultiplier+MEM_HEIGHT)*MEM_WIDTH <= 0x0800) {
+                    memory_start += scrolMultiplier;
                 }
-            } else if (keyb(Config::scrollMemUp)) {
-                if (memoryStart >= scrolMultiplier) {
-                    memoryStart -= scrolMultiplier;
+            } else if (keyb(Config::scroll_mem_up)) {
+                if (memory_start >= scrolMultiplier) {
+                    memory_start -= scrolMultiplier;
                 }
             }
 
-            memRenderer.clear({0,0,0},0);
+            mem_renderer.clear({0,0,0},0);
 
             for (int i = 0; i < MEM_WIDTH; i++) {
                 int x = MEM_HPADDING+53+i*30;
-                memRenderer.text(str_tmpf("{:02X}", i), x, MEM_VPADDING, 1, 1, (Font*)&mainFont, {255,255,255}, 0, 0);
+                mem_renderer.text(str_tmpf("{:02X}", i), x, MEM_VPADDING, 1, 1, (Font*)&main_font, {255,255,255}, 0, 0);
             }
 
             for (int j = 0; j < MEM_HEIGHT; j++) {
-                int y = MEM_VPADDING+(j+1)*(Config::fontSize+1);
-                memRenderer.text(str_tmpf("{:04X}", (memoryStart+j)*MEM_WIDTH), MEM_HPADDING, y, 1, 1, (Font*)&mainFont, {255,255,255}, 0, 0);
+                int y = MEM_VPADDING+(j+1)*(Config::font_size+1);
+                mem_renderer.text(str_tmpf("{:04X}", (memory_start+j)*MEM_WIDTH), MEM_HPADDING, y, 1, 1, (Font*)&main_font, {255,255,255}, 0, 0);
 
                 for (int i = 0; i < MEM_WIDTH; i++) {
                     int x = MEM_HPADDING+53+i*30;
                     uint8_t data;
-                    if (dev.ram.read((memoryStart+j)*MEM_WIDTH+i, data)) {
-                        memRenderer.text(str_tmpf("{:02X}", data), x, y, 1, 1, (Font*)&mainFont, {255,255,0}, 0, 0);
+                    if (dev.ram.read((memory_start+j)*MEM_WIDTH+i, data)) {
+                        mem_renderer.text(str_tmpf("{:02X}", data), x, y, 1, 1, (Font*)&main_font, {255,255,0}, 0, 0);
                     }
                 }
             }
 
-            memRenderer.show();
+            mem_renderer.show();
         } else {
-            devRenderer.show();
+            dev_renderer.show();
         }
 
         // debug window
-        if (showDebugWind) {
-            debugRenderer.clear({0,0,0},0);
+        if (show_debug_wind) {
+            debug_renderer.clear({0,0,0},0);
 
-            const int h = Config::fontSize+1,
-                w = Config::debugWind.w/2;
+            const int h = Config::font_size+1,
+                w = Config::debug_wind.w/2;
             int i = 0;
 
             // fps
-            debugRenderer.text(str_tmpf("FPS: {}", int(fps)), 10,(i)*h,1,1, (Font*)&mainFont,{255,0,0}, 0, 0);
+            debug_renderer.text(str_tmpf("FPS: {}", int(fps)), 10,(i)*h,1,1, (Font*)&main_font,{255,0,0}, 0, 0);
 
             // mem
-            debugRenderer.text("MEM ", 10+w,(i)*h,1,1, (Font*)&mainFont,{255,255,255}, 0, 0);
-            if (showMem) { debugRenderer.text("ON", 10+w+40,(i++)*h,1,1, (Font*)&mainFont,{0,255,0}, 0, 0); }
-            else { debugRenderer.text("OFF", 10+w+40,(i++)*h,1,1, (Font*)&mainFont,{255,0,0}, 0, 0); }
+            debug_renderer.text("MEM ", 10+w,(i)*h,1,1, (Font*)&main_font,{255,255,255}, 0, 0);
+            if (show_mem) { debug_renderer.text("ON", 10+w+40,(i++)*h,1,1, (Font*)&main_font,{0,255,0}, 0, 0); }
+            else { debug_renderer.text("OFF", 10+w+40,(i++)*h,1,1, (Font*)&main_font,{255,0,0}, 0, 0); }
             i++;
 
             // regs
             Color c{255,255,0};
             const auto regs = &dev.cpu.regs;
-            debugRenderer.text(str_tmpf("SP: ${:02X}", regs->sp), 10,(i)*h,1,1, (Font*)&mainFont,c, 0, 0);
-            debugRenderer.text(str_tmpf("A: ${:02X}", regs->a), 10+w,(i++)*h,1,1, (Font*)(Font*)&mainFont,c, 0, 0);
+            debug_renderer.text(str_tmpf("SP: ${:02X}", regs->sp), 10,(i)*h,1,1, (Font*)&main_font,c, 0, 0);
+            debug_renderer.text(str_tmpf("A: ${:02X}", regs->a), 10+w,(i++)*h,1,1, (Font*)(Font*)&main_font,c, 0, 0);
 
-            debugRenderer.text(str_tmpf("X: ${:02X}", regs->x), 10,(i)*h,1,1, (Font*)&mainFont,c, 0, 0);
-            debugRenderer.text(str_tmpf("Y: ${:02X}", regs->y), 10+w,(i++)*h,1,1, (Font*)&mainFont,c, 0, 0);
+            debug_renderer.text(str_tmpf("X: ${:02X}", regs->x), 10,(i)*h,1,1, (Font*)&main_font,c, 0, 0);
+            debug_renderer.text(str_tmpf("Y: ${:02X}", regs->y), 10+w,(i++)*h,1,1, (Font*)&main_font,c, 0, 0);
             i++;
 
-            debugRenderer.text(str_tmpf("C: {}", regs->flags.bits.c), 10,(i)*h,1,1, (Font*)&mainFont,c, 0, 0);
-            debugRenderer.text(str_tmpf("Z: {}", regs->flags.bits.z), 10+w*2.0/3,(i)*h,1,1, (Font*)&mainFont,c, 0, 0);
-            debugRenderer.text(str_tmpf("I: {}", regs->flags.bits.i), 10+w*4.0/3,(i++)*h,1,1, (Font*)&mainFont,c, 0, 0);
+            debug_renderer.text(str_tmpf("C: {}", regs->flags.bits.c), 10,(i)*h,1,1, (Font*)&main_font,c, 0, 0);
+            debug_renderer.text(str_tmpf("Z: {}", regs->flags.bits.z), 10+w*2.0/3,(i)*h,1,1, (Font*)&main_font,c, 0, 0);
+            debug_renderer.text(str_tmpf("I: {}", regs->flags.bits.i), 10+w*4.0/3,(i++)*h,1,1, (Font*)&main_font,c, 0, 0);
 
-            debugRenderer.text(str_tmpf("D: {}", regs->flags.bits.d), 10,(i)*h,1,1, (Font*)&mainFont,c, 0, 0);
-            debugRenderer.text(str_tmpf("B: {}", regs->flags.bits.b), 10+w*2.0/3,(i)*h,1,1, (Font*)&mainFont,c, 0, 0);
-            debugRenderer.text(str_tmpf("V: {}", regs->flags.bits.v), 10+w*4.0/3,(i++)*h,1,1, (Font*)&mainFont,c, 0, 0);
+            debug_renderer.text(str_tmpf("D: {}", regs->flags.bits.d), 10,(i)*h,1,1, (Font*)&main_font,c, 0, 0);
+            debug_renderer.text(str_tmpf("B: {}", regs->flags.bits.b), 10+w*2.0/3,(i)*h,1,1, (Font*)&main_font,c, 0, 0);
+            debug_renderer.text(str_tmpf("V: {}", regs->flags.bits.v), 10+w*4.0/3,(i++)*h,1,1, (Font*)&main_font,c, 0, 0);
 
-            debugRenderer.text(str_tmpf("N: {}", regs->flags.bits.n), 10,(i)*h,1,1, (Font*)&mainFont,c, 0, 0);
-            debugRenderer.text(str_tmpf("PC: ${:04X}", regs->pc), 10+w*2.0/3,(i++)*h,1,1, (Font*)&mainFont,{255,0,0}, 0, 0);
+            debug_renderer.text(str_tmpf("N: {}", regs->flags.bits.n), 10,(i)*h,1,1, (Font*)&main_font,c, 0, 0);
+            debug_renderer.text(str_tmpf("PC: ${:04X}", regs->pc), 10+w*2.0/3,(i++)*h,1,1, (Font*)&main_font,{255,0,0}, 0, 0);
             i++;
 
             // assembly
             const int n = 18;
             int j = 1;
-            for (auto& s: dev.disassembler.get(regs->pc, n)) {
+            for (auto& s:  disassembler_get(dev.disassembler, regs->pc, n)) {
                 c = Color {.r=255, .g=255, .b=255};
                 if (j++ == n+1) {
                     c.b = 0;
@@ -226,10 +227,10 @@ int main(int argc, char** argv) {
                     c.g = c.b = 0;
                 }
 
-                debugRenderer.text(s, 10,(i++)*h,1,1, (Font*)&mainFont,c, 0, 0);
+                debug_renderer.text(s, 10,(i++)*h,1,1, (Font*)&main_font,c, 0, 0);
             }
 
-            debugRenderer.show();
+            debug_renderer.show();
         }
     }
 
@@ -244,8 +245,10 @@ TODO:
 		- use with sfml
 		- only one window
 		- move all UI to it
-	- sfml -> SDL
 	- no dynamic dispatch
+    - function_name instead of functionName
+    - function_name(self) instead of self.function_name
+	-? sfml -> SDL
 
 - complete all nestest.nes
 - support illegal NES instructions

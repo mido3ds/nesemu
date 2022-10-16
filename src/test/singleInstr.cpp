@@ -35,8 +35,8 @@ static void memWrite16(RAM& ram, uint16_t a, uint16_t data) {
 }
 
 TEST_CASE("branch") {
-    Console dev;
-    dev.init();
+    Console dev {};
+    console_init(dev);
 
     MockRenderer mockRenderer;
 
@@ -55,11 +55,11 @@ TEST_CASE("branch") {
         memWrite(dev.ram, regs.pc, BCC);
         memWrite(dev.ram, regs.pc+1, addr);
 
-        dev.clock(&mockRenderer);
+        console_clock(dev, &mockRenderer);
 
         REQUIRE(regs.pc == oldpc+addr+2);
         REQUIRE(oldflags == regs.flags.byte);
-        REQUIRE(dev.cpu.cycles == instructionSet[BCC].cycles+1);
+        REQUIRE(dev.cpu.cycles == instruction_set[BCC].cycles+1);
     }
 
     SECTION("no-BCC") {
@@ -71,11 +71,11 @@ TEST_CASE("branch") {
         memWrite(dev.ram, regs.pc, BCC);
         memWrite(dev.ram, regs.pc+1, addr);
 
-        dev.clock(&mockRenderer);
+        console_clock(dev, &mockRenderer);
 
         REQUIRE(regs.pc == oldpc+2);
         REQUIRE(oldflags == regs.flags.byte);
-        REQUIRE(dev.cpu.cycles == instructionSet[BCC].cycles);
+        REQUIRE(dev.cpu.cycles == instruction_set[BCC].cycles);
     }
 
     SECTION("BCC-cross-page") {
@@ -88,11 +88,11 @@ TEST_CASE("branch") {
         memWrite(dev.ram, regs.pc, BCC);
         memWrite(dev.ram, regs.pc+1, addr);
 
-        dev.clock(&mockRenderer);
+        console_clock(dev, &mockRenderer);
 
         REQUIRE(regs.pc == oldpc+addr+2);
         REQUIRE(oldflags == regs.flags.byte);
-        REQUIRE(dev.cpu.cycles == instructionSet[BCC].cycles+1+1); // added penalty
+        REQUIRE(dev.cpu.cycles == instruction_set[BCC].cycles+1+1); // added penalty
     }
 
     SECTION("BEQ") {
@@ -104,11 +104,11 @@ TEST_CASE("branch") {
         memWrite(dev.ram, regs.pc, BEQ);
         memWrite(dev.ram, regs.pc+1, addr);
 
-        dev.clock(&mockRenderer);
+        console_clock(dev, &mockRenderer);
 
         REQUIRE(regs.pc == oldpc+addr+2);
         REQUIRE(oldflags == regs.flags.byte);
-        REQUIRE(dev.cpu.cycles == instructionSet[BEQ].cycles+1);
+        REQUIRE(dev.cpu.cycles == instruction_set[BEQ].cycles+1);
     }
 
     SECTION("no-BEQ") {
@@ -120,11 +120,11 @@ TEST_CASE("branch") {
         memWrite(dev.ram, regs.pc, BEQ);
         memWrite(dev.ram, regs.pc+1, addr);
 
-        dev.clock(&mockRenderer);
+        console_clock(dev, &mockRenderer);
 
         REQUIRE(regs.pc == oldpc+2);
         REQUIRE(oldflags == regs.flags.byte);
-        REQUIRE(dev.cpu.cycles == instructionSet[BEQ].cycles);
+        REQUIRE(dev.cpu.cycles == instruction_set[BEQ].cycles);
     }
 
     SECTION("BEQ") {
@@ -136,11 +136,11 @@ TEST_CASE("branch") {
         memWrite(dev.ram, regs.pc, BEQ);
         memWrite(dev.ram, regs.pc+1, addr);
 
-        dev.clock(&mockRenderer);
+        console_clock(dev, &mockRenderer);
 
         REQUIRE(regs.pc == oldpc+addr+2);
         REQUIRE(oldflags == regs.flags.byte);
-        REQUIRE(dev.cpu.cycles == instructionSet[BEQ].cycles+1);
+        REQUIRE(dev.cpu.cycles == instruction_set[BEQ].cycles+1);
     }
 
     SECTION("no-BEQ") {
@@ -152,17 +152,17 @@ TEST_CASE("branch") {
         memWrite(dev.ram, regs.pc, BEQ);
         memWrite(dev.ram, regs.pc+1, addr);
 
-        dev.clock(&mockRenderer);
+        console_clock(dev, &mockRenderer);
 
         REQUIRE(regs.pc == oldpc+2);
         REQUIRE(oldflags == regs.flags.byte);
-        REQUIRE(dev.cpu.cycles == instructionSet[BEQ].cycles);
+        REQUIRE(dev.cpu.cycles == instruction_set[BEQ].cycles);
     }
 }
 
 TEST_CASE("immediate-instructs") {
-    Console dev;
-    dev.init();
+    Console dev {};
+    console_init(dev);
 
     MockRenderer mockRenderer;
 
@@ -175,7 +175,7 @@ TEST_CASE("immediate-instructs") {
         regs.a = 0b01010101;
         memWrite(dev.ram, 0, 0x29);
         memWrite(dev.ram, 1, 0b00010001);
-        dev.clock(&mockRenderer);
+        console_clock(dev, &mockRenderer);
         REQUIRE(regs.a == (0b01010101 & 0b00010001));
         REQUIRE(regs.flags.bits.z == 0);
     }
@@ -184,7 +184,7 @@ TEST_CASE("immediate-instructs") {
         regs.a = 0b01010101;
         memWrite(dev.ram, 0, 0x29);
         memWrite(dev.ram, 1, 0b00000000);
-        dev.clock(&mockRenderer);
+        console_clock(dev, &mockRenderer);
         REQUIRE(regs.a == (0b01010101 & 0b00000000));
         REQUIRE(regs.flags.bits.z == 1);
     }
@@ -194,7 +194,7 @@ TEST_CASE("immediate-instructs") {
         regs.flags.bits.c = 1;
         memWrite(dev.ram, 0, 0x69);
         memWrite(dev.ram, 1, 99);
-        dev.clock(&mockRenderer);
+        console_clock(dev, &mockRenderer);
         REQUIRE(regs.a == (3 + 99 + 1));
         REQUIRE(regs.flags.bits.c == 0);
     }
@@ -203,7 +203,7 @@ TEST_CASE("immediate-instructs") {
         regs.a = 0xFF;
         memWrite(dev.ram, 0, 0x69);
         memWrite(dev.ram, 1, 1);
-        dev.clock(&mockRenderer);
+        console_clock(dev, &mockRenderer);
         REQUIRE(regs.a == 0);
         REQUIRE(regs.flags.bits.c == 1);
     }
@@ -212,7 +212,7 @@ TEST_CASE("immediate-instructs") {
         regs.a = 4;
         memWrite(dev.ram, 0, 0x69);
         memWrite(dev.ram, 1, -10);
-        dev.clock(&mockRenderer);
+        console_clock(dev, &mockRenderer);
         REQUIRE(regs.a == uint8_t(4-10));
         REQUIRE(regs.flags.bits.c == 0);
         REQUIRE(regs.flags.bits.v == 1);
@@ -220,8 +220,8 @@ TEST_CASE("immediate-instructs") {
 }
 
 TEST_CASE("implied-instructs") {
-    Console dev;
-    dev.init();
+    Console dev {};
+    console_init(dev);
 
     MockRenderer mockRenderer;
 
@@ -233,15 +233,15 @@ TEST_CASE("implied-instructs") {
     SECTION("PHP") {
         regs.flags.byte = 0xF5;
         memWrite(dev.ram, 0, 0x08);
-        dev.clock(&mockRenderer);
+        console_clock(dev, &mockRenderer);
         REQUIRE(regs.flags.byte == 0xF5);
         REQUIRE(memRead(dev.ram, STACK.start | (regs.sp+1)) == 0xF5);
     }
 }
 
 TEST_CASE("jmp-bug") {
-    Console dev;
-    dev.init();
+    Console dev {};
+    console_init(dev);
 
     MockRenderer mockRenderer;
 
@@ -255,7 +255,7 @@ TEST_CASE("jmp-bug") {
         memWrite(dev.ram, 0x00FF, 0x11);
         memWrite(dev.ram, 0x0000, 0xF5);
 
-        dev.clock(&mockRenderer);
+        console_clock(dev, &mockRenderer);
         REQUIRE(regs.pc == 0xF511);
     }
 
@@ -268,7 +268,7 @@ TEST_CASE("jmp-bug") {
         memWrite(dev.ram, 0x1511, 0x13);
         memWrite(dev.ram, 0x1512, 0x0F);
 
-        dev.clock(&mockRenderer);
+        console_clock(dev, &mockRenderer);
         REQUIRE(regs.pc == 0x0F13);
     }
 
@@ -278,7 +278,7 @@ TEST_CASE("jmp-bug") {
         memWrite(dev.ram, 0x00FE, 0x11);
         memWrite(dev.ram, 0x00FF, 0xF5);
 
-        dev.clock(&mockRenderer);
+        console_clock(dev, &mockRenderer);
         REQUIRE(regs.pc == 0xF511);
     }
 
@@ -291,7 +291,7 @@ TEST_CASE("jmp-bug") {
         memWrite(dev.ram, 0x1511, 0x13);
         memWrite(dev.ram, 0x1512, 0x0F);
 
-        dev.clock(&mockRenderer);
+        console_clock(dev, &mockRenderer);
         REQUIRE(regs.pc == 0x0F13);
     }
 }

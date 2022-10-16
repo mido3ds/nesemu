@@ -1,12 +1,12 @@
 #include "emulation/MMC0.h"
 #include "emulation/common.h"
 
-void MMC0::init(StrView romPath) {
-    rom.init(romPath);
+void mmc0_load_rom(MMC0& self, StrView rom_path) {
+    self.rom.load(rom_path);
 
-    const bool validMMC0Rom = rom.getMapperNumber() == 0 &&
-        (rom.prg.size() % (16*1024) == 0) &&
-        (rom.chr.size() == (8*1024));
+    const bool validMMC0Rom = self.rom.getMapperNumber() == 0 &&
+        (self.rom.prg.size() % (16*1024) == 0) &&
+        (self.rom.chr.size() == (8*1024));
     if (!validMMC0Rom) {
         panic("only supports MMC0");
     }
@@ -15,7 +15,7 @@ void MMC0::init(StrView romPath) {
 void MMC0::reset() {}
 
 bool MMC0::read(uint16_t addr, uint8_t& data) {
-    if (PRG_REGION.contains(addr)) {
+    if (rom.prg.size() > 0 && PRG_REGION.contains(addr)) {
         data = rom.prg[(addr - PRG_ROM_LOW.start) % rom.prg.size()];
 
         return true;

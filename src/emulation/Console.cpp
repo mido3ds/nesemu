@@ -5,57 +5,54 @@
 #include "emulation/ROM.h"
 #include "emulation/IORegs.h"
 
-void Console::init(StrView romPath) {
-    mmc0.init(romPath);
-    bus.attachToCPU(&mmc0);
-    bus.attachToPPU(&mmc0);
+void console_init(Console& self) {
+    self = {};
 
-    if (mmc0.rom.prg.size() == PRG_ROM_LOW.size()) {
-        disassembler.init(mmc0.rom.prg, PRG_ROM_UP.start);
+    self.ppu = ppu_new(&self.bus);
+    self.cpu = cpu_new(&self.bus);
+
+    bus_attach_to_cpu(self.bus, &self.mmc0);
+    bus_attach_to_cpu(self.bus, &self.ram);
+    bus_attach_to_cpu(self.bus, &self.io);
+    bus_attach_to_cpu(self.bus, &self.ppu);
+
+    bus_attach_to_ppu(self.bus, &self.mmc0);
+}
+
+void console_load_rom(Console& self, StrView romPath) {
+    mmc0_load_rom(self.mmc0, romPath);
+
+    if (self.mmc0.rom.prg.size() == PRG_ROM_LOW.size()) {
+        self.disassembler = disassembler_new(self.mmc0.rom.prg, PRG_ROM_UP.start);
     } else {
-        disassembler.init(mmc0.rom.prg, PRG_ROM_LOW.start);
+        self.disassembler = disassembler_new(self.mmc0.rom.prg, PRG_ROM_LOW.start);
     }
-
-    init();
 }
 
-void Console::init() {
-    ram.init();
-    bus.attachToCPU(&ram);
-
-    io.init();
-    bus.attachToCPU(&io);
-
-    ppu.init(&bus);
-    bus.attachToCPU(&ppu);
-
-    cpu.init(&bus);
-
-    cycles = 0;
+void console_reset(Console& self) {
+    bus_reset(self.bus);
+    cpu_reset(self.cpu);
+    self.cycles = 0;
 }
 
-void Console::reset() {
-    bus.reset();
-    cpu.reset();
-    cycles = 0;
-}
-
-void Console::clock(IRenderer* renderer) {
-    ppu.clock(renderer);
+void console_clock(Console& self, IRenderer* renderer) {
+    ppu_clock(self.ppu, renderer);
 
     // because ppu is 3x faster than cpu
-    if (cycles % 3 == 0) {
-        cpu.clock();
+    if (self.cycles % 3 == 0) {
+        cpu_clock(self.cpu);
     }
 
-    cycles++;
+    self.cycles++;
 }
 
-void Console::input(JoyPadInput joypad) {
+void console_input(Console& self, JoyPadInput joypad) {
     // TODO
 }
 
-void Disassembler::init(const Vec<uint8_t>& data, uint16_t addr) {
+Disassembler disassembler_new(const Vec<uint8_t>& data, uint16_t addr) {
+    Disassembler self {};
+
     uint8_t const* mem = data.data();
     int size = data.size();
 
@@ -64,7 +61,7 @@ void Disassembler::init(const Vec<uint8_t>& data, uint16_t addr) {
         Str instr;
         Str a(memory::tmp()), b(memory::tmp());
 
-        auto name = instructionSet[mem[0]].name;
+        auto name = instruction_set[mem[0]].name;
         if (name == "???") {
             str_push(instr, "{:02X} ?????", mem[0]);
         } else {
@@ -77,7 +74,7 @@ void Disassembler::init(const Vec<uint8_t>& data, uint16_t addr) {
         if (size >= 3) { str_push(b, "{:02X}", mem[1]); }
         else           { b = "??"; }
 
-        switch (instructionSet[mem[0]].mode ) {
+        switch (instruction_set[mem[0]].mode ) {
         case AddressMode::Implicit:
             break;
         case AddressMode::Accumulator:
@@ -133,23 +130,25 @@ void Disassembler::init(const Vec<uint8_t>& data, uint16_t addr) {
         default: unreachable();
         }
 
-        assembly[addr] = instr;
+        self.assembly[addr] = instr;
 
         size -= consumedBytes;
         mem  += consumedBytes;
         addr += consumedBytes;
     }
+
+    return std::move(self);
 }
 
-Vec<Str> Disassembler::get(const uint16_t addr, const uint16_t n) const {
+Vec<Str> disassembler_get(const Disassembler& self, const uint16_t addr, const uint16_t n) {
     Vec<Str> ret(2*n+1, "$????: ???");
 
-    auto tmpItr = assembly.lower_bound(addr);
+    auto tmpItr = self.assembly.lower_bound(addr);
     auto fItr = tmpItr; // forward itr, addr : end
     auto rItr = make_reverse_iterator(tmpItr); // reverse itr, addr-1 : rend
 
     // addr
-    if (fItr != assembly.end()) {
+    if (fItr != self.assembly.end()) {
         if (fItr->first == addr) {
             ret[n] = str_format("${:04X}: {}", fItr->first, fItr->second);
             fItr++;
@@ -159,12 +158,12 @@ Vec<Str> Disassembler::get(const uint16_t addr, const uint16_t n) const {
     }
 
     // [addr+1..addr+n]
-    for (auto i = n+1; fItr != assembly.end() && i < ret.size(); fItr++, i++) {
+    for (auto i = n+1; fItr != self.assembly.end() && i < ret.size(); fItr++, i++) {
         ret[i] = str_format("${:04X}: {}", fItr->first, fItr->second);
     }
 
     // [addr-n..addr-1]
-    for (auto i = n-1; rItr != assembly.rend() && i >= 0; rItr++, i--) {
+    for (auto i = n-1; rItr != self.assembly.rend() && i >= 0; rItr++, i--) {
         ret[i] = str_format("${:04X}: {}", rItr->first, rItr->second);
     }
 

@@ -43,7 +43,7 @@ int SFMLRenderer::text(const Str& s, int x, int y, double scaleW, double scaleH,
     text.setPosition(x, y);
     text.setScale(scaleW, scaleH);
     text.setColor(sf::Color(c.r,c.g,c.b));
-    text.setCharacterSize(Config::fontSize);
+    text.setCharacterSize(Config::font_size);
     text.setStyle(sf::Text::Underlined);
 
     auto sc = text.getScale();

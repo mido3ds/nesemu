@@ -4,7 +4,7 @@
 #include "utils.h"
 #include "emulation/ROM.h"
 
-void ROM::init(StrView path) {
+void ROM::load(StrView path) {
     INFO("reading rom from {}", path);
 
     auto file = file_content_str(path.begin(), memory::tmp());

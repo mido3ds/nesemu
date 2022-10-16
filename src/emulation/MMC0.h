@@ -7,8 +7,6 @@
 struct MMC0: public ICPUBusAttachable, public IPPUBusAttachable {
     ROM rom;
 
-    void init(StrView romPath);
-
     // from both ICPUBusAttachable, IPPUBusAttachable
     virtual void reset();
 
@@ -20,3 +18,5 @@ struct MMC0: public ICPUBusAttachable, public IPPUBusAttachable {
     virtual bool ppuRead(uint16_t addr, uint8_t& data);
     virtual bool ppuWrite(uint16_t addr, uint8_t data);
 };
+
+void mmc0_load_rom(MMC0& self, StrView rom_path);

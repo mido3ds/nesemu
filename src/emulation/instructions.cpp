@@ -7,7 +7,7 @@
 #include "emulation/instructions.h"
 
 void ADC(CPU& cpu) {
-    auto v = cpu.getArgValue();
+    auto v = cpu.arg_value;
 
     uint16_t result = cpu.regs.a + v + cpu.regs.flags.bits.c;
 
@@ -33,7 +33,7 @@ void ANC(CPU& cpu) {
 }
 
 void AND(CPU& cpu) {
-    auto v = cpu.getArgValue();
+    auto v = cpu.arg_value;
 
     cpu.regs.a = cpu.regs.a & v;
     cpu.regs.flags.bits.z = cpu.regs.a == 0;
@@ -45,14 +45,14 @@ void ARR(CPU& cpu) {
 }
 
 void ASL(CPU& cpu) {
-    auto v = cpu.getArgValue();
+    auto v = cpu.arg_value;
 
     cpu.regs.flags.bits.c = v >> 7;
     v <<= 1;
     cpu.regs.flags.bits.z = v == 0; // TODO: not sure if Accumulator only or any value
     cpu.regs.flags.bits.n = v >> 7;
 
-    cpu.writeArg(v);
+    cpu.write_arg(v);
 }
 
 void AXS(CPU& cpu) {
@@ -61,36 +61,36 @@ void AXS(CPU& cpu) {
 
 void BCC(CPU& cpu) {
     if (!cpu.regs.flags.bits.c) {
-        auto fetched = (int8_t)cpu.getArgValue();
+        auto fetched = (int8_t)cpu.arg_value;
         cpu.regs.pc += fetched;
         cpu.cycles++;
     } else {
-        cpu.crossPagePenalty = false;
+        cpu.cross_page_penalty = false;
     }
 }
 
 void BCS(CPU& cpu) {
     if (cpu.regs.flags.bits.c) {
-        auto fetched = (int8_t)cpu.getArgValue();
+        auto fetched = (int8_t)cpu.arg_value;
         cpu.regs.pc += fetched;
         cpu.cycles++;
     } else {
-        cpu.crossPagePenalty = false;
+        cpu.cross_page_penalty = false;
     }
 }
 
 void BEQ(CPU& cpu) {
     if (cpu.regs.flags.bits.z) {
-        auto fetched = (int8_t)cpu.getArgValue();
+        auto fetched = (int8_t)cpu.arg_value;
         cpu.regs.pc += fetched;
         cpu.cycles++;
     } else {
-        cpu.crossPagePenalty = false;
+        cpu.cross_page_penalty = false;
     }
 }
 
 void BIT(CPU& cpu) {
-    auto v = cpu.getArgValue();
+    auto v = cpu.arg_value;
 
     cpu.regs.flags.bits.z = (v & cpu.regs.a) == 0;
     cpu.regs.flags.bits.v = v >> 6;
@@ -99,31 +99,31 @@ void BIT(CPU& cpu) {
 
 void BMI(CPU& cpu) {
     if (cpu.regs.flags.bits.n) {
-        auto fetched = (int8_t)cpu.getArgValue();
+        auto fetched = (int8_t)cpu.arg_value;
         cpu.regs.pc += fetched;
         cpu.cycles++;
     } else {
-        cpu.crossPagePenalty = false;
+        cpu.cross_page_penalty = false;
     }
 }
 
 void BNE(CPU& cpu) {
     if (!cpu.regs.flags.bits.z) {
-        auto fetched = (int8_t)cpu.getArgValue();
+        auto fetched = (int8_t)cpu.arg_value;
         cpu.regs.pc += fetched;
         cpu.cycles++;
     } else {
-        cpu.crossPagePenalty = false;
+        cpu.cross_page_penalty = false;
     }
 }
 
 void BPL(CPU& cpu) {
     if (!cpu.regs.flags.bits.n) {
-        auto fetched = (int8_t)cpu.getArgValue();
+        auto fetched = (int8_t)cpu.arg_value;
         cpu.regs.pc += fetched;
         cpu.cycles++;
     } else {
-        cpu.crossPagePenalty = false;
+        cpu.cross_page_penalty = false;
     }
 }
 
@@ -139,21 +139,21 @@ void BRK(CPU& cpu) {
 
 void BVC(CPU& cpu) {
     if (!cpu.regs.flags.bits.v) {
-        auto fetched = (int8_t)cpu.getArgValue();
+        auto fetched = (int8_t)cpu.arg_value;
         cpu.regs.pc += fetched;
         cpu.cycles++;
     } else {
-        cpu.crossPagePenalty = false;
+        cpu.cross_page_penalty = false;
     }
 }
 
 void BVS(CPU& cpu) {
     if (cpu.regs.flags.bits.v) {
-        auto fetched = (int8_t)cpu.getArgValue();
+        auto fetched = (int8_t)cpu.arg_value;
         cpu.regs.pc += fetched;
         cpu.cycles++;
     } else {
-        cpu.crossPagePenalty = false;
+        cpu.cross_page_penalty = false;
     }
 }
 
@@ -174,7 +174,7 @@ void CLV(CPU& cpu) {
 }
 
 void CMP(CPU& cpu) {
-    auto v = cpu.getArgValue();
+    auto v = cpu.arg_value;
     uint8_t result = cpu.regs.a - v;
     cpu.regs.flags.bits.c = result > 0;
     cpu.regs.flags.bits.z = result == 0;
@@ -182,7 +182,7 @@ void CMP(CPU& cpu) {
 }
 
 void CPX(CPU& cpu) {
-    auto v = cpu.getArgValue();
+    auto v = cpu.arg_value;
     uint8_t result = cpu.regs.x - v;
     cpu.regs.flags.bits.c = result > 0;
     cpu.regs.flags.bits.z = result == 0;
@@ -190,7 +190,7 @@ void CPX(CPU& cpu) {
 }
 
 void CPY(CPU& cpu) {
-    auto v = cpu.getArgValue();
+    auto v = cpu.arg_value;
     uint8_t result = cpu.regs.y - v;
     cpu.regs.flags.bits.c = result > 0;
     cpu.regs.flags.bits.z = result == 0;
@@ -202,13 +202,13 @@ void DCP(CPU& cpu) {
 }
 
 void DEC(CPU& cpu) {
-    auto v = cpu.getArgValue();
+    auto v = cpu.arg_value;
     v--;
 
     cpu.regs.flags.bits.z = v == 0;
     cpu.regs.flags.bits.n = v >> 7;
 
-    cpu.writeArg(v);
+    cpu.write_arg(v);
 }
 
 void DEX(CPU& cpu) {
@@ -224,7 +224,7 @@ void DEY(CPU& cpu) {
 }
 
 void EOR(CPU& cpu) {
-    auto v = cpu.getArgValue();
+    auto v = cpu.arg_value;
     cpu.regs.a ^= v;
 
     cpu.regs.flags.bits.z = cpu.regs.a == 0;
@@ -232,13 +232,13 @@ void EOR(CPU& cpu) {
 }
 
 void INC(CPU& cpu) {
-    auto v = cpu.getArgValue();
+    auto v = cpu.arg_value;
     v++;
 
     cpu.regs.flags.bits.z = v == 0;
     cpu.regs.flags.bits.n = v >> 7;
 
-    cpu.writeArg(v);
+    cpu.write_arg(v);
 }
 
 void INX(CPU& cpu) {
@@ -258,13 +258,13 @@ void ISC(CPU& cpu) {
 }
 
 void JMP(CPU& cpu) {
-    cpu.reprepareJMPArg();
-    cpu.regs.pc = cpu.getArgAddr();
+    cpu.reprepare_jmp_arg();
+    cpu.regs.pc = cpu.arg_addr;
 }
 
 void JSR(CPU& cpu) {
     cpu.push16(cpu.regs.pc);
-    cpu.regs.pc = cpu.getArgAddr();
+    cpu.regs.pc = cpu.arg_addr;
 }
 
 void KIL(CPU& cpu) {
@@ -280,7 +280,7 @@ void LAX(CPU& cpu) {
 }
 
 void LDA(CPU& cpu) {
-    auto v = cpu.getArgValue();
+    auto v = cpu.arg_value;
     cpu.regs.a = v;
 
     cpu.regs.flags.bits.z = cpu.regs.a == 0;
@@ -288,7 +288,7 @@ void LDA(CPU& cpu) {
 }
 
 void LDX(CPU& cpu) {
-    auto v = cpu.getArgValue();
+    auto v = cpu.arg_value;
     cpu.regs.x = v;
 
     cpu.regs.flags.bits.z = cpu.regs.x == 0;
@@ -296,7 +296,7 @@ void LDX(CPU& cpu) {
 }
 
 void LDY(CPU& cpu) {
-    auto v = cpu.getArgValue();
+    auto v = cpu.arg_value;
     cpu.regs.y = v;
 
     cpu.regs.flags.bits.z = cpu.regs.y == 0;
@@ -304,7 +304,7 @@ void LDY(CPU& cpu) {
 }
 
 void LSR(CPU& cpu) {
-    auto v = cpu.getArgValue();
+    auto v = cpu.arg_value;
     cpu.regs.flags.bits.c = v & 1;
 
     v >>= 1;
@@ -312,13 +312,13 @@ void LSR(CPU& cpu) {
     cpu.regs.flags.bits.z = v == 0;
     cpu.regs.flags.bits.n = 0;
 
-    cpu.writeArg(v);
+    cpu.write_arg(v);
 }
 
 void NOP(CPU& cpu) {}
 
 void ORA(CPU& cpu) {
-    auto v = cpu.getArgValue();
+    auto v = cpu.arg_value;
     cpu.regs.a |= v;
 
     cpu.regs.flags.bits.z = cpu.regs.a == 0;
@@ -346,7 +346,7 @@ void RLA(CPU& cpu) {
 }
 
 void ROL(CPU& cpu) {
-    auto v = cpu.getArgValue();
+    auto v = cpu.arg_value;
     uint8_t oldCarry = cpu.regs.flags.bits.c;
     cpu.regs.flags.bits.c = v >> 7;
 
@@ -356,11 +356,11 @@ void ROL(CPU& cpu) {
     cpu.regs.flags.bits.z = v == 0;
     cpu.regs.flags.bits.n = v >> 7;
 
-    cpu.writeArg(v);
+    cpu.write_arg(v);
 }
 
 void ROR(CPU& cpu) {
-    auto v = cpu.getArgValue();
+    auto v = cpu.arg_value;
     uint8_t oldCarry = cpu.regs.flags.bits.c;
     cpu.regs.flags.bits.c = v & 1;
 
@@ -370,7 +370,7 @@ void ROR(CPU& cpu) {
     cpu.regs.flags.bits.z = v == 0;
     cpu.regs.flags.bits.n = oldCarry;
 
-    cpu.writeArg(v);
+    cpu.write_arg(v);
 }
 
 void RRA(CPU& cpu) {
@@ -391,7 +391,7 @@ void SAX(CPU& cpu) {
 }
 
 void SBC(CPU& cpu) {
-    auto v = cpu.getArgValue();
+    auto v = cpu.arg_value;
     uint16_t result = cpu.regs.a - v - (~ cpu.regs.flags.bits.c);
 
     cpu.regs.flags.bits.c = (uint16_t)result > UINT8_MAX;
@@ -432,15 +432,15 @@ void SRE(CPU& cpu) {
 }
 
 void STA(CPU& cpu) {
-    cpu.writeArg(cpu.regs.a);
+    cpu.write_arg(cpu.regs.a);
 }
 
 void STX(CPU& cpu) {
-    cpu.writeArg(cpu.regs.x);
+    cpu.write_arg(cpu.regs.x);
 }
 
 void STY(CPU& cpu) {
-    cpu.writeArg(cpu.regs.y);
+    cpu.write_arg(cpu.regs.y);
 }
 
 void TAS(CPU& cpu) {
@@ -488,7 +488,7 @@ void XAA(CPU& cpu) {
 }
 
 #define _DEF(x) x, #x
-const InstructionSet instructionSet{
+const InstructionSet instruction_set{
     Instruction{_DEF(BRK), AddressMode::Implicit,        7, 0},
     Instruction{_DEF(ORA), AddressMode::IndexedIndirect, 6, 0},
     Instruction{_DEF(KIL), AddressMode::Implicit,        0, 0},

@@ -36,8 +36,9 @@ ostream& operator<<(ostream& os, const TestLogLine& line) {
 struct { uint16_t x, y; } ppu; // TODO: ??
 
 TEST_CASE("nestest") {
-    Console dev;
-    REQUIRE(dev.init(ASSETS_DIR "/nestest.nes") == 0);
+    Console dev {};
+    console_init(dev);
+    console_load_rom(ASSETS_DIR "/nestest.nes");
 
     auto& regs = dev.cpu.regs;
 

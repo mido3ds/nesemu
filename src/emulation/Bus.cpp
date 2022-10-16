@@ -1,22 +1,22 @@
 #include "emulation/Bus.h"
 #include "utils.h"
 
-void Bus::attachToCPU(ICPUBusAttachable* attachment) {
+void bus_attach_to_cpu(Bus& self, ICPUBusAttachable* attachment) {
     my_assert(attachment);
-    cpuAttachments.push_back(attachment);
+    self.cpuAttachments.push_back(attachment);
 }
 
-void Bus::attachToPPU(IPPUBusAttachable* attachment) {
+void bus_attach_to_ppu(Bus& self, IPPUBusAttachable* attachment) {
     my_assert(attachment);
-    ppuAttachments.push_back(attachment);
+    self.ppuAttachments.push_back(attachment);
 }
 
-void Bus::reset() {
-    for (auto& at:cpuAttachments) {
+void bus_reset(Bus& self) {
+    for (auto& at : self.cpuAttachments) {
         at->reset();
     }
 
-    for (auto& at:ppuAttachments) {
+    for (auto& at : self.ppuAttachments) {
         at->reset();
     }
 }
