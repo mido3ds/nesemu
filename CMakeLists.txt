@@ -68,13 +68,11 @@ target_sources(nesemu
         src/test/testMain.cpp
         src/test/nestest.cpp
         src/gui/MockRenderer.h
-        src/gui/App.h
         src/gui/SFMLImageRenderer.cpp
         src/gui/SFMLRenderer.cpp
         src/gui/SFMLImageRenderer.h
         src/gui/SFMLRenderer.h
         src/gui/IRenderer.h
-        src/gui/App.cpp
         src/gui/MockRenderer.cpp
         src/emulation/common.h
         src/emulation/ICPUBusAttachable.h
@@ -98,7 +96,6 @@ target_sources(nesemu
         src/emulation/PPU.h
         src/emulation/Bus.h
         src/emulation/CPU.cpp
-        src/emulation/console_old.h
         src/emulation/common.cpp
         src/emulation/MMC.h
         src/emulation/MMC.cpp
