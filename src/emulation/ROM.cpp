@@ -4,7 +4,7 @@
 #include "utils.h"
 #include "emulation/ROM.h"
 
-int ROM::init(StrView path) {
+void ROM::init(StrView path) {
     INFO("reading rom from {}", path);
 
     auto file = file_content_str(path.begin(), memory::tmp());
@@ -13,8 +13,7 @@ int ROM::init(StrView path) {
     // check header
     const unsigned char constants[] = {0x4E, 0x45, 0x53, 0x1A};
     if (file.size() < 16 || memcmp(buffer, constants, 4) != 0) {
-        ERROR("no valid header");
-        return 1;
+        panic("no valid header");
     }
 
     // copy rest of header
@@ -34,8 +33,7 @@ int ROM::init(StrView path) {
 
     auto prgSize = getPRGRomSize();
     if (prgPtr+prgSize > buffer+file.size()) {
-        ERROR("no PRG ROM");
-        return 1;
+        panic("no PRG ROM");
     }
 
     prg.clear();
@@ -46,8 +44,7 @@ int ROM::init(StrView path) {
 
     auto chrSize = getCHRRomSize();
     if (chrPtr+chrSize > buffer+file.size()) {
-        ERROR("no CHR ROM");
-        return 1;
+        panic("no CHR ROM");
     }
 
     chr.clear();
@@ -55,8 +52,7 @@ int ROM::init(StrView path) {
 
     // no playchoice
     if (header.flags7.bits.hasPlayChoice) {
-        ERROR("emulator doesnt support PlayChoice");
-        WARNING("ignoring PlayChoice");
+        WARNING("emulator doesnt support PlayChoice, ignoring PlayChoice");
     }
 
     INFO("rom mapper num = {}", getMapperNumber());
@@ -73,7 +69,6 @@ int ROM::init(StrView path) {
         INFO("rom ignores mirroring");
     }
     INFO("done reading ROM");
-    return 0;
 }
 
 uint16_t ROM::getMapperNumber() const {

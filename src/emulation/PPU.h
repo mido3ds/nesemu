@@ -9,7 +9,7 @@ struct PPU: public ICPUBusAttachable {
 
     uint16_t cycles = 0, row = 0, col = 0;
 
-    int init(Bus* bus);
+    void init(Bus* bus);
 
     void clock(IRenderer* renderer);
 

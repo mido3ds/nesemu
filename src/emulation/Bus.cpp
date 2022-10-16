@@ -1,24 +1,14 @@
 #include "emulation/Bus.h"
 #include "utils.h"
 
-int Bus::attach(std::shared_ptr<ICPUBusAttachable> attachment) {
-    if (attachment) {
-        cpuAttachments.push_back(attachment);
-        return 0;
-    }
-
-    ERROR("attaching null to bus");
-    return 1;
+void Bus::attach(std::shared_ptr<ICPUBusAttachable> attachment) {
+    my_assert(attachment);
+    cpuAttachments.push_back(attachment);
 }
 
-int Bus::attach(std::shared_ptr<IPPUBusAttachable> attachment) {
-    if (attachment) {
-        ppuAttachments.push_back(attachment);
-        return 0;
-    }
-
-    ERROR("attaching null to bus");
-    return 1;
+void Bus::attach(std::shared_ptr<IPPUBusAttachable> attachment) {
+    my_assert(attachment);
+    ppuAttachments.push_back(attachment);
 }
 
 void Bus::reset() {

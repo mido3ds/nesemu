@@ -36,7 +36,7 @@ static void memWrite16(RAM& memory, uint16_t a, uint16_t data) {
 
 TEST_CASE("branch") {
     Console dev;
-    REQUIRE(dev.init() == 0);
+    dev.init();
 
     MockRenderer mockRenderer;
 
@@ -164,7 +164,7 @@ TEST_CASE("branch") {
 
 TEST_CASE("immediate-instructs") {
     Console dev;
-    REQUIRE(dev.init() == 0);
+    dev.init();
 
     MockRenderer mockRenderer;
 
@@ -224,7 +224,7 @@ TEST_CASE("immediate-instructs") {
 
 TEST_CASE("implied-instructs") {
     Console dev;
-    REQUIRE(dev.init() == 0);
+    dev.init();
 
     MockRenderer mockRenderer;
 
@@ -245,7 +245,7 @@ TEST_CASE("implied-instructs") {
 
 TEST_CASE("jmp-bug") {
     Console dev;
-    REQUIRE(dev.init() == 0);
+    dev.init();
 
     MockRenderer mockRenderer;
 

@@ -10,8 +10,8 @@ struct Bus {
     Vec<std::shared_ptr<ICPUBusAttachable>> cpuAttachments;
     Vec<std::shared_ptr<IPPUBusAttachable>> ppuAttachments;
 
-    int attach(std::shared_ptr<ICPUBusAttachable> attachment);
-    int attach(std::shared_ptr<IPPUBusAttachable> attachment);
+    void attach(std::shared_ptr<ICPUBusAttachable> attachment);
+    void attach(std::shared_ptr<IPPUBusAttachable> attachment);
 
     void reset();
 

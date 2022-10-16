@@ -1,30 +1,23 @@
 #include "gui/SFMLRenderer.h"
 #include "Config.h"
 
-int SFMLRenderer::init(sf::RenderWindow* window, Config::Rect resolution) {
+void SFMLRenderer::init(sf::RenderWindow* window, Config::Rect resolution) {
     if (resolution.w <= 0 || resolution.h <= 0) {
-        ERROR("invalid resolution or windsize");
-        return 1;
+        panic("invalid resolution and/or windsize");
     }
 
     this->resolution = resolution;
 
     this->window = window;
-    if (!window) {
-        ERROR("null window");
-        return 1;
-    }
+    my_assert(window);
 
     if (!texture.create(window->getSize().x, window->getSize().y)) {
-        ERROR("coulndt create texture");
-        return 1;
+        panic("coulndt create texture");
     }
     texture.clear();
 
     sf::View view(sf::FloatRect(0, 0, resolution.w, resolution.h));
     texture.setView(view);
-
-    return 0;
 }
 
 void SFMLRenderer::pixel(int x, int y, Color c, uint8_t a) {

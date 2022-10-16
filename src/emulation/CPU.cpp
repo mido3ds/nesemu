@@ -2,9 +2,9 @@
 #include "emulation/instructions.h"
 #include "utils.h"
 
-int CPU::init(Bus* bus) {
-    if (!bus) { return 1; }
+void CPU::init(Bus* bus) {
     this->bus = bus;
+    my_assert(bus);
 
     // https://wiki.nesdev.com/w/index.php/CPU_power_up_state#At_power-up
     regs.pc = read16(RH);
@@ -24,7 +24,6 @@ int CPU::init(Bus* bus) {
 
     // https://wiki.nesdev.com/w/index.php/PPU_power_up_state
     // TODO: set all ppu state
-    return 0;
 }
 
 void CPU::reset() {

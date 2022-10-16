@@ -1,11 +1,9 @@
 #include "emulation/PPU.h"
 #include "Config.h"
 
-int PPU::init(Bus* bus) {
-    if (!bus) { return 1; }
+void PPU::init(Bus* bus) {
     this->bus = bus;
-
-    return 0;
+    my_assert(bus);
 }
 
 void PPU::clock(IRenderer* renderer) {

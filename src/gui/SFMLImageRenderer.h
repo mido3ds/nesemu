@@ -14,7 +14,7 @@ struct SFMLImageRenderer: public IRenderer {
     sf::Sprite sprite;
     sf::Texture texture;
 
-    int init(sf::RenderWindow* window, Config::Rect resolution);
+    void init(sf::RenderWindow* window, Config::Rect resolution);
 
     virtual void clear(Color c, uint8_t a);
     virtual void pixel(int x, int y, Color c, uint8_t a);

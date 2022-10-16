@@ -24,9 +24,7 @@ int main(int argc, char** argv) {
     }
 
     Console dev;
-    if (auto err = dev.init(argv[1])) {
-        return err;
-    }
+    dev.init(argv[1]);
 
     sf::RenderWindow mainWind, debugWind;
     SFMLRenderer memRenderer, debugRenderer;
@@ -46,13 +44,8 @@ int main(int argc, char** argv) {
         title.c_str(), sf::Style::Titlebar|sf::Style::Close);
     mainWind.setPosition(sf::Vector2i(0,0));
 
-    if (auto err = memRenderer.init(&mainWind, Config::mainWind)) {
-        return err;
-    }
-
-    if (auto err = devRenderer.init(&mainWind, Config::resolution)) {
-        return err;
-    }
+    memRenderer.init(&mainWind, Config::mainWind);
+    devRenderer.init(&mainWind, Config::resolution);
 
     // debug window
     debugWind.create(sf::VideoMode(Config::debugWind.w, Config::debugWind.h),
@@ -61,9 +54,7 @@ int main(int argc, char** argv) {
     auto mpos = mainWind.getPosition();
     debugWind.setPosition(sf::Vector2i(mpos.x+Config::mainWind.w+5, mpos.y));
 
-    if (auto err = debugRenderer.init(&debugWind, Config::debugWind)) {
-        return err;
-    }
+    debugRenderer.init(&debugWind, Config::debugWind);
 
     // font
     if (!mainFont.loadFromFile(Config::fontPath)) {
@@ -254,10 +245,8 @@ TODO:
 		- only one window
 		- move all UI to it
 	- sfml -> SDL
-	- my utils
 	- no smart ptrs
 	- no dynamic dispatch
-	- panic instead of handle errors
 
 - complete all nestest.nes
 - support illegal NES instructions

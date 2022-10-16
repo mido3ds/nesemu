@@ -54,7 +54,7 @@ struct ROM {
     uint32_t getPRGRomSize() const;
     uint32_t getCHRRomSize() const;
 
-    int init(StrView path);
+    void init(StrView path);
 
     uint16_t getMapperNumber() const;
 };

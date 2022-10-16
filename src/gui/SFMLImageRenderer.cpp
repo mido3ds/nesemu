@@ -1,28 +1,20 @@
 #include "gui/SFMLImageRenderer.h"
 #include "Config.h"
 
-int SFMLImageRenderer::init(sf::RenderWindow* window, Config::Rect resolution) {
+void SFMLImageRenderer::init(sf::RenderWindow* window, Config::Rect resolution) {
     if (resolution.w <= 0 || resolution.h <= 0) {
-        ERROR("invalid resolution or windsize");
-        return 1;
+        panic("invalid resolution and/or windsize");
     }
 
     this->resolution = resolution;
-
     this->window = window;
-    if (!window) {
-        ERROR("null window");
-        return 1;
-    }
+    my_assert(window);
 
     image.create(resolution.w, resolution.h);
 
     if (!texture.create(resolution.w, resolution.h)) {
-        ERROR("texture.create failed");
-        return 1;
+        panic("texture.create failed");
     }
-
-    return 0;
 }
 
 void SFMLImageRenderer::pixel(int x, int y, Color c, uint8_t a) {

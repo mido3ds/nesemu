@@ -27,8 +27,8 @@ struct Console {
     uint64_t cycles = 0;
     Disassembler disassembler;
 
-    int init(StrView romPath); // with rom
-    int init();
+    void init(StrView romPath); // with rom
+    void init();
 
     void reset();
     void clock(IRenderer* renderer);

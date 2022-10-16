@@ -27,7 +27,7 @@ struct CPURegs {
 };
 
 struct CPU {
-    int init(Bus* bus);
+    void init(Bus* bus);
 
     void reset();
     void clock();
