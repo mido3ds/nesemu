@@ -163,7 +163,7 @@ int main(int argc, char** argv) {
                 for (int i = 0; i < MEM_WIDTH; i++) {
                     int x = MEM_HPADDING+53+i*30;
                     uint8_t data;
-                    if (dev.ram->read((memoryStart+j)*MEM_WIDTH+i, data)) {
+                    if (dev.ram.read((memoryStart+j)*MEM_WIDTH+i, data)) {
                         memRenderer.text(str_tmpf("{:02X}", data), x, y, 1, 1, (Font*)&mainFont, {255,255,0}, 0, 0);
                     }
                 }
@@ -245,7 +245,6 @@ TODO:
 		- only one window
 		- move all UI to it
 	- sfml -> SDL
-	- no smart ptrs
 	- no dynamic dispatch
 
 - complete all nestest.nes

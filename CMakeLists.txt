@@ -81,8 +81,8 @@ target_sources(nesemu
         src/emulation/Console.h
         src/emulation/vram.cpp
         src/emulation/Console.cpp
-        src/emulation/MMCs/MMC0.cpp
-        src/emulation/MMCs/MMC0.h
+        src/emulation/MMC0.cpp
+        src/emulation/MMC0.h
         src/emulation/ROM.cpp
         src/emulation/RAM.h
         src/emulation/CPU.h
@@ -95,8 +95,6 @@ target_sources(nesemu
         src/emulation/Bus.h
         src/emulation/CPU.cpp
         src/emulation/common.cpp
-        src/emulation/MMC.h
-        src/emulation/MMC.cpp
         src/emulation/RAM.cpp
         src/emulation/IORegs.cpp
         src/utils.h

@@ -7,6 +7,8 @@
 #include "emulation/Bus.h"
 #include "emulation/CPU.h"
 #include "emulation/PPU.h"
+#include "emulation/MMC0.h"
+#include "emulation/IORegs.h"
 
 struct JoyPadInput {
     bool a;
@@ -32,9 +34,11 @@ struct Disassembler {
 
 struct Console {
     CPU cpu;
-    std::shared_ptr<PPU> ppu;
-    std::shared_ptr<RAM> ram;
+    PPU ppu;
+    RAM ram;
     Bus bus;
+    MMC0 mmc0;
+    IORegs io;
     uint64_t cycles = 0;
     Disassembler disassembler;
 

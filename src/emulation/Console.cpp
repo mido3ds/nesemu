@@ -1,44 +1,33 @@
-#include <memory>
 #include <iterator>
 
 #include "emulation/Console.h"
 #include "emulation/instructions.h"
 #include "emulation/ROM.h"
-#include "emulation/MMC.h"
 #include "emulation/IORegs.h"
 
 void Console::init(StrView romPath) {
-    ROM rom;
-    rom.init(romPath);
+    mmc0.init(romPath);
+    bus.attachToCPU(&mmc0);
+    bus.attachToPPU(&mmc0);
 
-    disassembler.init(rom.prg, PRG_ROM_LOW.start);
-    if (rom.prg.size() == PRG_ROM_LOW.size()) {
-        disassembler.init(rom.prg, PRG_ROM_UP.start);
+    if (mmc0.rom.prg.size() == PRG_ROM_LOW.size()) {
+        disassembler.init(mmc0.rom.prg, PRG_ROM_UP.start);
+    } else {
+        disassembler.init(mmc0.rom.prg, PRG_ROM_LOW.start);
     }
-
-    // mmc
-    auto mmc = MMC::fromROM(rom);
-    bus.attach(std::static_pointer_cast<ICPUBusAttachable>(mmc));
-    bus.attach(std::static_pointer_cast<IPPUBusAttachable>(mmc));
 
     init();
 }
 
 void Console::init() {
-    // ram
-    ram = std::make_shared<RAM>();
-    ram->init();
-    bus.attach(ram);
+    ram.init();
+    bus.attachToCPU(&ram);
 
-    // io
-    auto io = std::make_shared<IORegs>();
-    io->init();
-    bus.attach(io);
+    io.init();
+    bus.attachToCPU(&io);
 
-    // ppu
-    ppu = std::make_shared<PPU>();
-    ppu->init(&bus);
-    bus.attach(ppu);
+    ppu.init(&bus);
+    bus.attachToCPU(&ppu);
 
     cpu.init(&bus);
 
@@ -52,7 +41,7 @@ void Console::reset() {
 }
 
 void Console::clock(IRenderer* renderer) {
-    ppu->clock(renderer);
+    ppu.clock(renderer);
 
     // because ppu is 3x faster than cpu
     if (cycles % 3 == 0) {

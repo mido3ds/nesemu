@@ -1,10 +1,13 @@
 #pragma once
 
-#include "emulation/MMC.h"
+#include "emulation/ROM.h"
+#include "emulation/ICPUBusAttachable.h"
+#include "emulation/IPPUBusAttachable.h"
 
-class MMC0: public MMC {
-public:
-    static bool valid(ROM const& rom);
+struct MMC0: public ICPUBusAttachable, public IPPUBusAttachable {
+    ROM rom;
+
+    void init(StrView romPath);
 
     // from both ICPUBusAttachable, IPPUBusAttachable
     virtual void reset();

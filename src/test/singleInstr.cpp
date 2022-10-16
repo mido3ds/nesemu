@@ -10,28 +10,28 @@
 
 #include <catch2/catch.hpp>
 
-static uint8_t memRead(RAM& memory, uint16_t a) {
+static uint8_t memRead(RAM& ram, uint16_t a) {
     uint8_t data;
-    memory.read(a, data);
+    ram.read(a, data);
     return data;
 }
 
-static uint16_t memRead16(RAM& memory, uint16_t a) {
+static uint16_t memRead16(RAM& ram, uint16_t a) {
     uint8_t up, low;
 
-    memory.read(a, up);
-    memory.read(a, low);
+    ram.read(a, up);
+    ram.read(a, low);
 
     return low | up << 8;
 }
 
-static void memWrite(RAM& memory, uint16_t a, uint8_t data) {
-    memory.write(a, data);
+static void memWrite(RAM& ram, uint16_t a, uint8_t data) {
+    ram.write(a, data);
 }
 
-static void memWrite16(RAM& memory, uint16_t a, uint16_t data) {
-    memory.write(a, data);
-    memory.write(a+1, data >> 8);
+static void memWrite16(RAM& ram, uint16_t a, uint16_t data) {
+    ram.write(a, data);
+    ram.write(a+1, data >> 8);
 }
 
 TEST_CASE("branch") {
@@ -40,8 +40,6 @@ TEST_CASE("branch") {
 
     MockRenderer mockRenderer;
 
-    auto& cpu = dev.cpu;
-    auto& memory = *dev.ram.get();
     auto& regs = dev.cpu.regs;
 
     memset(&regs, 0, sizeof(CPURegs));
@@ -54,14 +52,14 @@ TEST_CASE("branch") {
         auto oldflags = regs.flags.byte;
 
         regs.pc = oldpc;
-        memWrite(memory, regs.pc, BCC);
-        memWrite(memory, regs.pc+1, addr);
+        memWrite(dev.ram, regs.pc, BCC);
+        memWrite(dev.ram, regs.pc+1, addr);
 
         dev.clock(&mockRenderer);
 
         REQUIRE(regs.pc == oldpc+addr+2);
         REQUIRE(oldflags == regs.flags.byte);
-        REQUIRE(cpu.cycles == instructionSet[BCC].cycles+1);
+        REQUIRE(dev.cpu.cycles == instructionSet[BCC].cycles+1);
     }
 
     SECTION("no-BCC") {
@@ -70,14 +68,14 @@ TEST_CASE("branch") {
         auto oldflags = regs.flags.byte;
 
         regs.pc = oldpc;
-        memWrite(memory, regs.pc, BCC);
-        memWrite(memory, regs.pc+1, addr);
+        memWrite(dev.ram, regs.pc, BCC);
+        memWrite(dev.ram, regs.pc+1, addr);
 
         dev.clock(&mockRenderer);
 
         REQUIRE(regs.pc == oldpc+2);
         REQUIRE(oldflags == regs.flags.byte);
-        REQUIRE(cpu.cycles == instructionSet[BCC].cycles);
+        REQUIRE(dev.cpu.cycles == instructionSet[BCC].cycles);
     }
 
     SECTION("BCC-cross-page") {
@@ -87,14 +85,14 @@ TEST_CASE("branch") {
         addr = 0x01;
 
         regs.pc = oldpc;
-        memWrite(memory, regs.pc, BCC);
-        memWrite(memory, regs.pc+1, addr);
+        memWrite(dev.ram, regs.pc, BCC);
+        memWrite(dev.ram, regs.pc+1, addr);
 
         dev.clock(&mockRenderer);
 
         REQUIRE(regs.pc == oldpc+addr+2);
         REQUIRE(oldflags == regs.flags.byte);
-        REQUIRE(cpu.cycles == instructionSet[BCC].cycles+1+1); // added penalty
+        REQUIRE(dev.cpu.cycles == instructionSet[BCC].cycles+1+1); // added penalty
     }
 
     SECTION("BEQ") {
@@ -103,14 +101,14 @@ TEST_CASE("branch") {
         auto oldflags = regs.flags.byte;
 
         regs.pc = oldpc;
-        memWrite(memory, regs.pc, BEQ);
-        memWrite(memory, regs.pc+1, addr);
+        memWrite(dev.ram, regs.pc, BEQ);
+        memWrite(dev.ram, regs.pc+1, addr);
 
         dev.clock(&mockRenderer);
 
         REQUIRE(regs.pc == oldpc+addr+2);
         REQUIRE(oldflags == regs.flags.byte);
-        REQUIRE(cpu.cycles == instructionSet[BEQ].cycles+1);
+        REQUIRE(dev.cpu.cycles == instructionSet[BEQ].cycles+1);
     }
 
     SECTION("no-BEQ") {
@@ -119,14 +117,14 @@ TEST_CASE("branch") {
         auto oldflags = regs.flags.byte;
 
         regs.pc = oldpc;
-        memWrite(memory, regs.pc, BEQ);
-        memWrite(memory, regs.pc+1, addr);
+        memWrite(dev.ram, regs.pc, BEQ);
+        memWrite(dev.ram, regs.pc+1, addr);
 
         dev.clock(&mockRenderer);
 
         REQUIRE(regs.pc == oldpc+2);
         REQUIRE(oldflags == regs.flags.byte);
-        REQUIRE(cpu.cycles == instructionSet[BEQ].cycles);
+        REQUIRE(dev.cpu.cycles == instructionSet[BEQ].cycles);
     }
 
     SECTION("BEQ") {
@@ -135,14 +133,14 @@ TEST_CASE("branch") {
         auto oldflags = regs.flags.byte;
 
         regs.pc = oldpc;
-        memWrite(memory, regs.pc, BEQ);
-        memWrite(memory, regs.pc+1, addr);
+        memWrite(dev.ram, regs.pc, BEQ);
+        memWrite(dev.ram, regs.pc+1, addr);
 
         dev.clock(&mockRenderer);
 
         REQUIRE(regs.pc == oldpc+addr+2);
         REQUIRE(oldflags == regs.flags.byte);
-        REQUIRE(cpu.cycles == instructionSet[BEQ].cycles+1);
+        REQUIRE(dev.cpu.cycles == instructionSet[BEQ].cycles+1);
     }
 
     SECTION("no-BEQ") {
@@ -151,14 +149,14 @@ TEST_CASE("branch") {
         auto oldflags = regs.flags.byte;
 
         regs.pc = oldpc;
-        memWrite(memory, regs.pc, BEQ);
-        memWrite(memory, regs.pc+1, addr);
+        memWrite(dev.ram, regs.pc, BEQ);
+        memWrite(dev.ram, regs.pc+1, addr);
 
         dev.clock(&mockRenderer);
 
         REQUIRE(regs.pc == oldpc+2);
         REQUIRE(oldflags == regs.flags.byte);
-        REQUIRE(cpu.cycles == instructionSet[BEQ].cycles);
+        REQUIRE(dev.cpu.cycles == instructionSet[BEQ].cycles);
     }
 }
 
@@ -168,7 +166,6 @@ TEST_CASE("immediate-instructs") {
 
     MockRenderer mockRenderer;
 
-    auto& memory = *dev.ram.get();
     auto& regs = dev.cpu.regs;
 
     memset(&regs, 0, sizeof(CPURegs));
@@ -176,8 +173,8 @@ TEST_CASE("immediate-instructs") {
 
     SECTION("AND") {
         regs.a = 0b01010101;
-        memWrite(memory, 0, 0x29);
-        memWrite(memory, 1, 0b00010001);
+        memWrite(dev.ram, 0, 0x29);
+        memWrite(dev.ram, 1, 0b00010001);
         dev.clock(&mockRenderer);
         REQUIRE(regs.a == (0b01010101 & 0b00010001));
         REQUIRE(regs.flags.bits.z == 0);
@@ -185,8 +182,8 @@ TEST_CASE("immediate-instructs") {
 
     SECTION("AND-zero-a") {
         regs.a = 0b01010101;
-        memWrite(memory, 0, 0x29);
-        memWrite(memory, 1, 0b00000000);
+        memWrite(dev.ram, 0, 0x29);
+        memWrite(dev.ram, 1, 0b00000000);
         dev.clock(&mockRenderer);
         REQUIRE(regs.a == (0b01010101 & 0b00000000));
         REQUIRE(regs.flags.bits.z == 1);
@@ -195,8 +192,8 @@ TEST_CASE("immediate-instructs") {
     SECTION("ADC") {
         regs.a = 3;
         regs.flags.bits.c = 1;
-        memWrite(memory, 0, 0x69);
-        memWrite(memory, 1, 99);
+        memWrite(dev.ram, 0, 0x69);
+        memWrite(dev.ram, 1, 99);
         dev.clock(&mockRenderer);
         REQUIRE(regs.a == (3 + 99 + 1));
         REQUIRE(regs.flags.bits.c == 0);
@@ -204,8 +201,8 @@ TEST_CASE("immediate-instructs") {
 
     SECTION("ADC-unsigned-overflow") {
         regs.a = 0xFF;
-        memWrite(memory, 0, 0x69);
-        memWrite(memory, 1, 1);
+        memWrite(dev.ram, 0, 0x69);
+        memWrite(dev.ram, 1, 1);
         dev.clock(&mockRenderer);
         REQUIRE(regs.a == 0);
         REQUIRE(regs.flags.bits.c == 1);
@@ -213,8 +210,8 @@ TEST_CASE("immediate-instructs") {
 
     SECTION("ADC-signed-overflow") {
         regs.a = 4;
-        memWrite(memory, 0, 0x69);
-        memWrite(memory, 1, -10);
+        memWrite(dev.ram, 0, 0x69);
+        memWrite(dev.ram, 1, -10);
         dev.clock(&mockRenderer);
         REQUIRE(regs.a == uint8_t(4-10));
         REQUIRE(regs.flags.bits.c == 0);
@@ -228,7 +225,6 @@ TEST_CASE("implied-instructs") {
 
     MockRenderer mockRenderer;
 
-    auto& memory = *dev.ram.get();
     auto& regs = dev.cpu.regs;
 
     memset(&regs, 0, sizeof(CPURegs));
@@ -236,10 +232,10 @@ TEST_CASE("implied-instructs") {
 
     SECTION("PHP") {
         regs.flags.byte = 0xF5;
-        memWrite(memory, 0, 0x08);
+        memWrite(dev.ram, 0, 0x08);
         dev.clock(&mockRenderer);
         REQUIRE(regs.flags.byte == 0xF5);
-        REQUIRE(memRead(memory, STACK.start | (regs.sp+1)) == 0xF5);
+        REQUIRE(memRead(dev.ram, STACK.start | (regs.sp+1)) == 0xF5);
     }
 }
 
@@ -249,16 +245,15 @@ TEST_CASE("jmp-bug") {
 
     MockRenderer mockRenderer;
 
-    auto& memory = *dev.ram.get();
     auto& regs = dev.cpu.regs;
 
     memset(&regs, 0, sizeof(CPURegs));
 
     SECTION("absolute-bug") {
         regs.pc = 0x00FE;
-        memWrite(memory, 0x00FE, 0x4C);
-        memWrite(memory, 0x00FF, 0x11);
-        memWrite(memory, 0x0000, 0xF5);
+        memWrite(dev.ram, 0x00FE, 0x4C);
+        memWrite(dev.ram, 0x00FF, 0x11);
+        memWrite(dev.ram, 0x0000, 0xF5);
 
         dev.clock(&mockRenderer);
         REQUIRE(regs.pc == 0xF511);
@@ -266,12 +261,12 @@ TEST_CASE("jmp-bug") {
 
     SECTION("indirect-bug") {
         regs.pc = 0x00FE;
-        memWrite(memory, 0x00FE, 0x6C);
-        memWrite(memory, 0x00FF, 0x11);
-        memWrite(memory, 0x0000, 0x15);
+        memWrite(dev.ram, 0x00FE, 0x6C);
+        memWrite(dev.ram, 0x00FF, 0x11);
+        memWrite(dev.ram, 0x0000, 0x15);
 
-        memWrite(memory, 0x1511, 0x13);
-        memWrite(memory, 0x1512, 0x0F);
+        memWrite(dev.ram, 0x1511, 0x13);
+        memWrite(dev.ram, 0x1512, 0x0F);
 
         dev.clock(&mockRenderer);
         REQUIRE(regs.pc == 0x0F13);
@@ -279,9 +274,9 @@ TEST_CASE("jmp-bug") {
 
     SECTION("absolute-no-bug") {
         regs.pc = 0x00FD;
-        memWrite(memory, 0x00FD, 0x4C);
-        memWrite(memory, 0x00FE, 0x11);
-        memWrite(memory, 0x00FF, 0xF5);
+        memWrite(dev.ram, 0x00FD, 0x4C);
+        memWrite(dev.ram, 0x00FE, 0x11);
+        memWrite(dev.ram, 0x00FF, 0xF5);
 
         dev.clock(&mockRenderer);
         REQUIRE(regs.pc == 0xF511);
@@ -289,12 +284,12 @@ TEST_CASE("jmp-bug") {
 
     SECTION("indirect-no-bug") {
         regs.pc = 0x00FD;
-        memWrite(memory, 0x00FD, 0x6C);
-        memWrite(memory, 0x00FE, 0x11);
-        memWrite(memory, 0x00FF, 0x15);
+        memWrite(dev.ram, 0x00FD, 0x6C);
+        memWrite(dev.ram, 0x00FE, 0x11);
+        memWrite(dev.ram, 0x00FF, 0x15);
 
-        memWrite(memory, 0x1511, 0x13);
-        memWrite(memory, 0x1512, 0x0F);
+        memWrite(dev.ram, 0x1511, 0x13);
+        memWrite(dev.ram, 0x1512, 0x0F);
 
         dev.clock(&mockRenderer);
         REQUIRE(regs.pc == 0x0F13);

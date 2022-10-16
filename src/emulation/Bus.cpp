@@ -1,12 +1,12 @@
 #include "emulation/Bus.h"
 #include "utils.h"
 
-void Bus::attach(std::shared_ptr<ICPUBusAttachable> attachment) {
+void Bus::attachToCPU(ICPUBusAttachable* attachment) {
     my_assert(attachment);
     cpuAttachments.push_back(attachment);
 }
 
-void Bus::attach(std::shared_ptr<IPPUBusAttachable> attachment) {
+void Bus::attachToPPU(IPPUBusAttachable* attachment) {
     my_assert(attachment);
     ppuAttachments.push_back(attachment);
 }

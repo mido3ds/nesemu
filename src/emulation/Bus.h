@@ -7,11 +7,11 @@
 #include "emulation/IPPUBusAttachable.h"
 
 struct Bus {
-    Vec<std::shared_ptr<ICPUBusAttachable>> cpuAttachments;
-    Vec<std::shared_ptr<IPPUBusAttachable>> ppuAttachments;
+    Vec<ICPUBusAttachable*> cpuAttachments;
+    Vec<IPPUBusAttachable*> ppuAttachments;
 
-    void attach(std::shared_ptr<ICPUBusAttachable> attachment);
-    void attach(std::shared_ptr<IPPUBusAttachable> attachment);
+    void attachToCPU(ICPUBusAttachable* attachment);
+    void attachToPPU(IPPUBusAttachable* attachment);
 
     void reset();
 

@@ -1,10 +1,15 @@
-#include "emulation/MMCs/MMC0.h"
+#include "emulation/MMC0.h"
 #include "emulation/common.h"
 
-bool MMC0::valid(ROM const& rom) {
-    return rom.getMapperNumber() == 0 &&
+void MMC0::init(StrView romPath) {
+    rom.init(romPath);
+
+    const bool validMMC0Rom = rom.getMapperNumber() == 0 &&
         (rom.prg.size() % (16*1024) == 0) &&
         (rom.chr.size() == (8*1024));
+    if (!validMMC0Rom) {
+        panic("only supports MMC0");
+    }
 }
 
 void MMC0::reset() {}
