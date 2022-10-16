@@ -1,7 +1,7 @@
 #include "emulation/Bus.h"
 #include "utils.h"
 
-int Bus::attach(shared_ptr<ICPUBusAttachable> attachment) {
+int Bus::attach(std::shared_ptr<ICPUBusAttachable> attachment) {
     if (attachment) {
         cpuAttachments.push_back(attachment);
         return 0;
@@ -11,7 +11,7 @@ int Bus::attach(shared_ptr<ICPUBusAttachable> attachment) {
     return 1;
 }
 
-int Bus::attach(shared_ptr<IPPUBusAttachable> attachment) {
+int Bus::attach(std::shared_ptr<IPPUBusAttachable> attachment) {
     if (attachment) {
         ppuAttachments.push_back(attachment);
         return 0;
@@ -41,7 +41,7 @@ bool Bus::read(uint16_t addr, uint8_t& data) {
 
     if (success) { return true; }
 
-    WARNING("bus: read from unregistered address 0x%02X", addr);
+    WARNING("bus: read from unregistered address 0x{:02X}", addr);
     return false;
 }
 
@@ -62,7 +62,7 @@ bool Bus::write(uint16_t addr, uint8_t data) {
 
     if (success) { return true; }
 
-    WARNING("bus: write to unregistered address 0x%02X", addr);
+    WARNING("bus: write to unregistered address 0x{:02X}", addr);
     return false;
 }
 
@@ -80,7 +80,7 @@ bool Bus::ppuRead(uint16_t addr, uint8_t& data) {
 
     if (success) { return true; }
 
-    WARNING("bus: read from unregistered address 0x%02X", addr);
+    WARNING("bus: read from unregistered address 0x{:02X}", addr);
     return false;
 }
 
@@ -101,7 +101,7 @@ bool Bus::ppuWrite(uint16_t addr, uint8_t data) {
 
     if (success) { return true; }
 
-    WARNING("bus: write to unregistered address 0x%02X", addr);
+    WARNING("bus: write to unregistered address 0x{:02X}", addr);
     return false;
 }
 

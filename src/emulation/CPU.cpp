@@ -8,7 +8,7 @@ int CPU::init(Bus* bus) {
 
     // https://wiki.nesdev.com/w/index.php/CPU_power_up_state#At_power-up
     regs.pc = read16(RH);
-    INFO("PC = memory[0xFFFC] = 0x%04X", regs.pc);
+    INFO("PC = memory[0xFFFC] = 0x{:04X}", regs.pc);
 
     regs.sp = 0xFD;
     regs.flags.byte = 0x34; // IRQ disabled
@@ -29,7 +29,7 @@ int CPU::init(Bus* bus) {
 
 void CPU::reset() {
     regs.pc = read16(RH);
-    INFO("PC = memory[0xFFFC] = 0x%04X", regs.pc);
+    INFO("PC = memory[0xFFFC] = 0x{:04X}", regs.pc);
 
     regs.sp = 0xFD;
     regs.flags.byte = 0;

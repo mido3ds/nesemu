@@ -11,8 +11,8 @@ struct TextOperation { Str s; int x; int y; double scaleW; double scaleH; Font* 
 struct MockRenderer: public IRenderer {
     int clearOps = 0;
     int showOps = 0;
-    queue<PixelOperation> pixelOps;
-    queue<TextOperation> textOps;
+    std::queue<PixelOperation> pixelOps;
+    std::queue<TextOperation> textOps;
 
     virtual void clear(Color c, uint8_t a);
     bool hasCleared();

@@ -1,21 +1,17 @@
 #pragma once
 
 #include <thread>
-#include <vector>
-#include <memory>
 
-using std::vector;
-using std::shared_ptr;
-
+#include "utils.h"
 #include "emulation/ICPUBusAttachable.h"
 #include "emulation/IPPUBusAttachable.h"
 
 struct Bus {
-    vector<shared_ptr<ICPUBusAttachable>> cpuAttachments;
-    vector<shared_ptr<IPPUBusAttachable>> ppuAttachments;
+    Vec<std::shared_ptr<ICPUBusAttachable>> cpuAttachments;
+    Vec<std::shared_ptr<IPPUBusAttachable>> ppuAttachments;
 
-    int attach(shared_ptr<ICPUBusAttachable> attachment);
-    int attach(shared_ptr<IPPUBusAttachable> attachment);
+    int attach(std::shared_ptr<ICPUBusAttachable> attachment);
+    int attach(std::shared_ptr<IPPUBusAttachable> attachment);
 
     void reset();
 

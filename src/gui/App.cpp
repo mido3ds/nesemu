@@ -73,20 +73,6 @@ void App::toggleDebugger() {
     debugWind.setPosition(sf::Vector2i(mpos.x+Config::mainWind.w+5, mpos.y));
 }
 
-// TODO: remove
-static Str hex8(uint8_t v) {
-    char buffer[10] = {0};
-    sprintf(buffer, "%02X", v);
-    return buffer;
-}
-
-// TODO: remove
-static Str hex16(uint16_t v) {
-    char buffer[10] = {0};
-    sprintf(buffer, "%04X", v);
-    return buffer;
-}
-
 void App::handleEvents(sf::RenderWindow& w) {
     sf::Event event;
     while (w.pollEvent(event)) {
@@ -158,11 +144,11 @@ int App::debuggerTick() {
     // regs
     Color c{255,255,0};
     const auto regs = &dev->cpu.regs;
-    debugRenderer.text(str_tmpf("SP: ${}", hex8(regs->sp)), 10,(i)*h,1,1, (Font*)&mainFont,c, 0, 0);
-    debugRenderer.text(str_tmpf("A: ${}", hex8(regs->a)), 10+w,(i++)*h,1,1, (Font*)(Font*)&mainFont,c, 0, 0);
+    debugRenderer.text(str_tmpf("SP: ${:02X}", regs->sp), 10,(i)*h,1,1, (Font*)&mainFont,c, 0, 0);
+    debugRenderer.text(str_tmpf("A: ${:02X}", regs->a), 10+w,(i++)*h,1,1, (Font*)(Font*)&mainFont,c, 0, 0);
 
-    debugRenderer.text(str_tmpf("X: ${}", hex8(regs->x)), 10,(i)*h,1,1, (Font*)&mainFont,c, 0, 0);
-    debugRenderer.text(str_tmpf("Y: ${}", hex8(regs->y)), 10+w,(i++)*h,1,1, (Font*)&mainFont,c, 0, 0);
+    debugRenderer.text(str_tmpf("X: ${:02X}", regs->x), 10,(i)*h,1,1, (Font*)&mainFont,c, 0, 0);
+    debugRenderer.text(str_tmpf("Y: ${:02X}", regs->y), 10+w,(i++)*h,1,1, (Font*)&mainFont,c, 0, 0);
     i++;
 
     debugRenderer.text(str_tmpf("C: {}", regs->flags.bits.c), 10,(i)*h,1,1, (Font*)&mainFont,c, 0, 0);
@@ -174,7 +160,7 @@ int App::debuggerTick() {
     debugRenderer.text(str_tmpf("V: {}", regs->flags.bits.v), 10+w*4.0/3,(i++)*h,1,1, (Font*)&mainFont,c, 0, 0);
 
     debugRenderer.text(str_tmpf("N: {}", regs->flags.bits.n), 10,(i)*h,1,1, (Font*)&mainFont,c, 0, 0);
-    debugRenderer.text(str_tmpf("PC: ${}", hex16(regs->pc)), 10+w*2.0/3,(i++)*h,1,1, (Font*)&mainFont,{255,0,0}, 0, 0);
+    debugRenderer.text(str_tmpf("PC: ${:04X}", regs->pc), 10+w*2.0/3,(i++)*h,1,1, (Font*)&mainFont,{255,0,0}, 0, 0);
     i++;
 
     // assembly
@@ -203,18 +189,18 @@ void App::renderMem() {
 
     for (int i = 0; i < MEM_WIDTH; i++) {
         int x = MEM_HPADDING+53+i*30;
-        memRenderer.text(hex8(i), x, MEM_VPADDING, 1, 1, (Font*)&mainFont, {255,255,255}, 0, 0);
+        memRenderer.text(str_tmpf("{:02X}", i), x, MEM_VPADDING, 1, 1, (Font*)&mainFont, {255,255,255}, 0, 0);
     }
 
     for (int j = 0; j < MEM_HEIGHT; j++) {
         int y = MEM_VPADDING+(j+1)*(Config::fontSize+1);
-        memRenderer.text(hex16((memoryStart+j)*MEM_WIDTH), MEM_HPADDING, y, 1, 1, (Font*)&mainFont, {255,255,255}, 0, 0);
+        memRenderer.text(str_tmpf("{:04X}", (memoryStart+j)*MEM_WIDTH), MEM_HPADDING, y, 1, 1, (Font*)&mainFont, {255,255,255}, 0, 0);
 
         for (int i = 0; i < MEM_WIDTH; i++) {
             int x = MEM_HPADDING+53+i*30;
             uint8_t data;
             if (dev->ram->read((memoryStart+j)*MEM_WIDTH+i, data)) {
-                memRenderer.text(hex8(data), x, y, 1, 1, (Font*)&mainFont, {255,255,0}, 0, 0);
+                memRenderer.text(str_tmpf("{:02X}", data), x, y, 1, 1, (Font*)&mainFont, {255,255,0}, 0, 0);
             }
         }
     }
@@ -269,21 +255,19 @@ int App::mainTick() {
 }
 
 int App::mainLoop() {
-    using namespace chrono;
-
     INFO("start executing");
     int err;
 
     while (!quit && mainWind.isOpen()) {
         memory::reset_tmp();
 
-        auto t1 = high_resolution_clock::now();
+        auto t1 = std::chrono::high_resolution_clock::now();
 
         if ((err = mainTick())) { return err; }
         if ((err = debuggerTick())) { return err; }
 
-        auto t2 = high_resolution_clock::now();
-        auto duration = duration_cast<chrono::milliseconds>(t2 - t1).count();
+        auto t2 = std::chrono::high_resolution_clock::now();
+        auto duration = duration_cast<std::chrono::milliseconds>(t2 - t1).count();
 
         fps = 1000.0/duration;
     }

@@ -1,13 +1,10 @@
 #include <array>
-#include <string>
 #include <functional>
 
 #include "utils.h"
 #include "emulation/common.h"
 #include "emulation/CPU.h"
 #include "emulation/instructions.h"
-
-using namespace std;
 
 void ADC(CPU& cpu) {
     auto v = cpu.getArgValue();

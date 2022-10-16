@@ -196,5 +196,5 @@
 //     // from addr-n ... addr+n, with total size of (2*n+1) string
 //     // each line represents instruction (could be 1,2 or 3 bytes of memory)
 //     // unknown and out of range instructions are marked with "???"
-//     vector<string> getAssembly(const uint16_t addr, const uint16_t n);
+//     Vec<string> getAssembly(const uint16_t addr, const uint16_t n);
 // };

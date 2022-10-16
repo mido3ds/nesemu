@@ -4,11 +4,11 @@
 // nes color palatte -> RGB color
 Color Color::fromPalatte(const uint8_t palatte) {
     if (palatte > 0x3F) {
-        ERROR("invalid palatte color(0x%02x), returning default color", palatte);
+        ERROR("invalid palatte color(0x{:02x}), returning default color", palatte);
         return DEFAULT_COLOR;
     }
 
-    static constexpr array<Color, 0x3F + 1> colorPalatte = {
+    static constexpr Arr<Color, 0x3F + 1> colorPalatte = {
         Color({0x75, 0x75, 0x75}),
         Color({0x27, 0x1B, 0x8F}),
         Color({0x00, 0x00, 0xAB}),

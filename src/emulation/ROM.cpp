@@ -4,35 +4,15 @@
 #include "utils.h"
 #include "emulation/ROM.h"
 
-tuple<uint8_t*, size_t> readBinaryFile(string path) {
-    ifstream file(path, ios::in|ios::binary|ios::ate);
-    if (!file.is_open()) return make_tuple(nullptr, 0);
+int ROM::init(StrView path) {
+    INFO("reading rom from {}", path);
 
-    size_t size = (size_t)file.tellg();
-    auto buffer = new char[size];
-
-    file.seekg(0, ios::beg);
-    file.read(buffer, size);
-    file.close();
-
-    return make_tuple((uint8_t*) buffer, size);
-}
-
-int ROM::init(string path) {
-    size_t size = 0;
-    uint8_t* buffer = nullptr;
-
-    INFO("reading rom from %s", path.c_str());
-
-    tie(buffer, size) = readBinaryFile(path);
-    if (size == 0 || buffer == nullptr) {
-        ERROR("couldn't load rom from path %s", path.c_str());
-        return 1;
-    }
+    auto file = file_content_str(path.begin(), memory::tmp());
+    uint8_t* buffer = (uint8_t*) file.data();
 
     // check header
     const unsigned char constants[] = {0x4E, 0x45, 0x53, 0x1A};
-    if (size < 16 || memcmp(buffer, constants, 4) != 0) {
+    if (file.size() < 16 || memcmp(buffer, constants, 4) != 0) {
         ERROR("no valid header");
         return 1;
     }
@@ -53,7 +33,7 @@ int ROM::init(string path) {
     }
 
     auto prgSize = getPRGRomSize();
-    if (prgPtr+prgSize > buffer+size) {
+    if (prgPtr+prgSize > buffer+file.size()) {
         ERROR("no PRG ROM");
         return 1;
     }
@@ -65,7 +45,7 @@ int ROM::init(string path) {
     uint8_t* chrPtr = prgPtr+prgSize;
 
     auto chrSize = getCHRRomSize();
-    if (chrPtr+chrSize > buffer+size) {
+    if (chrPtr+chrSize > buffer+file.size()) {
         ERROR("no CHR ROM");
         return 1;
     }
@@ -79,12 +59,10 @@ int ROM::init(string path) {
         WARNING("ignoring PlayChoice");
     }
 
-    delete buffer;
-
-    INFO("rom mapper num = %d", getMapperNumber());
-    INFO("iNES version = %d", header.flags7.bits.nes2format == 2? 2:1);
-    INFO("rom num of PRG roms = %d", header.numPRGs);
-    INFO("rom num of CHR roms = %d", header.numCHRs);
+    INFO("rom mapper num = {}", getMapperNumber());
+    INFO("iNES version = {}", header.flags7.bits.nes2format == 2? 2:1);
+    INFO("rom num of PRG roms = {}", header.numPRGs);
+    INFO("rom num of CHR roms = {}", header.numCHRs);
     if (!header.flags6.bits.ignoreMirroringControl) {
         if (header.flags6.bits.mirroring == 0){
             INFO("rom mirroring is horizontal");

@@ -10,5 +10,5 @@
 struct MMC: public ICPUBusAttachable, public IPPUBusAttachable {
     ROM rom;
 
-    static shared_ptr<MMC> fromROM(ROM rom);
+    static std::shared_ptr<MMC> fromROM(ROM rom);
 };

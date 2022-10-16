@@ -1,10 +1,11 @@
+#include <memory>
+
 #include "emulation/Console.h"
 #include "emulation/ROM.h"
 #include "emulation/MMC.h"
 #include "emulation/IORegs.h"
 
-#include <iostream>
-int Console::init(string romPath) {
+int Console::init(StrView romPath) {
     ROM rom;
     if (rom.init(romPath)) { return 1; }
 
@@ -16,25 +17,25 @@ int Console::init(string romPath) {
     // mmc
     auto mmc = MMC::fromROM(rom);
     if (!mmc) { return 1; }
-    if (bus.attach(static_pointer_cast<ICPUBusAttachable>(mmc))) { return 1; }
-    if (bus.attach(static_pointer_cast<IPPUBusAttachable>(mmc))) { return 1; }
+    if (bus.attach(std::static_pointer_cast<ICPUBusAttachable>(mmc))) { return 1; }
+    if (bus.attach(std::static_pointer_cast<IPPUBusAttachable>(mmc))) { return 1; }
 
     return init();
 }
 
 int Console::init() {
     // ram
-    ram = make_shared<RAM>();
+    ram = std::make_shared<RAM>();
     ram->init();
     if (bus.attach(ram)) { return 1; }
 
     // io
-    auto io = make_shared<IORegs>();
+    auto io = std::make_shared<IORegs>();
     io->init();
     if (bus.attach(io)) { return 1; }
 
     // ppu
-    ppu = make_shared<PPU>();
+    ppu = std::make_shared<PPU>();
     if (ppu->init(&bus)) { return 1; }
     if (bus.attach(ppu)) { return 1; }
 

@@ -1,15 +1,12 @@
 #pragma once
 
-#include <string>
-#include <vector>
 #include <thread>
 
 #include "emulation/common.h"
-
-using namespace std;
+#include "utils.h"
 
 struct ROM {
-    vector<uint8_t> prg, chr;
+    Vec<uint8_t> prg, chr;
 
     struct Header {
         uint8_t numPRGs = 0;
@@ -57,7 +54,7 @@ struct ROM {
     uint32_t getPRGRomSize() const;
     uint32_t getCHRRomSize() const;
 
-    int init(string path);
+    int init(StrView path);
 
     uint16_t getMapperNumber() const;
 };

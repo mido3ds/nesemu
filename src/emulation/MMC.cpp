@@ -2,13 +2,13 @@
 #include "emulation/MMCs/MMC0.h"
 #include "utils.h"
 
-shared_ptr<MMC> MMC::fromROM(ROM rom) {
+std::shared_ptr<MMC> MMC::fromROM(ROM rom) {
     if (MMC0::valid(rom)) {
-        auto mmc0 = make_shared<MMC0>();
+        auto mmc0 = std::make_shared<MMC0>();
         mmc0->rom = rom;
         return mmc0;
     }
 
-    ERROR("mapper %d not supported", rom.getMapperNumber());
+    ERROR("mapper {} not supported", rom.getMapperNumber());
     return nullptr;
 }
