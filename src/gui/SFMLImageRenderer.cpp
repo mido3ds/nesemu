@@ -26,7 +26,7 @@ void SFMLImageRenderer::clear(Color c, uint8_t a) {
 }
 
 int SFMLImageRenderer::text(const Str& s, int x, int y, double scaleW, double scaleH, Font* font, Color c, int* newW, int* newH) {
-    ERROR("SFMLImageRenderer doesnt render text!");
+    panic("SFMLImageRenderer doesnt render text!");
     return 1;
 }
 
@@ -36,9 +36,7 @@ void SFMLImageRenderer::show() {
 
     window->setView(sf::View(sf::FloatRect(0, 0, resolution.w, resolution.h)));
 
-    window->clear();
     window->draw(sprite);
-    window->display();
 
     window->setView(window->getDefaultView());
 }

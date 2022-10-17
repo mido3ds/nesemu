@@ -5,11 +5,18 @@
 #include "emulation/ROM.h"
 #include "emulation/IORegs.h"
 
-void console_init(Console& self) {
+void console_init(Console& self, StrView rom_path) {
     self = {};
 
-    self.ppu = ppu_new(&self.bus);
-    self.cpu = cpu_new(&self.bus);
+    if (!rom_path.empty()) {
+        mmc0_load_rom(self.mmc0, rom_path);
+
+        if (self.mmc0.rom.prg.size() == PRG_ROM_LOW.size()) {
+            self.disassembler = disassembler_new(self.mmc0.rom.prg, PRG_ROM_UP.start);
+        } else {
+            self.disassembler = disassembler_new(self.mmc0.rom.prg, PRG_ROM_LOW.start);
+        }
+    }
 
     bus_attach_to_cpu(self.bus, &self.mmc0);
     bus_attach_to_cpu(self.bus, &self.ram);
@@ -17,16 +24,9 @@ void console_init(Console& self) {
     bus_attach_to_cpu(self.bus, &self.ppu);
 
     bus_attach_to_ppu(self.bus, &self.mmc0);
-}
 
-void console_load_rom(Console& self, StrView romPath) {
-    mmc0_load_rom(self.mmc0, romPath);
-
-    if (self.mmc0.rom.prg.size() == PRG_ROM_LOW.size()) {
-        self.disassembler = disassembler_new(self.mmc0.rom.prg, PRG_ROM_UP.start);
-    } else {
-        self.disassembler = disassembler_new(self.mmc0.rom.prg, PRG_ROM_LOW.start);
-    }
+    self.ppu = ppu_new(&self.bus);
+    self.cpu = cpu_new(&self.bus);
 }
 
 void console_reset(Console& self) {
