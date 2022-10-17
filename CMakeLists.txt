@@ -90,10 +90,10 @@ add_executable(nesemu)
 target_sources(nesemu
     PRIVATE
         src/utils.cpp
-        src/test/singleInstr.cpp
+        src/test/single_instructions.cpp
         src/test/nestestlines.cpp
         src/test/nestest.h
-        src/test/testMain.cpp
+        src/test/run_tests.cpp
         src/test/nestest.cpp
         src/gui/MockRenderer.h
         src/gui/SFMLImageRenderer.cpp
@@ -107,7 +107,6 @@ target_sources(nesemu
         src/emulation/instructions.h
         src/emulation/Bus.cpp
         src/emulation/Console.h
-        src/emulation/vram.cpp
         src/emulation/Console.cpp
         src/emulation/MMC0.cpp
         src/emulation/MMC0.h

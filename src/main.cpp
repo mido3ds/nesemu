@@ -13,7 +13,7 @@
 #define MEM_HPADDING 5
 #define MEM_VPADDING 5
 
-int testMain(int argc, char** argv);
+int run_tests(int argc, char** argv);
 
 int main(int argc, char** argv) {
     if (argc == 1 || argv[1] == "--help"_str_lit) {
@@ -22,7 +22,7 @@ int main(int argc, char** argv) {
     }
 
     if (argv[1] == "test"_str_lit) {
-        return testMain(argc-1, argv+1);
+        return run_tests(argc-1, argv+1);
     }
 
     Console dev {};
@@ -265,8 +265,8 @@ TODO:
 	- imgui
 		- only one window
 		- move all UI to it
+    - merge ROM with MMC0
 	- no dynamic dispatch
-    - function_name instead of functionName
     - function_name(self) instead of self.function_name
 	-? sfml -> SDL
 

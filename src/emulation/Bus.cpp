@@ -3,27 +3,27 @@
 
 void bus_attach_to_cpu(Bus& self, ICPUBusAttachable* attachment) {
     my_assert(attachment);
-    self.cpuAttachments.push_back(attachment);
+    self.cpu_attachments.push_back(attachment);
 }
 
 void bus_attach_to_ppu(Bus& self, IPPUBusAttachable* attachment) {
     my_assert(attachment);
-    self.ppuAttachments.push_back(attachment);
+    self.ppu_attachments.push_back(attachment);
 }
 
 void bus_reset(Bus& self) {
-    for (auto& at : self.cpuAttachments) {
+    for (auto& at : self.cpu_attachments) {
         at->reset();
     }
 
-    for (auto& at : self.ppuAttachments) {
+    for (auto& at : self.ppu_attachments) {
         at->reset();
     }
 }
 
 bool Bus::read(uint16_t addr, uint8_t& data) {
     bool success = false;
-    for (auto& at:cpuAttachments) {
+    for (auto& at:cpu_attachments) {
         if (at->read(addr, data)) {
             success = true;
         }
@@ -44,7 +44,7 @@ bool Bus::read16(uint16_t addr, uint16_t& data) {
 
 bool Bus::write(uint16_t addr, uint8_t data) {
     bool success = false;
-    for (auto& at:cpuAttachments) {
+    for (auto& at:cpu_attachments) {
         if (at->write(addr, data)) {
             success = true;
         }
@@ -60,10 +60,10 @@ bool Bus::write16(uint16_t addr, uint16_t data) {
     return write(addr, data & 0x00FF) && write(addr+1, (data & 0xFF00) >> 8);
 }
 
-bool Bus::ppuRead(uint16_t addr, uint8_t& data) {
+bool Bus::ppu_read(uint16_t addr, uint8_t& data) {
     bool success = false;
-    for (auto& at:ppuAttachments) {
-        if (at->ppuRead(addr, data)) {
+    for (auto& at:ppu_attachments) {
+        if (at->ppu_read(addr, data)) {
             success = true;
         }
     }
@@ -74,17 +74,17 @@ bool Bus::ppuRead(uint16_t addr, uint8_t& data) {
     return false;
 }
 
-bool Bus::ppuRead16(uint16_t addr, uint16_t& data) {
+bool Bus::ppu_read16(uint16_t addr, uint16_t& data) {
     uint8_t low, up;
     bool res = read(addr, low) && read(addr+1, up);
     data = low | up << 8;
     return res;
 }
 
-bool Bus::ppuWrite(uint16_t addr, uint8_t data) {
+bool Bus::ppu_write(uint16_t addr, uint8_t data) {
     bool success = false;
-    for (auto& at:ppuAttachments) {
-        if (at->ppuWrite(addr, data)) {
+    for (auto& at:ppu_attachments) {
+        if (at->ppu_write(addr, data)) {
             success = true;
         }
     }
@@ -95,6 +95,6 @@ bool Bus::ppuWrite(uint16_t addr, uint8_t data) {
     return false;
 }
 
-bool Bus::ppuWrite16(uint16_t addr, uint16_t data) {
+bool Bus::ppu_write16(uint16_t addr, uint16_t data) {
     return write(addr, data & 0x00FF) && write(addr+1, (data & 0xFF00) >> 8);
 }

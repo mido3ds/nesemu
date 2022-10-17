@@ -30,7 +30,7 @@ struct Region {
 struct Mirror {
     Region source, dest;
 
-    Vec<uint16_t> getAdresses(const uint16_t address) const;
+    Vec<uint16_t> get_address(const uint16_t address) const;
 };
 
 enum class SpriteType : uint8_t {S8x8 = 0, S8x16 = 1};
@@ -68,11 +68,11 @@ union PatternTablePointer {
     enum class TableHalf {LEFT, RIGHT};
 
     struct {
-        uint8_t rowInTile:3;
-        BitPlane bitPlane:1;
-        uint8_t tileCol:4;
-        uint8_t tileRow:4;
-        TableHalf tableHalf:1;
+        uint8_t row_in_tile:3;
+        BitPlane bit_plane:1;
+        uint8_t tile_col:4;
+        uint8_t tile_row:4;
+        TableHalf table_half:1;
         uint8_t:3;
     } bits;
     const uint16_t word = 0;
@@ -86,11 +86,11 @@ typedef Arr<uint8_t, MEM_SIZE> MemType;
 
 // Video systems info
 constexpr struct VideoSystem {
-    int cpuCycles; // in nanoseconds
+    int cpu_cycles; // in nanoseconds
     int fps;
-    float timePerFrame; // in milliseconds
-    int scanlinesPerFrame;
-    float cpuCyclesPerScanline;
+    float time_per_frame; // in milliseconds
+    int scanlines_per_frame;
+    float cpuCycles_per_scanline;
     struct {int width, height;} resolution;
 } NTSC {559, 60, 16.67f, 262, 113.33f, {256, 224}},
 PAL {601, 50, 20, 312, 106.56f, {256, 240}};

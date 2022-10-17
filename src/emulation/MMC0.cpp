@@ -4,7 +4,7 @@
 void mmc0_load_rom(MMC0& self, StrView rom_path) {
     self.rom.load(rom_path);
 
-    const bool validMMC0Rom = self.rom.getMapperNumber() == 0 &&
+    const bool validMMC0Rom = self.rom.get_mapper_number() == 0 &&
         (self.rom.prg.size() % (16*1024) == 0) &&
         (self.rom.chr.size() == (8*1024));
     if (!validMMC0Rom) {
@@ -25,7 +25,7 @@ bool MMC0::read(uint16_t addr, uint8_t& data) {
 }
 
 bool MMC0::write(uint16_t addr, uint8_t data) {
-    if (PRG_REGION.contains(addr)) {
+    if (rom.prg.size() > 0 && PRG_REGION.contains(addr)) {
         rom.prg[(addr - PRG_ROM_LOW.start) % rom.prg.size()] = data;
 
         return true;
@@ -34,12 +34,12 @@ bool MMC0::write(uint16_t addr, uint8_t data) {
     return false;
 }
 
-bool MMC0::ppuRead(uint16_t addr, uint8_t& data) {
+bool MMC0::ppu_read(uint16_t addr, uint8_t& data) {
     // TODO
 	return false;
 }
 
-bool MMC0::ppuWrite(uint16_t addr, uint8_t data) {
+bool MMC0::ppu_write(uint16_t addr, uint8_t data) {
     // TODO
 	return false;
 }

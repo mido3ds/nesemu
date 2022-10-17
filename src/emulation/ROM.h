@@ -9,8 +9,8 @@ struct ROM {
     Vec<uint8_t> prg, chr;
 
     struct Header {
-        uint8_t numPRGs = 0;
-        uint8_t numCHRs = 0;
+        uint8_t num_prgs = 0;
+        uint8_t num_chrs = 0;
 
         // 76543210
         // ||||||||
@@ -23,10 +23,10 @@ struct ROM {
         union {
             struct {
                 uint8_t mirroring:1;
-                bool hasBatteryBackedPRGRAM:1;
-                bool hasTrainer:1;
-                bool ignoreMirroringControl:1;
-                uint8_t lowerMapperNum:4;
+                bool has_battery_backed_prgram:1;
+                bool has_trainer:1;
+                bool ignore_mirroring_control:1;
+                uint8_t lower_mapper_num:4;
             } bits;
             uint8_t byte;
         } flags6;
@@ -39,10 +39,10 @@ struct ROM {
         // ++++----- Upper nybble of mapper number
         union {
             struct {
-                uint8_t vsUnisystem:1;
-                bool hasPlayChoice:1;
+                uint8_t vs_unisystem:1;
+                bool has_play_choice:1;
                 uint8_t nes2format:2;
-                uint8_t upperMapperNum:4;
+                uint8_t upper_mapper_num:4;
             } bits;
             uint8_t byte;
         } flags7;
@@ -51,10 +51,10 @@ struct ROM {
 		uint8_t _padding[8];
     } header;
 
-    uint32_t getPRGRomSize() const;
-    uint32_t getCHRRomSize() const;
+    uint32_t get_prg_rom_size() const;
+    uint32_t get_chr_rom_size() const;
 
     void load(StrView path);
 
-    uint16_t getMapperNumber() const;
+    uint16_t get_mapper_number() const;
 };
