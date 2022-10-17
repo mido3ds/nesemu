@@ -1,3 +1,5 @@
+#include <imgui.h>
+#include <imgui-SFML.h>
 #include <SFML/Window.hpp>
 #include <SFML/Graphics.hpp>
 
@@ -27,56 +29,74 @@ int main(int argc, char** argv) {
     console_init(dev);
     console_load_rom(dev, argv[1]);
 
-    sf::RenderWindow main_wind, debug_wind;
-    SFMLRenderer mem_renderer, debug_renderer;
-    SFMLImageRenderer dev_renderer;
-    sf::Font main_font;
-
     bool should_quit = false, should_pause = false,
-        show_debug_wind = true, show_mem = true,
+        show_debug_wind = false, show_mem = true,
         in_debug_mode = true, do_one_instr = false;
 
     uint16_t memory_start = 0;
-    double fps = 0;
 
     // main window
     auto title = str_tmpf("NESEMU - {}", argv[1]);
-    main_wind.create(sf::VideoMode(Config::main_wind.w, Config::main_wind.h), 
-        title.c_str(), sf::Style::Titlebar|sf::Style::Close);
+    sf::RenderWindow main_wind(
+        sf::VideoMode(Config::main_wind.w, Config::main_wind.h), 
+        title.c_str(),
+        sf::Style::Titlebar|sf::Style::Close
+    );
+    defer(main_wind.close());
     main_wind.setPosition(sf::Vector2i(0,0));
 
+    // imgui
+    auto _imgui_ini_file_path = str_format("{}/{}", folder_config(memory::tmp()), "nesemu-imgui.ini");
+
+    ImGui::SFML::Init(main_wind);
+    defer(ImGui::SFML::Shutdown(main_wind));
+
+    ImGui::StyleColorsDark();
+    ImGui::GetIO().IniFilename = _imgui_ini_file_path.c_str();
+
+    SFMLRenderer mem_renderer;
     mem_renderer.init(&main_wind, Config::main_wind);
+
+    SFMLImageRenderer dev_renderer;
     dev_renderer.init(&main_wind, Config::resolution);
 
     // debug window
-    debug_wind.create(sf::VideoMode(Config::debug_wind.w, Config::debug_wind.h),
-        "Debugger", sf::Style::Titlebar|sf::Style::Close);
+    sf::RenderWindow debug_wind(
+        sf::VideoMode(Config::debug_wind.w, Config::debug_wind.h),
+        "Debugger", 
+        sf::Style::Titlebar|sf::Style::Close
+    );
+    defer(debug_wind.close());
     debug_wind.setVisible(show_debug_wind);
     auto mpos = main_wind.getPosition();
     debug_wind.setPosition(sf::Vector2i(mpos.x+Config::main_wind.w+5, mpos.y));
 
+    ImGui::SFML::Init(debug_wind);
+    defer(ImGui::SFML::Shutdown(debug_wind));
+
+    SFMLRenderer debug_renderer;
     debug_renderer.init(&debug_wind, Config::debug_wind);
 
     // font
+    sf::Font main_font;
     if (!main_font.loadFromFile(Config::font_path)) {
         ERROR("cant load main font");
         return 1;
     }
 
+    sf::Clock delta_clock;
     while (!should_quit && main_wind.isOpen()) {
         memory::reset_tmp();
 
-        // fps
-        auto t1 = std::chrono::high_resolution_clock::now();
-        defer({
-            auto t2 = std::chrono::high_resolution_clock::now();
-            auto duration = duration_cast<std::chrono::milliseconds>(t2 - t1).count();
-            fps = 1000.0/duration;
-        });
+        // time
+        const auto time_elapsed = delta_clock.restart();
+        ImGui::SFML::Update(main_wind, time_elapsed);
 
         // handle events
         sf::Event event;
         while (main_wind.pollEvent(event) || debug_wind.pollEvent(event)) {
+            ImGui::SFML::ProcessEvent(main_wind, event);
+
             switch (event.type) {
             case sf::Event::Closed:
                 should_quit = true;
@@ -116,6 +136,8 @@ int main(int argc, char** argv) {
                 break;
             }
         }
+
+        ImGui::ShowDemoWindow();
 
         if (!should_pause) {
             console_input(dev, JoyPadInput {
@@ -184,7 +206,7 @@ int main(int argc, char** argv) {
             int i = 0;
 
             // fps
-            debug_renderer.text(str_tmpf("FPS: {}", int(fps)), 10,(i)*h,1,1, (Font*)&main_font,{255,0,0}, 0, 0);
+            debug_renderer.text(str_tmpf("FPS: {}", 1000 / time_elapsed.asMilliseconds()), 10,(i)*h,1,1, (Font*)&main_font,{255,0,0}, 0, 0);
 
             // mem
             debug_renderer.text("MEM ", 10+w,(i)*h,1,1, (Font*)&main_font,{255,255,255}, 0, 0);
@@ -241,8 +263,6 @@ int main(int argc, char** argv) {
 TODO:
 - refactor
 	- imgui
-		- include
-		- use with sfml
 		- only one window
 		- move all UI to it
 	- no dynamic dispatch

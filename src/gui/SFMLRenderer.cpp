@@ -1,3 +1,5 @@
+#include <imgui-SFML.h>
+
 #include "gui/SFMLRenderer.h"
 #include "Config.h"
 
@@ -62,5 +64,6 @@ void SFMLRenderer::show() {
 
     window->clear();
     window->draw(sprite);
+    ImGui::SFML::Render(*window); // TODO: should't have to call it here (call it in main)
     window->display();
 }

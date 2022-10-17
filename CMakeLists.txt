@@ -49,6 +49,34 @@ CPMAddPackage(
     GIT_TAG          v2.13.8
     GIT_SHALLOW      TRUE
 )
+CPMAddPackage(
+    NAME             ImGui-SFML
+    GIT_REPOSITORY   https://github.com/eliasdaler/imgui-sfml
+    GIT_TAG          v2.5
+    GIT_SHALLOW      TRUE
+    OPTIONS
+        "IMGUI_SFML_FIND_SFML OFF"
+        "IMGUI_DIR ${CMAKE_SOURCE_DIR}/extern/imgui-1.88"
+)
+
+# imgui
+add_library(_imgui
+	STATIC
+		extern/imgui-1.88/imgui.cpp
+		extern/imgui-1.88/imgui_demo.cpp
+		extern/imgui-1.88/imgui_draw.cpp
+		extern/imgui-1.88/imgui_tables.cpp
+		extern/imgui-1.88/imgui_widgets.cpp
+
+		extern/imgui-1.88/imconfig.h
+		extern/imgui-1.88/imgui.h
+		extern/imgui-1.88/imgui_internal.h
+		extern/imgui-1.88/imstb_rectpack.h
+		extern/imgui-1.88/imstb_textedit.h
+		extern/imgui-1.88/imstb_truetype.h
+)
+target_include_directories(_imgui PUBLIC extern/imgui-1.88)
+target_link_libraries(_imgui PRIVATE sfml-graphics ImGui-SFML::ImGui-SFML)
 
 # The additional / is important to remove the last character from the path.
 # Note that it does not matter if the OS uses / or \, because we are only
@@ -114,6 +142,8 @@ target_link_libraries(nesemu
         sfml-audio
         freetype
         Catch2
+        _imgui
+        ImGui-SFML::ImGui-SFML
 )
 
 set_property(TARGET nesemu
