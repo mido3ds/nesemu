@@ -29,7 +29,7 @@ int main(int argc, char** argv) {
     console_init(dev, argv[1]);
 
     // window
-    auto title = str_tmpf("NESEMU - {}", argv[1]);
+    auto title = str_format("NESEMU - {}", argv[1]);
     sf::RenderWindow main_wind(
         sf::VideoMode(Config::main_wind.w, Config::main_wind.h), 
         title.c_str(),

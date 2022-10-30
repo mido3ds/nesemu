@@ -1,7 +1,7 @@
 #include "emulation/MMC0.h"
 #include "emulation/common.h"
 
-void mmc0_load_rom(MMC0& self, StrView rom_path) {
+void mmc0_load_rom(MMC0& self, const Str& rom_path) {
     self.rom.load(rom_path);
 
     const bool validMMC0Rom = self.rom.get_mapper_number() == 0 &&

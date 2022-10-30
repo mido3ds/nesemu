@@ -4,10 +4,10 @@
 #include "utils.h"
 #include "emulation/ROM.h"
 
-void ROM::load(StrView path) {
+void ROM::load(const Str& path) {
     INFO("reading rom from {}", path);
 
-    auto file = file_content_str(path.begin(), memory::tmp());
+    auto file = file_content_str(path.c_str(), memory::tmp());
     uint8_t* buffer = (uint8_t*) file.data();
 
     // check header

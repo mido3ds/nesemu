@@ -19,4 +19,4 @@ struct MMC0: public ICPUBusAttachable, public IPPUBusAttachable {
     virtual bool ppu_write(uint16_t addr, uint8_t data);
 };
 
-void mmc0_load_rom(MMC0& self, StrView rom_path);
+void mmc0_load_rom(MMC0& self, const Str& rom_path);

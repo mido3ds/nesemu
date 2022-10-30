@@ -32,7 +32,7 @@ struct Console {
     Disassembler disassembler;
 };
 
-void console_init(Console& self, StrView rom_path = "");
+void console_init(Console& self, const Str& rom_path = "");
 void console_reset(Console& self);
 void console_clock(Console& self, IRenderer* renderer);
 

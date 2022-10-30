@@ -5,7 +5,7 @@
 #include "emulation/ROM.h"
 #include "emulation/IORegs.h"
 
-void console_init(Console& self, StrView rom_path) {
+void console_init(Console& self, const Str& rom_path) {
     self = {};
 
     if (!rom_path.empty()) {
