@@ -96,23 +96,31 @@ int main(int argc, char** argv) {
         }
         do_one_instr = !should_pause;
 
-        if (ImGui::Begin("Memory")) {
+        if (ImGui::Begin("RAM")) {
             constexpr uint32_t width = 16;
             const uint32_t height = dev.ram.data.size() / width;
-
-            ImGui::Text("    ");
-            for (int i = 0; i < width; i++) {
-                ImGui::SameLine();
-                ImGui::Text(str_tmpf("{:02X}", i).c_str());
-            }
-
-            for (int j = 0; j < height; j++) {
-                ImGui::Text(str_tmpf("{:04X}", j).c_str());
-
+            constexpr auto TABLE_FLAGS = ImGuiTableFlags_ScrollX | ImGuiTableFlags_ScrollY | ImGuiTableFlags_RowBg | ImGuiTableFlags_BordersOuter;
+            if (ImGui::BeginTable("ram_table", width+1, TABLE_FLAGS))
+            {
+                ImGui::TableSetupScrollFreeze(1, 1);
+                ImGui::TableSetupColumn("    ", ImGuiTableColumnFlags_NoHide);
                 for (int i = 0; i < width; i++) {
-                    ImGui::SameLine();
-                    ImGui::TextColored(ImVec4 {1.0f, 1.0f, 0, 1.0f}, str_tmpf("{:02X}", dev.ram.data[j*width+i]).c_str());
+                    ImGui::TableSetupColumn(str_tmpf("{:02X}", i).c_str());
                 }
+                ImGui::TableHeadersRow();
+
+                for (int j = 0; j < height; j++) {
+                    ImGui::TableNextRow();
+                    ImGui::TableSetColumnIndex(0);
+                    ImGui::Text(str_tmpf("{:04X}", j).c_str());
+
+                    for (int i = 0; i < width; i++) {
+                        ImGui::TableSetColumnIndex(i+1);
+                        ImGui::TextColored(ImVec4 {1.0f, 1.0f, 0, 1.0f}, str_tmpf("{:02X}", dev.ram.data[j*width+i]).c_str());
+                    }
+                }
+
+                ImGui::EndTable();
             }
 
         }
@@ -198,11 +206,6 @@ int main(int argc, char** argv) {
 /*
 TODO:
 - refactor
-    - memory window
-        - table
-        - vertical scrolling
-        - horizontal scrolling
-        - coloring
     - create windows for RPG, CHM
     - RAM/RPG/CHM: window -> tree
     - merge ROM with MMC0
