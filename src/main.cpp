@@ -96,33 +96,99 @@ int main(int argc, char** argv) {
         }
         do_one_instr = !should_pause;
 
-        if (ImGui::Begin("RAM")) {
-            constexpr uint32_t width = 16;
-            const uint32_t height = dev.ram.data.size() / width;
-            constexpr auto TABLE_FLAGS = ImGuiTableFlags_ScrollX | ImGuiTableFlags_ScrollY | ImGuiTableFlags_RowBg | ImGuiTableFlags_BordersOuter;
-            if (ImGui::BeginTable("ram_table", width+1, TABLE_FLAGS))
-            {
-                ImGui::TableSetupScrollFreeze(1, 1);
-                ImGui::TableSetupColumn("    ", ImGuiTableColumnFlags_NoHide);
-                for (int i = 0; i < width; i++) {
-                    ImGui::TableSetupColumn(str_tmpf("{:02X}", i).c_str());
-                }
-                ImGui::TableHeadersRow();
+        if (ImGui::Begin("Memory")) {
+            if (ImGui::BeginTabBar("memory_tab_bar")) {
+                constexpr uint32_t width = 16;
+                constexpr auto TABLE_FLAGS = ImGuiTableFlags_ScrollX | ImGuiTableFlags_ScrollY | ImGuiTableFlags_RowBg | ImGuiTableFlags_BordersOuter;
 
-                for (int j = 0; j < height; j++) {
-                    ImGui::TableNextRow();
-                    ImGui::TableSetColumnIndex(0);
-                    ImGui::Text(str_tmpf("{:04X}", j).c_str());
+                if (ImGui::BeginTabItem("RAM")) {
+                    const uint32_t height = dev.ram.data.size() / width;
+                    if (ImGui::BeginTable("ram_table", width+1, TABLE_FLAGS))
+                    {
+                        ImGui::TableSetupScrollFreeze(1, 1);
+                        ImGui::TableSetupColumn("", ImGuiTableColumnFlags_NoHeaderLabel);
+                        for (int i = 0; i < width; i++) {
+                            ImGui::TableSetupColumn(str_tmpf("{:02X}", i).c_str());
+                        }
+                        ImGui::TableHeadersRow();
 
-                    for (int i = 0; i < width; i++) {
-                        ImGui::TableSetColumnIndex(i+1);
-                        ImGui::TextColored(ImVec4 {1.0f, 1.0f, 0, 1.0f}, str_tmpf("{:02X}", dev.ram.data[j*width+i]).c_str());
+                        for (int j = 0; j < height; j++) {
+                            ImGui::TableNextRow();
+                            ImGui::TableSetColumnIndex(0);
+                            ImGui::Text(str_tmpf("{:04X}", j).c_str());
+
+                            for (int i = 0; i < width; i++) {
+                                ImGui::TableSetColumnIndex(i+1);
+                                ImGui::TextColored(ImVec4 {1.0f, 1.0f, 0, 1.0f}, str_tmpf("{:02X}", dev.ram.data[j*width+i]).c_str());
+                            }
+                        }
+
+                        ImGui::EndTable();
                     }
+
+                    ImGui::EndTabItem();
                 }
 
-                ImGui::EndTable();
-            }
+                if (ImGui::BeginTabItem("PRG")) {
+                    const auto& prg = dev.mmc0.rom.prg;
+                    const uint32_t height = prg.size() / width;
+                    if (ImGui::BeginTable("ram_table", width+1, TABLE_FLAGS))
+                    {
+                        ImGui::TableSetupScrollFreeze(1, 1);
+                        ImGui::TableSetupColumn("", ImGuiTableColumnFlags_NoHeaderLabel);
+                        for (int i = 0; i < width; i++) {
+                            ImGui::TableSetupColumn(str_tmpf("{:02X}", i).c_str());
+                        }
+                        ImGui::TableHeadersRow();
 
+                        for (int j = 0; j < height; j++) {
+                            ImGui::TableNextRow();
+                            ImGui::TableSetColumnIndex(0);
+                            ImGui::Text(str_tmpf("{:04X}", j).c_str());
+
+                            for (int i = 0; i < width; i++) {
+                                ImGui::TableSetColumnIndex(i+1);
+                                ImGui::TextColored(ImVec4 {1.0f, 1.0f, 0, 1.0f}, str_tmpf("{:02X}", prg[j*width+i]).c_str());
+                            }
+                        }
+
+                        ImGui::EndTable();
+                    }
+
+                    ImGui::EndTabItem();
+                }
+
+                if (ImGui::BeginTabItem("CHR")) {
+                    const auto& chr = dev.mmc0.rom.chr;
+                    const uint32_t height = chr.size() / width;
+                    if (ImGui::BeginTable("ram_table", width+1, TABLE_FLAGS))
+                    {
+                        ImGui::TableSetupScrollFreeze(1, 1);
+                        ImGui::TableSetupColumn("", ImGuiTableColumnFlags_NoHeaderLabel);
+                        for (int i = 0; i < width; i++) {
+                            ImGui::TableSetupColumn(str_tmpf("{:02X}", i).c_str());
+                        }
+                        ImGui::TableHeadersRow();
+
+                        for (int j = 0; j < height; j++) {
+                            ImGui::TableNextRow();
+                            ImGui::TableSetColumnIndex(0);
+                            ImGui::Text(str_tmpf("{:04X}", j).c_str());
+
+                            for (int i = 0; i < width; i++) {
+                                ImGui::TableSetColumnIndex(i+1);
+                                ImGui::TextColored(ImVec4 {1.0f, 1.0f, 0, 1.0f}, str_tmpf("{:02X}", chr[j*width+i]).c_str());
+                            }
+                        }
+
+                        ImGui::EndTable();
+                    }
+
+                    ImGui::EndTabItem();
+                }
+
+                ImGui::EndTabBar();
+            }
         }
         ImGui::End();
 
@@ -206,8 +272,6 @@ int main(int argc, char** argv) {
 /*
 TODO:
 - refactor
-    - create windows for RPG, CHM
-    - RAM/RPG/CHM: window -> tree
     - merge ROM with MMC0
 	- no dynamic dispatch
     - function_name(self) instead of self.function_name

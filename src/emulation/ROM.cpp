@@ -4,7 +4,15 @@
 #include "utils.h"
 #include "emulation/ROM.h"
 
-void ROM::load(const Str& path) {
+static uint32_t rom_get_prg_rom_size(const ROM& self) {
+    return self.header.num_prgs*16*1024; // 16 KB
+}
+
+static uint32_t rom_get_chr_rom_size(const ROM& self) {
+    return self.header.num_chrs*8*1024; // 8 KB
+}
+
+void rom_load(ROM& self, const Str& path) {
     INFO("reading rom from {}", path);
 
     auto file = file_content_str(path.c_str(), memory::tmp());
@@ -17,50 +25,50 @@ void ROM::load(const Str& path) {
     }
 
     // copy rest of header
-	header = *(Header*) (buffer+4);
-	static_assert(sizeof(header) == 16-4);
+	self.header = *(ROM::Header*) (buffer+4);
+	static_assert(sizeof(self.header) == 16-4);
 
     // no trainer
-    if (header.flags6.bits.has_trainer) {
+    if (self.header.flags6.bits.has_trainer) {
         WARNING("emulator doesnt support trainers, ignoring trainer");
     }
 
     // cpy PRG
-    uint8_t* prgPtr = buffer+16;
-    if (header.flags6.bits.has_trainer) {
-        prgPtr += 512;
+    uint8_t* prg_ptr = buffer+16;
+    if (self.header.flags6.bits.has_trainer) {
+        prg_ptr += 512;
     }
 
-    auto prgSize = get_prg_rom_size();
-    if (prgPtr+prgSize > buffer+file.size()) {
+    auto prg_size = rom_get_prg_rom_size(self);
+    if (prg_ptr+prg_size > buffer+file.size()) {
         panic("no PRG ROM");
     }
 
-    prg.clear();
-    prg.insert(prg.end(), prgPtr, prgPtr+prgSize);
+    self.prg.clear();
+    self.prg.insert(self.prg.end(), prg_ptr, prg_ptr+prg_size);
 
     // cpy CHR
-    uint8_t* chrPtr = prgPtr+prgSize;
+    uint8_t* chr_ptr = prg_ptr+prg_size;
 
-    auto chrSize = get_chr_rom_size();
-    if (chrPtr+chrSize > buffer+file.size()) {
+    auto chr_size = rom_get_chr_rom_size(self);
+    if (chr_ptr+chr_size > buffer+file.size()) {
         panic("no CHR ROM");
     }
 
-    chr.clear();
-    chr.insert(chr.end(), chrPtr, chrPtr+chrSize);
+    self.chr.clear();
+    self.chr.insert(self.chr.end(), chr_ptr, chr_ptr+chr_size);
 
     // no playchoice
-    if (header.flags7.bits.has_play_choice) {
+    if (self.header.flags7.bits.has_play_choice) {
         WARNING("emulator doesnt support PlayChoice, ignoring PlayChoice");
     }
 
-    INFO("rom mapper num = {}", get_mapper_number());
-    INFO("iNES version = {}", header.flags7.bits.nes2format == 2? 2:1);
-    INFO("rom num of PRG roms = {}", header.num_prgs);
-    INFO("rom num of CHR roms = {}", header.num_chrs);
-    if (!header.flags6.bits.ignore_mirroring_control) {
-        if (header.flags6.bits.mirroring == 0){
+    INFO("rom mapper num = {}", rom_get_mapper_number(self));
+    INFO("iNES version = {}", self.header.flags7.bits.nes2format == 2? 2:1);
+    INFO("rom num of PRG roms = {}", self.header.num_prgs);
+    INFO("rom num of CHR roms = {}", self.header.num_chrs);
+    if (!self.header.flags6.bits.ignore_mirroring_control) {
+        if (self.header.flags6.bits.mirroring == 0){
             INFO("rom mirroring is horizontal");
         } else {
             INFO("rom mirroring is vertical");
@@ -69,16 +77,4 @@ void ROM::load(const Str& path) {
         INFO("rom ignores mirroring");
     }
     INFO("done reading ROM");
-}
-
-uint16_t ROM::get_mapper_number() const {
-    return header.flags6.bits.lower_mapper_num | header.flags7.bits.upper_mapper_num << 8;
-}
-
-uint32_t ROM::get_prg_rom_size() const {
-    return header.num_prgs*16*1024; // 16 KB
-}
-
-uint32_t ROM::get_chr_rom_size() const {
-    return header.num_chrs*8*1024; // 8 KB
 }

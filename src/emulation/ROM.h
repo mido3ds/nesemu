@@ -50,11 +50,10 @@ struct ROM {
         // Flags 8, 9 and 10 are not supported
 		uint8_t _padding[8];
     } header;
-
-    uint32_t get_prg_rom_size() const;
-    uint32_t get_chr_rom_size() const;
-
-    void load(const Str& path);
-
-    uint16_t get_mapper_number() const;
 };
+
+void rom_load(ROM& self, const Str& path);
+
+inline uint16_t rom_get_mapper_number(const ROM& self) {
+    return self.header.flags6.bits.lower_mapper_num | self.header.flags7.bits.upper_mapper_num << 8;
+}
