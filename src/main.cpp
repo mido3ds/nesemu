@@ -288,6 +288,7 @@ TODO:
 	-? no dynamic dispatch in renderers
 	-? sfml -> SDL
 
+- show instructions as a table
 - complete all nestest.nes
 - support illegal NES instructions
 - handle reset correctly (how?)
