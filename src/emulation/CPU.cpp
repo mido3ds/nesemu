@@ -49,8 +49,67 @@ void cpu_clock(CPU& self) {
 
     auto& inst = instruction_set[self.fetch()];
 
-    self.prepare_arg(inst.mode);
-    auto oldpc = self.regs.pc;
+    // prepare arg
+    // TODO: optimize using function instead
+    // of switch case
+    self.mode = inst.mode;
+    switch (self.mode) {
+    case AddressMode::Implicit:
+        break;
+    case AddressMode::Accumulator:
+        self.arg_value = self.regs.a;
+        break;
+    case AddressMode::Relative:
+    case AddressMode::Immediate:
+        self.arg_value = self.fetch();
+        break;
+    case AddressMode::ZeroPage:
+        self.arg_addr = self.zero_page_address(self.fetch());
+        self.arg_value = self.read(self.arg_addr);
+        break;
+    case AddressMode::ZeroPageX:
+        self.arg_addr = self.indexed_zero_page_address(self.fetch(), self.regs.x);
+        self.arg_value = self.read(self.arg_addr);
+        break;
+    case AddressMode::ZeroPageY:
+        self.arg_addr = self.indexed_zero_page_address(self.fetch(), self.regs.y);
+        self.arg_value = self.read(self.arg_addr);
+        break;
+    case AddressMode::Absolute: {
+        auto bb = self.fetch(), cc = self.fetch();
+        self.arg_addr = self.absolute_address(bb, cc);
+        self.arg_value = self.read(self.arg_addr);
+        break;
+    }
+    case AddressMode::AbsoluteX: {
+        auto bb = self.fetch(), cc = self.fetch();
+        self.arg_addr = self.indexed_absolute_address(bb, cc, self.regs.x);
+        self.arg_value = self.read(self.arg_addr);
+        break;
+    }
+    case AddressMode::AbsoluteY: {
+        auto bb = self.fetch(), cc = self.fetch();
+        self.arg_addr = self.indexed_absolute_address(bb, cc, self.regs.y);
+        self.arg_value = self.read(self.arg_addr);
+        break;
+    }
+    case AddressMode::Indirect: {
+        auto bb = self.fetch(), cc = self.fetch();
+        self.arg_addr = self.indirect_address(bb, cc);
+        self.arg_value = self.read(self.arg_addr);
+        break;
+    }
+    case AddressMode::IndexedIndirect:
+        self.arg_addr = self.indexed_indirect_address(self.fetch(), self.regs.x);
+        self.arg_value = self.read(self.arg_addr);
+        break;
+    case AddressMode::IndirectIndexed:
+        self.arg_addr = self.indirect_indexed_address(self.fetch(), self.regs.y);
+        self.arg_value = self.read(self.arg_addr);
+        break;
+    }
+
+    const auto oldpc = self.regs.pc;
     self.cross_page_penalty = true;
 
     inst.exec(self);
@@ -60,69 +119,6 @@ void cpu_clock(CPU& self) {
     if (self.cross_page_penalty && inst.cross_page_penalty == 1) {
         self.cycles += (self.regs.pc>>8 == oldpc>>8) ? 0:1;
     }
-}
-
-// TODO: inline in caller
-void CPU::prepare_arg(AddressMode mode) {
-    // TODO: optimize using function instead
-    // of switch case
-    switch (mode) {
-    case AddressMode::Implicit:
-        break;
-    case AddressMode::Accumulator:
-        arg_value = regs.a;
-        break;
-    case AddressMode::Relative:
-    case AddressMode::Immediate:
-        arg_value = fetch();
-        break;
-    case AddressMode::ZeroPage:
-        arg_addr = zero_page_address(fetch());
-        arg_value = read(arg_addr);
-        break;
-    case AddressMode::ZeroPageX:
-        arg_addr = indexed_zero_page_address(fetch(), regs.x);
-        arg_value = read(arg_addr);
-        break;
-    case AddressMode::ZeroPageY:
-        arg_addr = indexed_zero_page_address(fetch(), regs.y);
-        arg_value = read(arg_addr);
-        break;
-    case AddressMode::Absolute: {
-        auto bb = fetch(), cc = fetch();
-        arg_addr = absolute_address(bb, cc);
-        arg_value = read(arg_addr);
-        break;
-    }
-    case AddressMode::AbsoluteX: {
-        auto bb = fetch(), cc = fetch();
-        arg_addr = indexed_absolute_address(bb, cc, regs.x);
-        arg_value = read(arg_addr);
-        break;
-    }
-    case AddressMode::AbsoluteY: {
-        auto bb = fetch(), cc = fetch();
-        arg_addr = indexed_absolute_address(bb, cc, regs.y);
-        arg_value = read(arg_addr);
-        break;
-    }
-    case AddressMode::Indirect: {
-        auto bb = fetch(), cc = fetch();
-        arg_addr = indirect_address(bb, cc);
-        arg_value = read(arg_addr);
-        break;
-    }
-    case AddressMode::IndexedIndirect:
-        arg_addr = indexed_indirect_address(fetch(), regs.x);
-        arg_value = read(arg_addr);
-        break;
-    case AddressMode::IndirectIndexed:
-        arg_addr = indirect_indexed_address(fetch(), regs.y);
-        arg_value = read(arg_addr);
-        break;
-    }
-
-    this->mode = mode;
 }
 
 // TODO: is this only for JMP?
@@ -165,21 +161,19 @@ void CPU::write_arg(uint8_t v) {
 
 uint8_t CPU::read(uint16_t address) {
     uint8_t data = 0;
-    bool success = console->mmc0.read(address, data)
-        || console->ram.read(address, data)
-        || console->io.read(address, data)
-        || console->ppu.read(address, data);
+    bool success = rom_read(console->rom, address, data)
+        || ram_read(console->ram, address, data)
+        || ppu_read(console->ppu, address, data);
     if (!success) {
        WARNING("read from unregistered address 0x{:02X}", address);
     }
     return data;
 }
 
-void CPU::write(uint16_t address, uint8_t value)  {
-    bool success = console->mmc0.write(address, value)
-        || console->ram.write(address, value)
-        || console->io.write(address, value)
-        || console->ppu.write(address, value);
+void CPU::write(uint16_t address, uint8_t data)  {
+    bool success = rom_write(console->rom, address, data)
+        || ram_write(console->ram, address, data)
+        || ppu_read(console->ppu, address, data);
     if (!success) {
        WARNING("write to unregistered address 0x{:02X}", address);
     }

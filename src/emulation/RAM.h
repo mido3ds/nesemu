@@ -2,10 +2,7 @@
 
 #include "utils.h"
 
-struct RAM {
-    Arr<uint8_t, 0x07FF+1> data;
+using RAM = Arr<uint8_t, 0x07FF+1>;
 
-    void reset();
-    bool read(uint16_t addr, uint8_t& data);
-    bool write(uint16_t addr, uint8_t data);
-};
+bool ram_read(RAM& self, uint16_t addr, uint8_t& data);
+bool ram_write(RAM& self, uint16_t addr, uint8_t data);

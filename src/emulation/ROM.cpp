@@ -63,6 +63,13 @@ void rom_load(ROM& self, const Str& path) {
         WARNING("emulator doesnt support PlayChoice, ignoring PlayChoice");
     }
 
+    const bool valid_mmc0_rom = rom_get_mapper_number(self) == 0 &&
+        (self.prg.size() % (16*1024) == 0) &&
+        (self.chr.size() == (8*1024));
+    if (!valid_mmc0_rom) {
+        panic("only supports MMC0");
+    }
+
     INFO("rom mapper num = {}", rom_get_mapper_number(self));
     INFO("iNES version = {}", self.header.flags7.bits.nes2format == 2? 2:1);
     INFO("rom num of PRG roms = {}", self.header.num_prgs);
@@ -77,4 +84,24 @@ void rom_load(ROM& self, const Str& path) {
         INFO("rom ignores mirroring");
     }
     INFO("done reading ROM");
+}
+
+bool rom_read(ROM& self, uint16_t addr, uint8_t& data) {
+    if (self.prg.size() > 0 && PRG_REGION.contains(addr)) {
+        data = self.prg[(addr - PRG_ROM_LOW.start) % self.prg.size()];
+
+        return true;
+    }
+
+    return false;
+}
+
+bool rom_write(ROM& self, uint16_t addr, uint8_t data) {
+    if (self.prg.size() > 0 && PRG_REGION.contains(addr)) {
+        self.prg[(addr - PRG_ROM_LOW.start) % self.prg.size()] = data;
+
+        return true;
+    }
+
+    return false;
 }

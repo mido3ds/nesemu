@@ -4,10 +4,9 @@
 #include <map>
 
 #include "emulation/RAM.h"
+#include "emulation/ROM.h"
 #include "emulation/CPU.h"
 #include "emulation/PPU.h"
-#include "emulation/MMC0.h"
-#include "emulation/IORegs.h"
 
 struct Disassembler {
     std::pmr::map<uint16_t, Str> assembly;
@@ -24,8 +23,7 @@ struct Console {
     CPU cpu;
     PPU ppu;
     RAM ram;
-    MMC0 mmc0;
-    IORegs io;
+    ROM rom;
     uint64_t cycles;
     Disassembler disassembler;
 };

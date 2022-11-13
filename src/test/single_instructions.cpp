@@ -12,26 +12,26 @@
 
 static uint8_t mem_read(RAM& ram, uint16_t a) {
     uint8_t data;
-    ram.read(a, data);
+    ram_read(ram, a, data);
     return data;
 }
 
 static uint16_t mem_read16(RAM& ram, uint16_t a) {
     uint8_t up, low;
 
-    ram.read(a, up);
-    ram.read(a, low);
+    ram_read(ram, a, up);
+    ram_read(ram, a, low);
 
     return low | up << 8;
 }
 
 static void mem_write(RAM& ram, uint16_t a, uint8_t data) {
-    ram.write(a, data);
+    ram_write(ram, a, data);
 }
 
 static void mem_write16(RAM& ram, uint16_t a, uint16_t data) {
-    ram.write(a, data);
-    ram.write(a+1, data >> 8);
+    ram_write(ram, a, data);
+    ram_write(ram, a+1, data >> 8);
 }
 
 TEST_CASE("branch") {

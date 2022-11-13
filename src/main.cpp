@@ -102,7 +102,7 @@ int main(int argc, char** argv) {
                 constexpr auto TABLE_FLAGS = ImGuiTableFlags_ScrollX | ImGuiTableFlags_ScrollY | ImGuiTableFlags_RowBg | ImGuiTableFlags_BordersOuter;
 
                 if (ImGui::BeginTabItem("RAM")) {
-                    const uint32_t height = dev.ram.data.size() / width;
+                    const uint32_t height = dev.ram.size() / width;
                     if (ImGui::BeginTable("ram_table", width+1, TABLE_FLAGS))
                     {
                         ImGui::TableSetupScrollFreeze(1, 1);
@@ -119,7 +119,7 @@ int main(int argc, char** argv) {
 
                             for (int i = 0; i < width; i++) {
                                 ImGui::TableSetColumnIndex(i+1);
-                                ImGui::TextColored(ImVec4 {1.0f, 1.0f, 0, 1.0f}, str_tmpf("{:02X}", dev.ram.data[j*width+i]).c_str());
+                                ImGui::TextColored(ImVec4 {1.0f, 1.0f, 0, 1.0f}, str_tmpf("{:02X}", dev.ram[j*width+i]).c_str());
                             }
                         }
 
@@ -130,7 +130,7 @@ int main(int argc, char** argv) {
                 }
 
                 if (ImGui::BeginTabItem("PRG")) {
-                    const auto& prg = dev.mmc0.rom.prg;
+                    const auto& prg = dev.rom.prg;
                     const uint32_t height = prg.size() / width;
                     if (ImGui::BeginTable("ram_table", width+1, TABLE_FLAGS))
                     {
@@ -159,7 +159,7 @@ int main(int argc, char** argv) {
                 }
 
                 if (ImGui::BeginTabItem("CHR")) {
-                    const auto& chr = dev.mmc0.rom.chr;
+                    const auto& chr = dev.rom.chr;
                     const uint32_t height = chr.size() / width;
                     if (ImGui::BeginTable("ram_table", width+1, TABLE_FLAGS))
                     {
@@ -272,11 +272,11 @@ int main(int argc, char** argv) {
 /*
 TODO:
 - refactor
-    - merge ROM with MMC0
-	- no dynamic dispatch
     - function_name(self) instead of self.function_name
+	-? no dynamic dispatch in renderers
 	-? sfml -> SDL
 
+- speed up table rendering by clipping
 - complete all nestest.nes
 - support illegal NES instructions
 - handle reset correctly (how?)

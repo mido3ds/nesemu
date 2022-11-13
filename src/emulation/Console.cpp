@@ -3,18 +3,17 @@
 #include "emulation/Console.h"
 #include "emulation/instructions.h"
 #include "emulation/ROM.h"
-#include "emulation/IORegs.h"
 
 void console_init(Console& self, const Str& rom_path) {
     self = {};
 
     if (!rom_path.empty()) {
-        mmc0_load_rom(self.mmc0, rom_path);
+        rom_load(self.rom, rom_path);
 
-        if (self.mmc0.rom.prg.size() == PRG_ROM_LOW.size()) {
-            self.disassembler = disassembler_new(self.mmc0.rom.prg, PRG_ROM_UP.start);
+        if (self.rom.prg.size() == PRG_ROM_LOW.size()) {
+            self.disassembler = disassembler_new(self.rom.prg, PRG_ROM_UP.start);
         } else {
-            self.disassembler = disassembler_new(self.mmc0.rom.prg, PRG_ROM_LOW.start);
+            self.disassembler = disassembler_new(self.rom.prg, PRG_ROM_LOW.start);
         }
     }
 
@@ -23,10 +22,7 @@ void console_init(Console& self, const Str& rom_path) {
 }
 
 void console_reset(Console& self) {
-    self.ppu.reset();
-    self.ram.reset();
-    self.mmc0.reset();
-    self.io.reset();
+    ppu_reset(self.ppu);
     cpu_reset(self.cpu);
     self.cycles = 0;
 }

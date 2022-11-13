@@ -48,7 +48,7 @@ struct CPU {
     uint16_t read16(uint16_t address);
     uint8_t fetch(); // read and increment pc
 
-    void write(uint16_t address, uint8_t value);
+    void write(uint16_t address, uint8_t data);
     void write16(uint16_t address, uint16_t v);
 
     void push(uint8_t v);
@@ -63,7 +63,6 @@ struct CPU {
     AddressMode mode;
 
     void write_arg(uint8_t v); 
-    void prepare_arg(AddressMode mode);
     void reprepare_jmp_arg();
     bool cross_page_penalty;
 };

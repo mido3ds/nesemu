@@ -57,3 +57,6 @@ void rom_load(ROM& self, const Str& path);
 inline uint16_t rom_get_mapper_number(const ROM& self) {
     return self.header.flags6.bits.lower_mapper_num | self.header.flags7.bits.upper_mapper_num << 8;
 }
+
+bool rom_read(ROM& self, uint16_t addr, uint8_t& data);
+bool rom_write(ROM& self, uint16_t addr, uint8_t data);

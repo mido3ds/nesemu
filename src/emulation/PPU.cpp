@@ -2,10 +2,9 @@
 #include "Config.h"
 
 PPU ppu_new(Console* console) {
-    my_assert(console);
-    PPU self {};
-    self.console = console;
-    return self;
+    return PPU {
+        .console = console,
+    };
 }
 
 void ppu_clock(PPU& self, IRenderer* renderer) {
@@ -18,12 +17,12 @@ void ppu_clock(PPU& self, IRenderer* renderer) {
     }
 }
 
-void PPU::reset() {
+void ppu_reset(PPU& self) {
     // TODO
-    cycles = 0;
+    self.cycles = 0;
 }
 
-bool PPU::read(uint16_t addr, uint8_t& data) {
+bool ppu_read(PPU& self, uint16_t addr, uint8_t& data) {
     // TODO
     switch (addr) {
     case 0x0000: // Control
@@ -46,7 +45,7 @@ bool PPU::read(uint16_t addr, uint8_t& data) {
     return false;
 }
 
-bool PPU::write(uint16_t addr, uint8_t data) {
+bool ppu_write(PPU& self, uint16_t addr, uint8_t data) {
     // TODO
     switch (addr) {
     case 0x0000: // Control

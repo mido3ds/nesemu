@@ -88,20 +88,16 @@ target_sources(nesemu
         src/emulation/instructions.h
         src/emulation/Console.h
         src/emulation/Console.cpp
-        src/emulation/MMC0.cpp
-        src/emulation/MMC0.h
         src/emulation/ROM.cpp
         src/emulation/RAM.h
         src/emulation/CPU.h
         src/emulation/instructions.cpp
         src/emulation/ROM.h
-        src/emulation/IORegs.h
         src/emulation/PPU.cpp
         src/emulation/PPU.h
         src/emulation/CPU.cpp
         src/emulation/common.cpp
         src/emulation/RAM.cpp
-        src/emulation/IORegs.cpp
         src/utils.h
         src/Config.h
         src/main.cpp
