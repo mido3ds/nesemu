@@ -112,16 +112,20 @@ int main(int argc, char** argv) {
                         }
                         ImGui::TableHeadersRow();
 
-                        for (int j = 0; j < height; j++) {
-                            ImGui::TableNextRow();
-                            ImGui::TableSetColumnIndex(0);
-                            ImGui::Text(str_tmpf("{:04X}", j).c_str());
+                        ImGuiListClipper clipper(height);
+                        while (clipper.Step()) {
+                            for (int j = clipper.DisplayStart; j < clipper.DisplayEnd; j++) {
+                                ImGui::TableNextRow();
+                                ImGui::TableSetColumnIndex(0);
+                                ImGui::Text(str_tmpf("{:04X}", j).c_str());
 
-                            for (int i = 0; i < width; i++) {
-                                ImGui::TableSetColumnIndex(i+1);
-                                ImGui::TextColored(ImVec4 {1.0f, 1.0f, 0, 1.0f}, str_tmpf("{:02X}", dev.ram[j*width+i]).c_str());
+                                for (int i = 0; i < width; i++) {
+                                    ImGui::TableSetColumnIndex(i+1);
+                                    ImGui::TextColored(ImVec4 {1.0f, 1.0f, 0, 1.0f}, str_tmpf("{:02X}", dev.ram[j*width+i]).c_str());
+                                }
                             }
                         }
+                        clipper.End();
 
                         ImGui::EndTable();
                     }
@@ -141,16 +145,20 @@ int main(int argc, char** argv) {
                         }
                         ImGui::TableHeadersRow();
 
-                        for (int j = 0; j < height; j++) {
-                            ImGui::TableNextRow();
-                            ImGui::TableSetColumnIndex(0);
-                            ImGui::Text(str_tmpf("{:04X}", j).c_str());
+                        ImGuiListClipper clipper(height);
+                        while (clipper.Step()) {
+                            for (int j = clipper.DisplayStart; j < clipper.DisplayEnd; j++) {
+                                ImGui::TableNextRow();
+                                ImGui::TableSetColumnIndex(0);
+                                ImGui::Text(str_tmpf("{:04X}", j).c_str());
 
-                            for (int i = 0; i < width; i++) {
-                                ImGui::TableSetColumnIndex(i+1);
-                                ImGui::TextColored(ImVec4 {1.0f, 1.0f, 0, 1.0f}, str_tmpf("{:02X}", prg[j*width+i]).c_str());
+                                for (int i = 0; i < width; i++) {
+                                    ImGui::TableSetColumnIndex(i+1);
+                                    ImGui::TextColored(ImVec4 {1.0f, 1.0f, 0, 1.0f}, str_tmpf("{:02X}", prg[j*width+i]).c_str());
+                                }
                             }
                         }
+                        clipper.End();
 
                         ImGui::EndTable();
                     }
@@ -170,16 +178,20 @@ int main(int argc, char** argv) {
                         }
                         ImGui::TableHeadersRow();
 
-                        for (int j = 0; j < height; j++) {
-                            ImGui::TableNextRow();
-                            ImGui::TableSetColumnIndex(0);
-                            ImGui::Text(str_tmpf("{:04X}", j).c_str());
+                        ImGuiListClipper clipper(height);
+                        while (clipper.Step()) {
+                            for (int j = clipper.DisplayStart; j < clipper.DisplayEnd; j++) {
+                                ImGui::TableNextRow();
+                                ImGui::TableSetColumnIndex(0);
+                                ImGui::Text(str_tmpf("{:04X}", j).c_str());
 
-                            for (int i = 0; i < width; i++) {
-                                ImGui::TableSetColumnIndex(i+1);
-                                ImGui::TextColored(ImVec4 {1.0f, 1.0f, 0, 1.0f}, str_tmpf("{:02X}", chr[j*width+i]).c_str());
+                                for (int i = 0; i < width; i++) {
+                                    ImGui::TableSetColumnIndex(i+1);
+                                    ImGui::TextColored(ImVec4 {1.0f, 1.0f, 0, 1.0f}, str_tmpf("{:02X}", chr[j*width+i]).c_str());
+                                }
                             }
                         }
+                        clipper.End();
 
                         ImGui::EndTable();
                     }
@@ -276,7 +288,7 @@ TODO:
 	-? no dynamic dispatch in renderers
 	-? sfml -> SDL
 
-- speed up table rendering by clipping
+- use mouse wheel with imgui
 - complete all nestest.nes
 - support illegal NES instructions
 - handle reset correctly (how?)
