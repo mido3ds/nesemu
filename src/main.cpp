@@ -57,10 +57,6 @@ int main(int argc, char** argv) {
         memory::reset_tmp();
         main_wind.clear();
 
-        // time
-        const auto elapsed_time = delta_clock.restart();
-        ImGui::SFML::Update(main_wind, elapsed_time);
-
         // handle events
         sf::Event event;
         while (main_wind.pollEvent(event)) {
@@ -79,6 +75,10 @@ int main(int argc, char** argv) {
                 break;
             }
         }
+
+        // time
+        const auto elapsed_time = delta_clock.restart();
+        ImGui::SFML::Update(main_wind, elapsed_time);
 
         if (!should_pause || do_one_instr) {
             console_input(dev, JoyPadInput {
@@ -288,7 +288,6 @@ TODO:
 	-? no dynamic dispatch in renderers
 	-? sfml -> SDL
 
-- use mouse wheel with imgui
 - complete all nestest.nes
 - support illegal NES instructions
 - handle reset correctly (how?)
