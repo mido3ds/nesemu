@@ -85,9 +85,7 @@ target_sources(nesemu
         src/gui/IRenderer.h
         src/gui/MockRenderer.cpp
         src/emulation/common.h
-        src/emulation/ICPUBusAttachable.h
         src/emulation/instructions.h
-        src/emulation/Bus.cpp
         src/emulation/Console.h
         src/emulation/Console.cpp
         src/emulation/MMC0.cpp
@@ -95,13 +93,11 @@ target_sources(nesemu
         src/emulation/ROM.cpp
         src/emulation/RAM.h
         src/emulation/CPU.h
-        src/emulation/IPPUBusAttachable.h
         src/emulation/instructions.cpp
         src/emulation/ROM.h
         src/emulation/IORegs.h
         src/emulation/PPU.cpp
         src/emulation/PPU.h
-        src/emulation/Bus.h
         src/emulation/CPU.cpp
         src/emulation/common.cpp
         src/emulation/RAM.cpp

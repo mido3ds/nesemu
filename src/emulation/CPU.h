@@ -2,7 +2,6 @@
 
 #include <thread>
 
-#include "emulation/Bus.h"
 #include "emulation/common.h"
 
 struct CPURegs {
@@ -26,11 +25,12 @@ struct CPURegs {
     } flags; // processor status
 };
 
+struct Console;
+
 struct CPU {
     CPURegs regs;
-
     uint16_t cycles = 0;
-    Bus* bus;
+    Console* console;
 
     /*addressing modes for 6502
     from Appendix E: http://www.nesdev.com/NESDoc.pdf
@@ -68,6 +68,6 @@ struct CPU {
     bool cross_page_penalty;
 };
 
-CPU cpu_new(Bus* bus);
+CPU cpu_new(Console* console);
 void cpu_reset(CPU& self);
 void cpu_clock(CPU& self);

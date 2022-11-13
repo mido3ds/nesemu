@@ -1,12 +1,13 @@
 #include "emulation/CPU.h"
+#include "emulation/Console.h"
 #include "emulation/instructions.h"
 #include "utils.h"
 
-CPU cpu_new(Bus* bus) {
+CPU cpu_new(Console* console) {
     CPU self {};
 
-    self.bus = bus;
-    my_assert(bus);
+    self.console = console;
+    my_assert(console);
 
     // https://wiki.nesdev.com/w/index.php/CPU_power_up_state#At_power-up
     self.regs.pc = self.read16(RH);
@@ -163,13 +164,25 @@ void CPU::write_arg(uint8_t v) {
 }
 
 uint8_t CPU::read(uint16_t address) {
-    uint8_t data;
-    bus->read(address, data);
+    uint8_t data = 0;
+    bool success = console->mmc0.read(address, data)
+        || console->ram.read(address, data)
+        || console->io.read(address, data)
+        || console->ppu.read(address, data);
+    if (!success) {
+       WARNING("read from unregistered address 0x{:02X}", address);
+    }
     return data;
 }
 
 void CPU::write(uint16_t address, uint8_t value)  {
-    bus->write(address, value);
+    bool success = console->mmc0.write(address, value)
+        || console->ram.write(address, value)
+        || console->io.write(address, value)
+        || console->ppu.write(address, value);
+    if (!success) {
+       WARNING("write to unregistered address 0x{:02X}", address);
+    }
 }
 
 void CPU::push(uint8_t v) {
@@ -215,12 +228,13 @@ uint16_t CPU::indirect_indexed_address(const uint8_t bb, const uint8_t i) {
 uint8_t CPU::fetch() { return read(regs.pc++); }
 
 uint16_t CPU::read16(uint16_t address) {
-    uint16_t data;
-    bus->read16(address, data);
-    return data;
+    return read(address) | read(address+1) << 8;
 }
 
-void CPU::write16(uint16_t address, uint16_t v) { bus->write16(address, v); }
+void CPU::write16(uint16_t address, uint16_t v) {
+    write(address, v & 0x00FF);
+    write(address+1, (v & 0xFF00) >> 8);
+}
 
 uint16_t CPU::pop16() { return pop() | pop() << 8; }
 void CPU::push16(uint16_t v) { push(v & 255); push((v >> 8) & 255); }

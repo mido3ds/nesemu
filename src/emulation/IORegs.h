@@ -1,9 +1,9 @@
 #pragma once
 
-#include "emulation/ICPUBusAttachable.h"
+#include <cstdint>
 
-struct IORegs: public ICPUBusAttachable {
-    virtual void reset();
-    virtual bool read(uint16_t addr, uint8_t& data);
-    virtual bool write(uint16_t addr, uint8_t data);
+struct IORegs {
+    void reset();
+    bool read(uint16_t addr, uint8_t& data);
+    bool write(uint16_t addr, uint8_t data);
 };

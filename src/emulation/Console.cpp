@@ -18,19 +18,15 @@ void console_init(Console& self, const Str& rom_path) {
         }
     }
 
-    bus_attach_to_cpu(self.bus, &self.mmc0);
-    bus_attach_to_cpu(self.bus, &self.ram);
-    bus_attach_to_cpu(self.bus, &self.io);
-    bus_attach_to_cpu(self.bus, &self.ppu);
-
-    bus_attach_to_ppu(self.bus, &self.mmc0);
-
-    self.ppu = ppu_new(&self.bus);
-    self.cpu = cpu_new(&self.bus);
+    self.ppu = ppu_new(&self);
+    self.cpu = cpu_new(&self);
 }
 
 void console_reset(Console& self) {
-    bus_reset(self.bus);
+    self.ppu.reset();
+    self.ram.reset();
+    self.mmc0.reset();
+    self.io.reset();
     cpu_reset(self.cpu);
     self.cycles = 0;
 }

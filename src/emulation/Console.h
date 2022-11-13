@@ -4,7 +4,6 @@
 #include <map>
 
 #include "emulation/RAM.h"
-#include "emulation/Bus.h"
 #include "emulation/CPU.h"
 #include "emulation/PPU.h"
 #include "emulation/MMC0.h"
@@ -25,7 +24,6 @@ struct Console {
     CPU cpu;
     PPU ppu;
     RAM ram;
-    Bus bus;
     MMC0 mmc0;
     IORegs io;
     uint64_t cycles;

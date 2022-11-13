@@ -1,10 +1,10 @@
 #include "emulation/PPU.h"
 #include "Config.h"
 
-PPU ppu_new(Bus* bus) {
-    my_assert(bus);
+PPU ppu_new(Console* console) {
+    my_assert(console);
     PPU self {};
-    self.bus = bus;
+    self.console = console;
     return self;
 }
 
