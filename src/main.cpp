@@ -285,8 +285,8 @@ int main(int argc, char** argv) {
 TODO:
 - refactor
     - function_name(self) instead of self.function_name
-	-? no dynamic dispatch in renderers
-	-? sfml -> SDL
+    -? no dynamic dispatch in renderers
+    -? sfml -> SDL
 
 - show instructions as a table
 - complete all nestest.nes
