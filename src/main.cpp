@@ -17,7 +17,7 @@ int run_tests(int argc, char** argv);
 
 int main(int argc, char** argv) {
     if (argc == 1 || argv[1] == "--help"_str_lit) {
-        fmt::print(stderr, "Usage: {} </path/to/rom | test [args to Carch2] | --help>\n", file_get_base_name(argv[0]));
+        fmt::print(stderr, "Usage: {} </path/to/rom | test [args to Catch2] | --help>\n", file_get_base_name(argv[0]));
         return 1;
     }
 
