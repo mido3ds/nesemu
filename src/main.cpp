@@ -27,6 +27,7 @@ int main(int argc, char** argv) {
 
     Console dev {};
     console_init(dev, argv[1]);
+    const auto assembly = rom_disassemble(dev.rom);
 
     // window
     auto title = str_format("NESEMU - {}", argv[1]);
@@ -103,8 +104,7 @@ int main(int argc, char** argv) {
 
                 if (ImGui::BeginTabItem("RAM")) {
                     const uint32_t height = dev.ram.size() / width;
-                    if (ImGui::BeginTable("ram_table", width+1, TABLE_FLAGS))
-                    {
+                    if (ImGui::BeginTable("ram_table", width+1, TABLE_FLAGS)) {
                         ImGui::TableSetupScrollFreeze(1, 1);
                         ImGui::TableSetupColumn("", ImGuiTableColumnFlags_NoHeaderLabel);
                         for (int i = 0; i < width; i++) {
@@ -136,8 +136,7 @@ int main(int argc, char** argv) {
                 if (ImGui::BeginTabItem("PRG")) {
                     const auto& prg = dev.rom.prg;
                     const uint32_t height = prg.size() / width;
-                    if (ImGui::BeginTable("ram_table", width+1, TABLE_FLAGS))
-                    {
+                    if (ImGui::BeginTable("ram_table", width+1, TABLE_FLAGS)) {
                         ImGui::TableSetupScrollFreeze(1, 1);
                         ImGui::TableSetupColumn("", ImGuiTableColumnFlags_NoHeaderLabel);
                         for (int i = 0; i < width; i++) {
@@ -169,8 +168,7 @@ int main(int argc, char** argv) {
                 if (ImGui::BeginTabItem("CHR")) {
                     const auto& chr = dev.rom.chr;
                     const uint32_t height = chr.size() / width;
-                    if (ImGui::BeginTable("ram_table", width+1, TABLE_FLAGS))
-                    {
+                    if (ImGui::BeginTable("ram_table", width+1, TABLE_FLAGS)) {
                         ImGui::TableSetupScrollFreeze(1, 1);
                         ImGui::TableSetupColumn("", ImGuiTableColumnFlags_NoHeaderLabel);
                         for (int i = 0; i < width; i++) {
@@ -255,14 +253,33 @@ int main(int argc, char** argv) {
             }
 
             if (ImGui::TreeNodeEx("Instructions", ImGuiTreeNodeFlags_DefaultOpen)) {
-                const int n = 18;
-                const auto assembly_lines = disassembler_get(dev.disassembler, dev.cpu.regs.pc, n);
-                for (size_t i = 0; i < assembly_lines.size(); i++) {
-                    if (i == n+1) {
-                        ImGui::TextColored(ImVec4 {1.0f, 0, 0, 1.0f}, assembly_lines[i].c_str());
-                    } else {
-                        ImGui::Text(assembly_lines[i].c_str());
+                constexpr auto TABLE_FLAGS = ImGuiTableFlags_ScrollY | ImGuiTableFlags_ScrollX | ImGuiTableFlags_RowBg | ImGuiTableFlags_BordersOuter | ImGuiTableFlags_BordersInnerV;
+                if (ImGui::BeginTable("assembly_table", 2, TABLE_FLAGS)) {
+                    ImGui::TableSetupScrollFreeze(0, 1);
+                    ImGui::TableSetupColumn("Adr");
+                    ImGui::TableSetupColumn("Inst");
+                    ImGui::TableHeadersRow();
+
+                    ImGuiListClipper clipper(assembly.size());
+                    while (clipper.Step()) {
+                        for (int j = clipper.DisplayStart; j < clipper.DisplayEnd; j++) {
+                            ImGui::TableNextRow();
+
+                            if (assembly[j].adr == dev.cpu.regs.pc) {
+                                ImGui::TableSetBgColor(ImGuiTableBgTarget_RowBg0, ImGui::GetColorU32(ImVec4{0.3f, 0.3f, 0.7f, 0.65f}));
+                            }
+
+                            if (ImGui::TableSetColumnIndex(0)) {
+                                ImGui::Text(str_tmpf("${:04X}", assembly[j].adr).c_str());
+                            }
+                            if (ImGui::TableSetColumnIndex(1)) {
+                                ImGui::Text(assembly[j].instr.c_str());
+                            }
+                        }
                     }
+                    clipper.End();
+
+                    ImGui::EndTable();
                 }
 
                 ImGui::TreePop();
@@ -288,7 +305,6 @@ TODO:
     -? no dynamic dispatch in renderers
     -? sfml -> SDL
 
-- show instructions as a table
 - complete all nestest.nes
 - support illegal NES instructions
 - handle reset correctly (how?)

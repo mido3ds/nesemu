@@ -60,3 +60,10 @@ inline uint16_t rom_get_mapper_number(const ROM& self) {
 
 bool rom_read(ROM& self, uint16_t addr, uint8_t& data);
 bool rom_write(ROM& self, uint16_t addr, uint8_t data);
+
+struct Assembly {
+    uint16_t adr;
+    Str instr;
+};
+
+Vec<Assembly> rom_disassemble(const ROM& self, memory::Allocator* allocator = memory::default_allocator());

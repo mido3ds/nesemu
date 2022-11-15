@@ -3,6 +3,7 @@
 
 #include "utils.h"
 #include "emulation/ROM.h"
+#include "emulation/instructions.h"
 
 static uint32_t rom_get_prg_rom_size(const ROM& self) {
     return self.header.num_prgs*16*1024; // 16 KB
@@ -104,4 +105,99 @@ bool rom_write(ROM& self, uint16_t addr, uint8_t data) {
     }
 
     return false;
+}
+
+Vec<Assembly> rom_disassemble(const ROM& rom, memory::Allocator* allocator) {
+    Vec<Assembly> out (allocator);
+
+    uint8_t const* mem = rom.prg.data();
+    int size = rom.prg.size();
+
+    uint16_t addr = (size == PRG_ROM_LOW.size())? PRG_ROM_UP.start : PRG_ROM_LOW.start;
+
+    while (size > 0) {
+        int consumedBytes = 1;
+        Str instr(allocator);
+        Str a(memory::tmp()), b(memory::tmp());
+
+        auto name = instruction_set[mem[0]].name;
+        if (name == "???") {
+            str_push(instr, "{:02X} ?????", mem[0]);
+        } else {
+            str_push(instr, name);
+        }
+
+        if (size >= 2) { str_push(a, "{:02X}", mem[1]); }
+        else           { a = "??"; }
+
+        if (size >= 3) { str_push(b, "{:02X}", mem[1]); }
+        else           { b = "??"; }
+
+        switch (instruction_set[mem[0]].mode ) {
+        case AddressMode::Implicit:
+            break;
+        case AddressMode::Accumulator:
+            str_push(instr, " A");
+            break;
+        case AddressMode::Immediate:
+            str_push(instr, " #{}", a);
+            consumedBytes++;
+            break;
+        case AddressMode::ZeroPage:
+            str_push(instr, " ${}", a);
+            consumedBytes++;
+            break;
+        case AddressMode::ZeroPageX:
+            str_push(instr, " ${}, X", a);
+            consumedBytes++;
+            break;
+        case AddressMode::ZeroPageY:
+            str_push(instr, " ${}, Y", a);
+            consumedBytes++;
+            break;
+        case AddressMode::Relative:
+            if (size >= 2) { a.clear(); str_push(a, "{:+}", int8_t(mem[1])); }
+            else           { a = "??"; }
+
+            str_push(instr, " {}", a);
+            consumedBytes++;
+            break;
+        case AddressMode::Absolute:
+            str_push(instr, " ${}{}", b, a);
+            consumedBytes += 2;
+            break;
+        case AddressMode::AbsoluteX:
+            str_push(instr, " ${}{}, X", b, a);
+            consumedBytes += 2;
+            break;
+        case AddressMode::AbsoluteY:
+            str_push(instr, " ${}{}, Y", b, a);
+            consumedBytes += 2;
+            break;
+        case AddressMode::Indirect:
+            str_push(instr, " (${}{})", b, a);
+            consumedBytes += 2;
+            break;
+        case AddressMode::IndexedIndirect:
+            str_push(instr, " (${}, X)", a);
+            consumedBytes++;
+            break;
+        case AddressMode::IndirectIndexed:
+            str_push(instr, " (${}, Y)", a);
+            consumedBytes++;
+            break;
+        default: unreachable();
+        }
+
+        out.push_back(Assembly {
+            .adr = addr,
+            .instr = instr,
+        });
+
+        size -= consumedBytes;
+        mem  += consumedBytes;
+        addr += consumedBytes;
+    }
+
+    return std::move(out);
 }
