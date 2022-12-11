@@ -5,8 +5,7 @@
 
 #include "utils.h"
 #include "emulation/Console.h"
-#include "gui/SFMLRenderer.h"
-#include "gui/SFMLImageRenderer.h"
+#include "gui/Image.h"
 
 #define MEM_WIDTH 16
 #define MEM_HEIGHT 46
@@ -38,8 +37,7 @@ int main(int argc, char** argv) {
     );
     main_wind.setPosition(sf::Vector2i(0,0));
 
-    SFMLImageRenderer dev_renderer;
-    dev_renderer.init(&main_wind, Config::resolution);
+    Image image = image_new();
 
     // imgui
     auto _imgui_ini_file_path = str_format("{}/{}", folder_config(memory::tmp()), "nesemu-imgui.ini");
@@ -93,7 +91,7 @@ int main(int argc, char** argv) {
                 .right   = sf::Keyboard::isKeyPressed(Config::right)
             });
 
-            console_clock(dev, &dev_renderer);
+            console_clock(dev, &image);
         }
         do_one_instr = !should_pause;
 
@@ -289,7 +287,7 @@ int main(int argc, char** argv) {
 
         ImGui::ShowDemoWindow();
 
-        dev_renderer.show();
+        image_show(image, main_wind);
         ImGui::SFML::Render(main_wind);
 
         main_wind.display();
@@ -300,11 +298,6 @@ int main(int argc, char** argv) {
 
 /*
 TODO:
-- refactor
-    - function_name(self) instead of self.function_name
-    -? no dynamic dispatch in renderers
-    -? sfml -> SDL
-
 - complete all nestest.nes
 - support illegal NES instructions
 - handle reset correctly (how?)

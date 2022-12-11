@@ -1,5 +1,6 @@
 #include "emulation/PPU.h"
 #include "Config.h"
+#include "gui/Image.h"
 
 PPU ppu_new(Console* console) {
     return PPU {
@@ -7,12 +8,14 @@ PPU ppu_new(Console* console) {
     };
 }
 
-void ppu_clock(PPU& self, IRenderer* renderer) {
+void ppu_clock(PPU& self, Image* image) {
     // TODO
     // for now we will draw random white-black pixels
-    for (int i = 0; i < Config::sys.resolution.height; i++) {
-        for (int j = 0; j < Config::sys.resolution.width; j++) {
-            renderer->pixel(j, i, rand()%10 == 0? Color{0,0,0}:Color{255,255,255}, 255);
+    if (image) {
+        for (int i = 0; i < Config::sys.resolution.height; i++) {
+            for (int j = 0; j < Config::sys.resolution.width; j++) {
+                image_pixel(*image, j, i, rand()%10 == 0? Color{0,0,0}:Color{255,255,255}, 255);
+            }
         }
     }
 }

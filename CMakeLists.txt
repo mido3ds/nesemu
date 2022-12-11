@@ -77,13 +77,8 @@ target_sources(nesemu
         src/test/nestest.h
         src/test/run_tests.cpp
         src/test/nestest.cpp
-        src/gui/MockRenderer.h
-        src/gui/SFMLImageRenderer.cpp
-        src/gui/SFMLRenderer.cpp
-        src/gui/SFMLImageRenderer.h
-        src/gui/SFMLRenderer.h
-        src/gui/IRenderer.h
-        src/gui/MockRenderer.cpp
+        src/gui/Image.cpp
+        src/gui/Image.h
         src/emulation/common.h
         src/emulation/instructions.h
         src/emulation/Console.h

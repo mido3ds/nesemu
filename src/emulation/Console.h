@@ -18,7 +18,7 @@ struct Console {
 
 void console_init(Console& self, const Str& rom_path = "");
 void console_reset(Console& self);
-void console_clock(Console& self, IRenderer* renderer);
+void console_clock(Console& self, Image* image);
 
 struct JoyPadInput {
     bool a;

@@ -20,8 +20,8 @@ void console_reset(Console& self) {
     self.cycles = 0;
 }
 
-void console_clock(Console& self, IRenderer* renderer) {
-    ppu_clock(self.ppu, renderer);
+void console_clock(Console& self, Image* image) {
+    ppu_clock(self.ppu, image);
 
     // because ppu is 3x faster than cpu
     if (self.cycles % 3 == 0) {
