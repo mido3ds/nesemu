@@ -3,7 +3,7 @@
 #include <map>
 #include <iterator>
 
-#include "emulation/console.h"
+#include "console.h"
 
 // TODO: move those to ppu and dma
 

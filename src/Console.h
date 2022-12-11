@@ -3,10 +3,10 @@
 #include <thread>
 #include <map>
 
-#include "emulation/RAM.h"
-#include "emulation/ROM.h"
-#include "emulation/CPU.h"
-#include "emulation/PPU.h"
+#include "RAM.h"
+#include "ROM.h"
+#include "CPU.h"
+#include "PPU.h"
 
 struct Console {
     CPU cpu;

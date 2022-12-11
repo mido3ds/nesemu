@@ -2,8 +2,8 @@
 #include <tuple>
 
 #include "utils.h"
-#include "emulation/ROM.h"
-#include "emulation/instructions.h"
+#include "ROM.h"
+#include "instructions.h"
 
 static uint32_t rom_get_prg_rom_size(const ROM& self) {
     return self.header.num_prgs*16*1024; // 16 KB

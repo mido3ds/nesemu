@@ -77,22 +77,22 @@ target_sources(nesemu
         src/test/nestest.h
         src/test/run_tests.cpp
         src/test/nestest.cpp
-        src/gui/Image.cpp
-        src/gui/Image.h
-        src/emulation/common.h
-        src/emulation/instructions.h
-        src/emulation/Console.h
-        src/emulation/Console.cpp
-        src/emulation/ROM.cpp
-        src/emulation/RAM.h
-        src/emulation/CPU.h
-        src/emulation/instructions.cpp
-        src/emulation/ROM.h
-        src/emulation/PPU.cpp
-        src/emulation/PPU.h
-        src/emulation/CPU.cpp
-        src/emulation/common.cpp
-        src/emulation/RAM.cpp
+        src/Image.cpp
+        src/Image.h
+        src/common.h
+        src/instructions.h
+        src/Console.h
+        src/Console.cpp
+        src/ROM.cpp
+        src/RAM.h
+        src/CPU.h
+        src/instructions.cpp
+        src/ROM.h
+        src/PPU.cpp
+        src/PPU.h
+        src/CPU.cpp
+        src/common.cpp
+        src/RAM.cpp
         src/utils.h
         src/Config.h
         src/main.cpp

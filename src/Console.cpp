@@ -1,7 +1,7 @@
 #include <iterator>
 
-#include "emulation/Console.h"
-#include "emulation/ROM.h"
+#include "Console.h"
+#include "ROM.h"
 
 void console_init(Console& self, const Str& rom_path) {
     self = {};

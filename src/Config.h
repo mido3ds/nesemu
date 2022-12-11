@@ -2,7 +2,7 @@
 
 #include <SFML/Window.hpp>
 
-#include "emulation/common.h"
+#include "common.h"
 
 namespace Config {
     constexpr sf::Keyboard::Key

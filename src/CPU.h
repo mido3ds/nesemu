@@ -2,7 +2,7 @@
 
 #include <thread>
 
-#include "emulation/common.h"
+#include "common.h"
 
 struct CPURegs {
     uint16_t pc; // program counter

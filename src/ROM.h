@@ -2,7 +2,7 @@
 
 #include <thread>
 
-#include "emulation/common.h"
+#include "common.h"
 #include "utils.h"
 
 struct ROM {

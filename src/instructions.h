@@ -4,8 +4,8 @@
 #include <array>
 
 #include "utils.h"
-#include "emulation/common.h"
-#include "emulation/CPU.h"
+#include "common.h"
+#include "CPU.h"
 
 struct Instruction {
     std::function<void(CPU&)> exec;

@@ -1,8 +1,8 @@
 #include <cstring>
 
-#include "emulation/Console.h"
-#include "emulation/instructions.h"
-#include "gui/Image.h"
+#include "Console.h"
+#include "instructions.h"
+#include "Image.h"
 
 // already defined at catch
 // TODO: better fix

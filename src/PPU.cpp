@@ -1,6 +1,6 @@
-#include "emulation/PPU.h"
+#include "PPU.h"
 #include "Config.h"
-#include "gui/Image.h"
+#include "Image.h"
 
 PPU ppu_new(Console* console) {
     return PPU {

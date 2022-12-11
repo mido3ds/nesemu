@@ -2,9 +2,9 @@
 #include <functional>
 
 #include "utils.h"
-#include "emulation/common.h"
-#include "emulation/CPU.h"
-#include "emulation/instructions.h"
+#include "common.h"
+#include "CPU.h"
+#include "instructions.h"
 
 void ADC(CPU& cpu) {
     auto v = cpu.arg_value;

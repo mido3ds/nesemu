@@ -1,6 +1,6 @@
-#include "emulation/CPU.h"
-#include "emulation/Console.h"
-#include "emulation/instructions.h"
+#include "CPU.h"
+#include "Console.h"
+#include "instructions.h"
 #include "utils.h"
 
 CPU cpu_new(Console* console) {

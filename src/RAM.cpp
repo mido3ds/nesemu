@@ -1,5 +1,5 @@
-#include "emulation/RAM.h"
-#include "emulation/common.h"
+#include "RAM.h"
+#include "common.h"
 
 bool ram_read(RAM& self, uint16_t addr, uint8_t& data) {
     if (RAM_REGION.contains(addr)) {

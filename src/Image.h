@@ -3,7 +3,7 @@
 #include <SFML/Window.hpp>
 #include <SFML/Graphics.hpp>
 
-#include "emulation/common.h"
+#include "common.h"
 #include "Config.h"
 
 struct Image {

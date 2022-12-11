@@ -4,8 +4,8 @@
 #include <SFML/Graphics.hpp>
 
 #include "utils.h"
-#include "emulation/Console.h"
-#include "gui/Image.h"
+#include "Console.h"
+#include "Image.h"
 
 #define MEM_WIDTH 16
 #define MEM_HEIGHT 46

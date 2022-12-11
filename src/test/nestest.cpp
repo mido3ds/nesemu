@@ -4,7 +4,7 @@
 #include <catch2/catch.hpp>
 #include "nestest.h"
 
-#include "emulation/Console.h"
+#include "Console.h"
 
 static string hex8(uint8_t v) {
     char buffer[10] = {0};

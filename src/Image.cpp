@@ -1,4 +1,4 @@
-#include "gui/Image.h"
+#include "Image.h"
 #include "Config.h"
 
 Image image_new() {
