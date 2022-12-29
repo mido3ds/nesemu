@@ -298,6 +298,19 @@ int main(int argc, char** argv) {
 
 /*
 TODO:
+- pattern table
+    - render one tile as table
+    - render all tiles as table
+    - render as image too
+    - show current color pallete
+    - render with color (select pallete)
+- nametable
+    - render one frame without color
+    - render one frame with color from one pallete
+    - select pallete from attribute table
+- sprites
+    - render one sprite without color
+    - select color from pallete
 - complete all nestest.nes
 - support illegal NES instructions
 - handle reset correctly (how?)
