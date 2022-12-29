@@ -1,3 +1,4 @@
+#include <bitset>
 #include <imgui.h>
 #include <imgui-SFML.h>
 #include <SFML/Window.hpp>
@@ -13,6 +14,31 @@
 #define MEM_VPADDING 5
 
 int run_tests(int argc, char** argv);
+
+namespace MyImGui {
+    template<typename T>
+    void EnumsCombo(const char* label, T* p_enum, const std::initializer_list<std::pair<T, const char*>>& enums) {
+            int var_i = -1;
+            const char* preview = "- Invalid Value -";
+            for (const auto& [type, type_str] : enums) {
+                    var_i++;
+                    if (type == *p_enum) {
+                            preview = type_str;
+                            break;
+                    }
+            }
+
+            if (ImGui::BeginCombo(label, preview)) {
+                    for (const auto& [type, type_str] : enums) {
+                            if (ImGui::Selectable(type_str,  type == *p_enum)) {
+                                    *p_enum = type;
+                            }
+                    }
+
+                    ImGui::EndCombo();
+            }
+    }
+}
 
 int main(int argc, char** argv) {
     if (argc == 1 || argv[1] == "--help"_str_lit) {
@@ -200,6 +226,73 @@ int main(int argc, char** argv) {
         }
         ImGui::End();
 
+        if (ImGui::Begin("Viewer")) {
+            if (ImGui::BeginTabBar("viewer_tab_bar")) {
+                if (ImGui::BeginTabItem("Pattern Table")) {
+                    static int row = 0, col = 0;
+                    static auto table_half = PatternTablePointer::TableHalf::LEFT;
+                    PatternTablePointer p {
+                        bits: {
+                            row_in_tile: 0,
+                            bit_plane: PatternTablePointer::BitPlane::LOWER,
+                            tile_col: col,
+                            tile_row: row,
+                            table_half: table_half,
+                        }
+                    };
+
+                    constexpr auto TABLE_FLAGS = ImGuiTableFlags_NoHostExtendX | ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_BordersOuter;
+                    if (ImGui::BeginTable("pattern_table", 8, TABLE_FLAGS)) {
+                        ImGuiListClipper clipper(8);
+                        while (clipper.Step()) {
+                            for (int j = clipper.DisplayStart; j < clipper.DisplayEnd; j++) {
+                                ImGui::TableNextRow();
+
+                                p.bits.row_in_tile = j;
+                                p.bits.bit_plane = PatternTablePointer::BitPlane::LOWER;
+                                auto l = std::bitset<8>(dev.rom.chr[p.word]);
+                                p.bits.bit_plane = PatternTablePointer::BitPlane::UPPER;
+                                auto h = std::bitset<8>(dev.rom.chr[p.word]);
+
+                                for (int i = 0; i < 8; i++) {
+                                    ImGui::TableSetColumnIndex(i);
+                                    int val = h[7-i] << 1 | l[7-i];
+
+                                    if (val == 0) {
+                                        ImGui::Text(".");
+                                    } else {
+                                        ImVec4 color;
+                                        switch (val) {
+                                        case 3: color = {1.0f, 1.0f, 1.0f, 1.0f}; break;
+                                        case 2: color = {67.0f/255.0f, 145.0f/255.0f, 170.0f/255.0f, 1.0f}; break;
+                                        case 1: color = {131.0f/255.0f, 162.0f/255.0f, 173.0f/255.0f, 1.0f}; break;
+                                        default: unreachable();
+                                        }
+                                        ImGui::TextColored(color, str_tmpf("{}", val).c_str());
+                                    }
+                                }
+                            }
+                        }
+                        clipper.End();
+
+                        ImGui::EndTable();
+                    }
+
+                    ImGui::SliderInt("Col", &col, 0, 15, "%d", ImGuiSliderFlags_AlwaysClamp);
+                    ImGui::SliderInt("Row", &row, 0, 15, "%d", ImGuiSliderFlags_AlwaysClamp);
+                    MyImGui::EnumsCombo("Half", &table_half, {
+                        {PatternTablePointer::TableHalf::LEFT, "LEFT"},
+                        {PatternTablePointer::TableHalf::RIGHT, "RIGHT"},
+                    });
+
+                    ImGui::EndTabItem();
+                }
+
+                ImGui::EndTabBar();
+            }
+        }
+        ImGui::End();
+
         if (ImGui::Begin("Debug")) {
             // fps
             auto time_millis = elapsed_time.asMilliseconds();
@@ -299,8 +392,6 @@ int main(int argc, char** argv) {
 /*
 TODO:
 - pattern table
-    - render one tile as table
-    - render all tiles as table
     - render as image too
     - show current color pallete
     - render with color (select pallete)

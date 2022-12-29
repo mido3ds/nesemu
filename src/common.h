@@ -90,7 +90,7 @@ constexpr struct VideoSystem {
     int fps;
     float time_per_frame; // in milliseconds
     int scanlines_per_frame;
-    float cpuCycles_per_scanline;
+    float cpu_cycles_per_scanline;
     struct {int width, height;} resolution;
 } NTSC {559, 60, 16.67f, 262, 113.33f, {256, 224}},
 PAL {601, 50, 20, 312, 106.56f, {256, 240}};
@@ -113,7 +113,7 @@ constexpr Region
     PRG_ROM_UP {0xC000, 0xFFFF},
     PRG_REGION {0x8000, 0xFFFF}; // all prg, with two parts
 
-// varm regions
+// vram regions
 constexpr Region
     /* pattern tables */
     PATT_TBL0 {0x0000, 0x1000-1},
