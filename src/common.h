@@ -7,10 +7,11 @@
 
 #include "utils.h"
 
-struct Color {
-    uint8_t r, g, b;
+struct RGBAColor {
+    uint8_t r, g, b, a;
 
-    static Color fromPalatte(const uint8_t palatte);
+    // nes color palette index -> RGB color
+    static RGBAColor from_sys_palette(uint8_t index);
 };
 
 enum class AddressMode {
@@ -27,30 +28,30 @@ struct Region {
     constexpr uint16_t size() const {return (end + 1) - start;}
 };
 
-struct Mirror {
-    Region source, dest;
+// struct Mirror {
+//     Region source, dest;
 
-    Vec<uint16_t> get_address(const uint16_t address) const;
-};
+//     Vec<uint16_t> get_address(const uint16_t address) const;
+// };
 
-enum class SpriteType : uint8_t {S8x8 = 0, S8x16 = 1};
-enum class ColorMode : uint8_t {Color = 0, Monochrome = 1};
+// enum class SpriteType : uint8_t {S8x8 = 0, S8x16 = 1};
+// enum class ColorMode : uint8_t {Color = 0, Monochrome = 1};
 
-struct SpriteInfo {
-    uint8_t y; // Y-coordinate of the top left of the sprite minus 1
-    uint8_t i; // Index number of the sprite in the pattern tables.
+// struct SpriteInfo {
+//     uint8_t y; // Y-coordinate of the top left of the sprite minus 1
+//     uint8_t i; // Index number of the sprite in the pattern tables.
 
-    union {
-        struct {
-            uint8_t color:2; // Most significant two bits of the colour
-            uint8_t:3;
-            uint8_t pritority:1; // Indicates whether this sprite has priority over the background
-            uint8_t hFlip:1; // Indicates whether to flip the sprite horizontally
-            uint8_t vFlip:1; // Indicates whether to flip the sprite vertically}
-        } bits;
-        uint8_t byte;
-    } attr;
-};
+//     union {
+//         struct {
+//             uint8_t color:2; // Most significant two bits of the colour
+//             uint8_t:3;
+//             uint8_t pritority:1; // Indicates whether this sprite has priority over the background
+//             uint8_t hFlip:1; // Indicates whether to flip the sprite horizontally
+//             uint8_t vFlip:1; // Indicates whether to flip the sprite vertically}
+//         } bits;
+//         uint8_t byte;
+//     } attr;
+// };
 
 /*
  *  DCBA98 76543210
@@ -95,8 +96,6 @@ constexpr struct VideoSystem {
 } NTSC {559, 60, 16.67f, 262, 113.33f, {256, 224}},
 PAL {601, 50, 20, 312, 106.56f, {256, 240}};
 
-constexpr Color DEFAULT_COLOR = Color({0, 0, 0});
-
 // memory regions
 constexpr Region
     ZERO_PAGE {0x0000, 0x0100-1},
@@ -133,16 +132,16 @@ constexpr Region
     IMG_PLT {0x3F00, 0x3F10-1},
     SPR_PLT {0x3F10, 0x3F20-1};
 
-constexpr Arr<Mirror, 2> MEM_MIRRORS {
-    Mirror({{0x0000, 0x07FF}, {0x0800, 0x2000-1}}),
-    Mirror({IO_REGS0, {0x2008, 0x4000-1}}),
-};
+// constexpr Arr<Mirror, 2> MEM_MIRRORS {
+//     Mirror({{0x0000, 0x07FF}, {0x0800, 0x2000-1}}),
+//     Mirror({IO_REGS0, {0x2008, 0x4000-1}}),
+// };
 
-constexpr Arr<Mirror, 3> VRAM_MIRRORS {
-    Mirror({{0x2000, 0x2EFF}, {0x3000, 0x3F00-1}}),
-    Mirror({{0x3F00, 0x3F1F}, {0x3F20, 0x4000-1}}),
-    Mirror({{0x0000, 0x3FFF}, {0x4000, 0xFFFF}}),
-};
+// constexpr Arr<Mirror, 3> VRAM_MIRRORS {
+//     Mirror({{0x2000, 0x2EFF}, {0x3000, 0x3F00-1}}),
+//     Mirror({{0x3F00, 0x3F1F}, {0x3F20, 0x4000-1}}),
+//     Mirror({{0x0000, 0x3FFF}, {0x4000, 0xFFFF}}),
+// };
 
 // interrupt Vec table
 constexpr uint16_t

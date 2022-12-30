@@ -14,8 +14,7 @@ struct Image {
 
 Image image_new();
 
-void image_clear(Image& self, Color c, uint8_t a);
-void image_pixel(Image& self, int x, int y, Color c, uint8_t a);
+void image_pixel(Image& self, int x, int y, RGBAColor c);
 
 // present the renderer on its window
 void image_show(Image& self, sf::RenderWindow& window);

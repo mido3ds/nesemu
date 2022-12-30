@@ -57,7 +57,7 @@ int main(int argc, char** argv) {
     // window
     auto title = str_format("NESEMU - {}", argv[1]);
     sf::RenderWindow main_wind(
-        sf::VideoMode(Config::main_wind.w, Config::main_wind.h), 
+        sf::VideoMode(Config::main_wind.w, Config::main_wind.h),
         title.c_str(),
         sf::Style::Titlebar|sf::Style::Close
     );
@@ -77,6 +77,12 @@ int main(int argc, char** argv) {
     bool should_pause = true;
     bool do_one_instr = false;
     sf::Clock delta_clock;
+
+    sf::Texture tile_texture;
+    if (tile_texture.create(8, 8) == false) {
+        panic("failed to create texture");
+    }
+    sf::Sprite tile_sprite(tile_texture);
 
     while (main_wind.isOpen()) {
         memory::reset_tmp();
@@ -229,6 +235,7 @@ int main(int argc, char** argv) {
         if (ImGui::Begin("Viewer")) {
             if (ImGui::BeginTabBar("viewer_tab_bar")) {
                 if (ImGui::BeginTabItem("Pattern Table")) {
+                    // get tile
                     static int row = 0, col = 0;
                     static auto table_half = PatternTablePointer::TableHalf::LEFT;
                     PatternTablePointer p {
@@ -240,40 +247,63 @@ int main(int argc, char** argv) {
                             table_half: table_half,
                         }
                     };
+                    uint8_t tile[8][8] = {0};
+                    for (int j = 0; j < 8; j++) {
+                        p.bits.row_in_tile = j;
+                        p.bits.bit_plane = PatternTablePointer::BitPlane::LOWER;
+                        auto l = std::bitset<8>(dev.rom.chr[p.word]);
+                        p.bits.bit_plane = PatternTablePointer::BitPlane::UPPER;
+                        auto h = std::bitset<8>(dev.rom.chr[p.word]);
 
+                        for (int i = 0; i < 8; i++) {
+                            tile[j][i] = h[7-i] << 1 | l[7-i];
+                        }
+                    }
+
+                    // render tile
+                    RGBAColor tile_monochrome[8][8] = {0};
+                    for (int j = 0; j < 8; j++) {
+                        for (int i = 0; i< 8; i++) {
+                            RGBAColor color {};
+                            switch (tile[j][i]) {
+                            case 3: color = {255, 255, 255, 255}; break;
+                            case 2: color = {150, 150, 150, 255}; break;
+                            case 1: color = {50, 50, 50, 255}; break;
+                            default: color = {255, 0, 255, 255}; break;
+                            }
+                            tile_monochrome[j][i] = color;
+                        }
+                    }
+                    tile_texture.update((const sf::Uint8*)tile_monochrome);
+                    tile_sprite.setScale(15, 15);
+                    ImGui::Image(tile_sprite);
+
+                    ImGui::SameLine();
+
+                    // tile as a table
                     constexpr auto TABLE_FLAGS = ImGuiTableFlags_NoHostExtendX | ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_BordersOuter;
                     if (ImGui::BeginTable("pattern_table", 8, TABLE_FLAGS)) {
-                        ImGuiListClipper clipper(8);
-                        while (clipper.Step()) {
-                            for (int j = clipper.DisplayStart; j < clipper.DisplayEnd; j++) {
-                                ImGui::TableNextRow();
+                        for (int j = 0; j < 8; j++) {
+                            ImGui::TableNextRow();
 
-                                p.bits.row_in_tile = j;
-                                p.bits.bit_plane = PatternTablePointer::BitPlane::LOWER;
-                                auto l = std::bitset<8>(dev.rom.chr[p.word]);
-                                p.bits.bit_plane = PatternTablePointer::BitPlane::UPPER;
-                                auto h = std::bitset<8>(dev.rom.chr[p.word]);
+                            for (int i = 0; i < 8; i++) {
+                                ImGui::TableSetColumnIndex(i);
 
-                                for (int i = 0; i < 8; i++) {
-                                    ImGui::TableSetColumnIndex(i);
-                                    int val = h[7-i] << 1 | l[7-i];
-
-                                    if (val == 0) {
-                                        ImGui::Text(".");
-                                    } else {
-                                        ImVec4 color;
-                                        switch (val) {
-                                        case 3: color = {1.0f, 1.0f, 1.0f, 1.0f}; break;
-                                        case 2: color = {67.0f/255.0f, 145.0f/255.0f, 170.0f/255.0f, 1.0f}; break;
-                                        case 1: color = {131.0f/255.0f, 162.0f/255.0f, 173.0f/255.0f, 1.0f}; break;
-                                        default: unreachable();
-                                        }
-                                        ImGui::TextColored(color, str_tmpf("{}", val).c_str());
+                                const int val = tile[j][i];
+                                if (val == 0) {
+                                    ImGui::Text(".");
+                                } else {
+                                    ImVec4 color;
+                                    switch (val) {
+                                    case 3: color = {1.0f, 1.0f, 1.0f, 1.0f}; break;
+                                    case 2: color = {67.0f/255.0f, 145.0f/255.0f, 170.0f/255.0f, 1.0f}; break;
+                                    case 1: color = {131.0f/255.0f, 162.0f/255.0f, 173.0f/255.0f, 1.0f}; break;
+                                    default: unreachable();
                                     }
+                                    ImGui::TextColored(color, str_tmpf("{}", val).c_str());
                                 }
                             }
                         }
-                        clipper.End();
 
                         ImGui::EndTable();
                     }
@@ -392,7 +422,6 @@ int main(int argc, char** argv) {
 /*
 TODO:
 - pattern table
-    - render as image too
     - show current color pallete
     - render with color (select pallete)
 - nametable
