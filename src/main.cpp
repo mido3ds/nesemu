@@ -38,6 +38,12 @@ namespace MyImGui {
                     ImGui::EndCombo();
             }
     }
+
+    bool InputByte(const char* label, uint8_t* v, uint8_t step = 1, uint8_t step_fast = 100, ImGuiInputTextFlags flags = ImGuiInputTextFlags_CharsHexadecimal) {
+        // Hexadecimal input provided as a convenience but the flag name is awkward. Typically you'd use InputText() to parse your own data, if you want to handle prefixes.
+        const char* format = (flags & ImGuiInputTextFlags_CharsHexadecimal) ? "0x%02X" : "%d";
+        return ImGui::InputScalar(label, ImGuiDataType_U8, (void*)v, (void*)(step > 0 ? &step : NULL), (void*)(step_fast > 0 ? &step_fast : NULL), format, flags);
+    }
 }
 
 int main(int argc, char** argv) {
@@ -234,6 +240,26 @@ int main(int argc, char** argv) {
 
         if (ImGui::Begin("Viewer")) {
             if (ImGui::BeginTabBar("viewer_tab_bar")) {
+                if (ImGui::BeginTabItem("Palettes")) {
+                    MyImGui::InputByte("Universal Background", &dev.ppu.universal_bg_index);
+                    ImGui::Separator();
+                    for (int i = 0; i < 4; i++) {
+                        ImGui::Text(str_tmpf("Background {}", i).c_str());
+                        for (int j = 0; j < 4; j++) {
+                            MyImGui::InputByte(str_tmpf("{}", j).c_str(), &dev.ppu.bg_palette[i].index[j]);
+                        }
+                    }
+                    ImGui::Separator();
+                    for (int i = 0; i < 4; i++) {
+                        ImGui::Text(str_tmpf("Sprite {}", i).c_str());
+                        for (int j = 0; j < 4; j++) {
+                            MyImGui::InputByte(str_tmpf("{}", j).c_str(), &dev.ppu.sprite_palette[i].index[j]);
+                        }
+                    }
+
+                    ImGui::EndTabItem();
+                }
+
                 if (ImGui::BeginTabItem("Pattern Table")) {
                     // get tile
                     static int row = 0, col = 0;
@@ -421,16 +447,17 @@ int main(int argc, char** argv) {
 
 /*
 TODO:
+- pallette:
+    - show/edit current color palette as colors
 - pattern table
-    - show current color pallete
-    - render with color (select pallete)
+    - render with color (select palette index + background/sprite palette)
 - nametable
     - render one frame without color
-    - render one frame with color from one pallete
-    - select pallete from attribute table
+    - render one frame with color from one palette
+    - select palette from attribute table
 - sprites
     - render one sprite without color
-    - select color from pallete
+    - select color from palette
 - complete all nestest.nes
 - support illegal NES instructions
 - handle reset correctly (how?)
