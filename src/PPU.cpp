@@ -70,3 +70,20 @@ bool ppu_write(PPU& self, uint16_t addr, uint8_t data) {
     }
     return false;
 }
+
+RGBAColor ppu_get_color(PPU& self, uint8_t index, ColorType type) {
+    auto index_into_palette = index >> 2;
+    if (index_into_palette > 4) {
+        panic("only 4 palettes to select from, found index = {}", index_into_palette);
+    }
+    auto index_into_indices = index & 0b11;
+
+    uint8_t final_index;
+    if (type == ColorType::BG) {
+        final_index = self.bg_palette[index_into_palette].index[index_into_indices];
+    } else {
+        final_index = self.sprite_palette[index_into_palette].index[index_into_indices];
+    }
+
+    return RGBAColor::from_palette_index(final_index);
+}

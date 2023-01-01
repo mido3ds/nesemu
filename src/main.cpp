@@ -240,29 +240,10 @@ int main(int argc, char** argv) {
 
         if (ImGui::Begin("Viewer")) {
             if (ImGui::BeginTabBar("viewer_tab_bar")) {
-                if (ImGui::BeginTabItem("Palettes")) {
-                    MyImGui::InputByte("Universal Background", &dev.ppu.universal_bg_index);
-                    ImGui::Separator();
-                    for (int i = 0; i < 4; i++) {
-                        ImGui::Text(str_tmpf("Background {}", i).c_str());
-                        for (int j = 0; j < 4; j++) {
-                            MyImGui::InputByte(str_tmpf("{}", j).c_str(), &dev.ppu.bg_palette[i].index[j]);
-                        }
-                    }
-                    ImGui::Separator();
-                    for (int i = 0; i < 4; i++) {
-                        ImGui::Text(str_tmpf("Sprite {}", i).c_str());
-                        for (int j = 0; j < 4; j++) {
-                            MyImGui::InputByte(str_tmpf("{}", j).c_str(), &dev.ppu.sprite_palette[i].index[j]);
-                        }
-                    }
-
-                    ImGui::EndTabItem();
-                }
-
                 if (ImGui::BeginTabItem("Pattern Table")) {
                     // get tile
-                    static int row = 0, col = 0;
+                    static int row = 0, col = 0, palette_index = 0 /*0-4*/;
+                    static ColorType color_type = ColorType::BG;
                     static auto table_half = PatternTablePointer::TableHalf::LEFT;
                     PatternTablePointer p {
                         bits: {
@@ -282,7 +263,7 @@ int main(int argc, char** argv) {
                         auto h = std::bitset<8>(dev.rom.chr[p.word]);
 
                         for (int i = 0; i < 8; i++) {
-                            tile[j][i] = h[7-i] << 1 | l[7-i];
+                            tile[j][i] = palette_index << 2 | h[7-i] << 1 | l[7-i];
                         }
                     }
 
@@ -290,14 +271,7 @@ int main(int argc, char** argv) {
                     RGBAColor tile_monochrome[8][8] = {0};
                     for (int j = 0; j < 8; j++) {
                         for (int i = 0; i< 8; i++) {
-                            RGBAColor color {};
-                            switch (tile[j][i]) {
-                            case 3: color = {255, 255, 255, 255}; break;
-                            case 2: color = {150, 150, 150, 255}; break;
-                            case 1: color = {50, 50, 50, 255}; break;
-                            default: color = {255, 0, 255, 255}; break;
-                            }
-                            tile_monochrome[j][i] = color;
+                            tile_monochrome[j][i] = ppu_get_color(dev.ppu, tile[j][i], color_type);
                         }
                     }
                     tile_texture.update((const sf::Uint8*)tile_monochrome);
@@ -315,7 +289,7 @@ int main(int argc, char** argv) {
                             for (int i = 0; i < 8; i++) {
                                 ImGui::TableSetColumnIndex(i);
 
-                                const int val = tile[j][i];
+                                const int val = tile[j][i] & 0b11;
                                 if (val == 0) {
                                     ImGui::Text(".");
                                 } else {
@@ -340,6 +314,31 @@ int main(int argc, char** argv) {
                         {PatternTablePointer::TableHalf::LEFT, "LEFT"},
                         {PatternTablePointer::TableHalf::RIGHT, "RIGHT"},
                     });
+                    ImGui::SliderInt("Palette Index", &palette_index, 0, 3, "%d", ImGuiSliderFlags_AlwaysClamp);
+                    MyImGui::EnumsCombo("Color Type", &color_type, {
+                        {ColorType::BG, "BG"},
+                        {ColorType::SPRITE, "SPRITE"},
+                    });
+
+                    ImGui::EndTabItem();
+                }
+
+                if (ImGui::BeginTabItem("Palettes")) {
+                    MyImGui::InputByte("Universal Background", &dev.ppu.universal_bg_index);
+                    ImGui::Separator();
+                    for (int i = 0; i < 4; i++) {
+                        ImGui::Text(str_tmpf("Background {}", i).c_str());
+                        for (int j = 0; j < 4; j++) {
+                            MyImGui::InputByte(str_tmpf("{}##bg{}", j, i).c_str(), &dev.ppu.bg_palette[i].index[j]);
+                        }
+                    }
+                    ImGui::Separator();
+                    for (int i = 0; i < 4; i++) {
+                        ImGui::Text(str_tmpf("Sprite {}", i).c_str());
+                        for (int j = 0; j < 4; j++) {
+                            MyImGui::InputByte(str_tmpf("{}##sp{}", j, i).c_str(), &dev.ppu.sprite_palette[i].index[j]);
+                        }
+                    }
 
                     ImGui::EndTabItem();
                 }
@@ -449,8 +448,6 @@ int main(int argc, char** argv) {
 TODO:
 - pallette:
     - show/edit current color palette as colors
-- pattern table
-    - render with color (select palette index + background/sprite palette)
 - nametable
     - render one frame without color
     - render one frame with color from one palette

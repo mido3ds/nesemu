@@ -11,7 +11,7 @@ struct RGBAColor {
     uint8_t r, g, b, a;
 
     // nes color palette index -> RGB color
-    static RGBAColor from_sys_palette(uint8_t index);
+    static RGBAColor from_palette_index(uint8_t index);
 };
 
 enum class AddressMode {
