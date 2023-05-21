@@ -60,6 +60,14 @@ CPMAddPackage(
         "IMGUI_DIR ${CMAKE_SOURCE_DIR}/extern/imgui-1.88"
 )
 
+# AppleClang insists on compiling imgui-1.88 with old c++ standards
+set_property(TARGET ImGui-SFML
+    PROPERTY
+        CXX_STANDARD 20
+        CMAKE_CXX_STANDARD_REQUIRED YES
+        CMAKE_CXX_EXTENSIONS NO
+)
+
 # The additional / is important to remove the last character from the path.
 # Note that it does not matter if the OS uses / or \, because we are only
 # saving the path size.
@@ -129,7 +137,7 @@ target_compile_definitions(nesemu
 		$<$<PLATFORM_ID:Linux>:OS_LINUX=1>
 		$<$<PLATFORM_ID:Darwin>:OS_MACOS=1>
 		$<$<CXX_COMPILER_ID:Clang>:COMPILER_CLANG=1>
-		$<$<CXX_COMPILER_ID:AppleClang>:COMPILER_CLANG=1>
+		$<$<CXX_COMPILER_ID:AppleClang>:COMPILER_APPLE_CLANG=1>
 		$<$<CXX_COMPILER_ID:GNU>:COMPILER_GNU=1>
 		$<$<CXX_COMPILER_ID:MSVC>:COMPILER_MSVC=1>
 		$<$<CONFIG:DEBUG>:DEBUG>

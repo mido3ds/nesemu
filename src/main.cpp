@@ -60,10 +60,18 @@ int main(int argc, char** argv) {
     console_init(dev, argv[1]);
     const auto assembly = rom_disassemble(dev.rom);
 
+    // scale if use retina display, because it has very big resolution
+    // very hacky solution, if another system has big resolution it would fail :D
+    #ifdef OS_MACOS
+    constexpr int view_scale = 2;
+    #else
+    constexpr int view_scale = 1;
+    #endif
+
     // window
     auto title = str_format("NESEMU - {}", argv[1]);
     sf::RenderWindow main_wind(
-        sf::VideoMode(Config::main_wind.w, Config::main_wind.h),
+        sf::VideoMode(Config::main_wind.w * view_scale, Config::main_wind.h * view_scale),
         title.c_str(),
         sf::Style::Titlebar|sf::Style::Close
     );
@@ -79,6 +87,7 @@ int main(int argc, char** argv) {
 
     ImGui::StyleColorsDark();
     ImGui::GetIO().IniFilename = _imgui_ini_file_path.c_str();
+    ImGui::GetIO().FontGlobalScale = view_scale;
 
     bool should_pause = true;
     bool do_one_instr = false;
@@ -249,8 +258,8 @@ int main(int argc, char** argv) {
                         bits: {
                             row_in_tile: 0,
                             bit_plane: PatternTablePointer::BitPlane::LOWER,
-                            tile_col: col,
-                            tile_row: row,
+                            tile_col: (uint8_t) col,
+                            tile_row: (uint8_t) row,
                             table_half: table_half,
                         }
                     };
@@ -275,7 +284,7 @@ int main(int argc, char** argv) {
                         }
                     }
                     tile_texture.update((const sf::Uint8*)tile_monochrome);
-                    tile_sprite.setScale(15, 15);
+                    tile_sprite.setScale(15 * view_scale, 15 * view_scale);
                     ImGui::Image(tile_sprite);
 
                     ImGui::SameLine();
