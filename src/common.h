@@ -65,8 +65,8 @@ struct Region {
  *  +--------------- 0: Pattern table is at $0000-$1FFF
  */
 union PatternTablePointer {
-    enum class BitPlane {LOWER, UPPER};
-    enum class TableHalf {LEFT, RIGHT};
+    enum class BitPlane: uint8_t {LOWER, UPPER};
+    enum class TableHalf: uint8_t {LEFT, RIGHT};
 
     struct {
         uint8_t row_in_tile:3;
@@ -77,6 +77,8 @@ union PatternTablePointer {
         uint8_t:3;
     } bits;
     const uint16_t word = 0;
+
+    static_assert(sizeof(word) == sizeof(bits) && sizeof(word) == 16/8);
 };
 
 constexpr uint8_t SPRITE_8x8_SIZE = 16;

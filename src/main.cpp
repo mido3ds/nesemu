@@ -55,9 +55,11 @@ int main(int argc, char** argv) {
     if (argv[1] == "test"_str_lit) {
         return run_tests(argc-1, argv+1);
     }
+    
+    const Str rom_path = argv[1]; 
 
     Console dev {};
-    console_init(dev, argv[1]);
+    console_init(dev, rom_path);
     const auto assembly = rom_disassemble(dev.rom);
 
     // scale if use retina display, because it has very big resolution
@@ -69,7 +71,7 @@ int main(int argc, char** argv) {
     #endif
 
     // window
-    auto title = str_format("NESEMU - {}", argv[1]);
+    auto title = str_format("NESEMU - {}", rom_path);
     sf::RenderWindow main_wind(
         sf::VideoMode(Config::main_wind.w * view_scale, Config::main_wind.h * view_scale),
         title.c_str(),
@@ -255,12 +257,12 @@ int main(int argc, char** argv) {
                     static ColorType color_type = ColorType::BG;
                     static auto table_half = PatternTablePointer::TableHalf::LEFT;
                     PatternTablePointer p {
-                        bits: {
-                            row_in_tile: 0,
-                            bit_plane: PatternTablePointer::BitPlane::LOWER,
-                            tile_col: (uint8_t) col,
-                            tile_row: (uint8_t) row,
-                            table_half: table_half,
+                        .bits = {
+                            .row_in_tile = 0,
+                            .bit_plane = PatternTablePointer::BitPlane::LOWER,
+                            .tile_col = (uint8_t) col,
+                            .tile_row = (uint8_t) row,
+                            .table_half = table_half,
                         }
                     };
                     uint8_t tile[8][8] = {0};

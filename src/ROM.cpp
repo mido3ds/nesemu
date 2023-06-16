@@ -199,5 +199,5 @@ Vec<Assembly> rom_disassemble(const ROM& rom, memory::Allocator* allocator) {
         addr += consumedBytes;
     }
 
-    return std::move(out);
+    return out;
 }

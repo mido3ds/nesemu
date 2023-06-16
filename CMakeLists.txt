@@ -26,22 +26,22 @@ list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 # dependencies
 include(CPM)
 CPMAddPackage(
-	NAME             fmt
-	GIT_REPOSITORY   https://github.com/fmtlib/fmt.git
-	GIT_TAG          8.1.1
-	GIT_SHALLOW      TRUE
+    NAME             fmt
+    GIT_REPOSITORY   https://github.com/fmtlib/fmt.git
+    GIT_TAG          10.0.0
+    GIT_SHALLOW      TRUE
 )
 CPMAddPackage(
-	NAME             sfml
-	GIT_REPOSITORY   https://github.com/SFML/SFML
-	GIT_TAG          2.5.1
-	GIT_SHALLOW      TRUE
+    NAME             sfml
+    GIT_REPOSITORY   https://github.com/SFML/SFML
+    GIT_TAG          2.5.1
+    GIT_SHALLOW      TRUE
 )
 CPMAddPackage(
-	NAME             freetype
-	GIT_REPOSITORY   https://github.com/freetype/freetype.git
-	GIT_TAG          VER-2-11-1
-	GIT_SHALLOW      TRUE
+    NAME             freetype
+    GIT_REPOSITORY   https://github.com/freetype/freetype.git
+    GIT_TAG          VER-2-11-1
+    GIT_SHALLOW      TRUE
 )
 CPMAddPackage(
     NAME             Catch2
@@ -119,7 +119,7 @@ target_link_libraries(nesemu
         freetype
         Catch2
         ImGui-SFML::ImGui-SFML
-	    $<$<PLATFORM_ID:Windows>:dbghelp>
+        $<$<PLATFORM_ID:Windows>:dbghelp>
 )
 
 set_property(TARGET nesemu
@@ -133,14 +133,14 @@ target_compile_definitions(nesemu
     PRIVATE
         ASSETS_DIR="${CMAKE_SOURCE_DIR}/assets"
         $<$<PLATFORM_ID:Windows>:UNICODE;_UNICODE>
-		$<$<PLATFORM_ID:Windows>:OS_WINDOWS=1>
-		$<$<PLATFORM_ID:Linux>:OS_LINUX=1>
-		$<$<PLATFORM_ID:Darwin>:OS_MACOS=1>
-		$<$<CXX_COMPILER_ID:Clang>:COMPILER_CLANG=1>
-		$<$<CXX_COMPILER_ID:AppleClang>:COMPILER_APPLE_CLANG=1>
-		$<$<CXX_COMPILER_ID:GNU>:COMPILER_GNU=1>
-		$<$<CXX_COMPILER_ID:MSVC>:COMPILER_MSVC=1>
-		$<$<CONFIG:DEBUG>:DEBUG>
+        $<$<PLATFORM_ID:Windows>:OS_WINDOWS=1>
+        $<$<PLATFORM_ID:Linux>:OS_LINUX=1>
+        $<$<PLATFORM_ID:Darwin>:OS_MACOS=1>
+        $<$<CXX_COMPILER_ID:Clang>:COMPILER_CLANG=1>
+        $<$<CXX_COMPILER_ID:AppleClang>:COMPILER_APPLE_CLANG=1>
+        $<$<CXX_COMPILER_ID:GNU>:COMPILER_GNU=1>
+        $<$<CXX_COMPILER_ID:MSVC>:COMPILER_MSVC=1>
+        $<$<CONFIG:DEBUG>:DEBUG>
 )
 
 # TODO: why is this? maybe because of nestestlines.cpp? if so, then i have to remove it

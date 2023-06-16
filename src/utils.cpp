@@ -202,7 +202,7 @@ Str folder_config(memory::Allocator* allocator) {
 
 	path_normalize(str);
 
-	return std::move(str);
+	return str;
 }
 #else
 Str folder_config(memory::Allocator* allocator) {
