@@ -3,7 +3,7 @@
 
 RGBAColor RGBAColor::from_palette_index(uint8_t index) {
     if (index > 0x3F) {
-        ERROR("invalid index color(0x{:02x}), returning black", index);
+        log_error("invalid index color(0x{:02x}), returning black", index);
         return {};
     }
 

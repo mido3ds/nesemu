@@ -4,10 +4,6 @@
 #include "instructions.h"
 #include "Image.h"
 
-// already defined at catch
-// TODO: better fix
-#undef INFO
-
 #include <catch2/catch.hpp>
 
 static uint8_t mem_read(RAM& ram, uint16_t a) {

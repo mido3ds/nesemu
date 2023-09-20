@@ -21,15 +21,15 @@ void ADC(CPU& cpu) {
 }
 
 void AHX(CPU& cpu) {
-    ERROR("invalid/unsupported opcode was called");
+    log_error("invalid/unsupported opcode was called");
 }
 
 void ALR(CPU& cpu) {
-    ERROR("invalid/unsupported opcode was called");
+    log_error("invalid/unsupported opcode was called");
 }
 
 void ANC(CPU& cpu) {
-    ERROR("invalid/unsupported opcode was called");
+    log_error("invalid/unsupported opcode was called");
 }
 
 void AND(CPU& cpu) {
@@ -41,7 +41,7 @@ void AND(CPU& cpu) {
 }
 
 void ARR(CPU& cpu) {
-    ERROR("invalid/unsupported opcode was called");
+    log_error("invalid/unsupported opcode was called");
 }
 
 void ASL(CPU& cpu) {
@@ -56,7 +56,7 @@ void ASL(CPU& cpu) {
 }
 
 void AXS(CPU& cpu) {
-    ERROR("invalid/unsupported opcode was called");
+    log_error("invalid/unsupported opcode was called");
 }
 
 void BCC(CPU& cpu) {
@@ -198,7 +198,7 @@ void CPY(CPU& cpu) {
 }
 
 void DCP(CPU& cpu) {
-    ERROR("invalid/unsupported opcode was called");
+    log_error("invalid/unsupported opcode was called");
 }
 
 void DEC(CPU& cpu) {
@@ -254,7 +254,7 @@ void INY(CPU& cpu) {
 }
 
 void ISC(CPU& cpu) {
-    ERROR("invalid/unsupported opcode was called");
+    log_error("invalid/unsupported opcode was called");
 }
 
 void JMP(CPU& cpu) {
@@ -268,15 +268,15 @@ void JSR(CPU& cpu) {
 }
 
 void KIL(CPU& cpu) {
-    ERROR("KIL was called");
+    log_error("KIL was called");
 }
 
 void LAS(CPU& cpu) {
-    ERROR("invalid/unsupported opcode was called");
+    log_error("invalid/unsupported opcode was called");
 }
 
 void LAX(CPU& cpu) {
-    ERROR("invalid/unsupported opcode was called");
+    log_error("invalid/unsupported opcode was called");
 }
 
 void LDA(CPU& cpu) {
@@ -342,7 +342,7 @@ void PLP(CPU& cpu) {
 }
 
 void RLA(CPU& cpu) {
-    ERROR("invalid/unsupported opcode was called");
+    log_error("invalid/unsupported opcode was called");
 }
 
 void ROL(CPU& cpu) {
@@ -374,7 +374,7 @@ void ROR(CPU& cpu) {
 }
 
 void RRA(CPU& cpu) {
-    ERROR("invalid/unsupported opcode was called");
+    log_error("invalid/unsupported opcode was called");
 }
 
 void RTI(CPU& cpu) {
@@ -387,7 +387,7 @@ void RTS(CPU& cpu) {
 }
 
 void SAX(CPU& cpu) {
-    ERROR("invalid/unsupported opcode was called");
+    log_error("invalid/unsupported opcode was called");
 }
 
 void SBC(CPU& cpu) {
@@ -416,19 +416,19 @@ void SEI(CPU& cpu) {
 }
 
 void SHX(CPU& cpu) {
-    ERROR("invalid/unsupported opcode was called");
+    log_error("invalid/unsupported opcode was called");
 }
 
 void SHY(CPU& cpu) {
-    ERROR("invalid/unsupported opcode was called");
+    log_error("invalid/unsupported opcode was called");
 }
 
 void SLO(CPU& cpu) {
-    ERROR("invalid/unsupported opcode was called");
+    log_error("invalid/unsupported opcode was called");
 }
 
 void SRE(CPU& cpu) {
-    ERROR("invalid/unsupported opcode was called");
+    log_error("invalid/unsupported opcode was called");
 }
 
 void STA(CPU& cpu) {
@@ -444,7 +444,7 @@ void STY(CPU& cpu) {
 }
 
 void TAS(CPU& cpu) {
-    ERROR("invalid/unsupported opcode was called");
+    log_error("invalid/unsupported opcode was called");
 }
 
 void TAX(CPU& cpu) {
@@ -484,7 +484,7 @@ void TYA(CPU& cpu) {
 }
 
 void XAA(CPU& cpu) {
-    ERROR("invalid/unsupported opcode was called");
+    log_error("invalid/unsupported opcode was called");
 }
 
 #define _DEF(x) x, #x

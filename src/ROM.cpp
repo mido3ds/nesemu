@@ -14,7 +14,7 @@ static uint32_t rom_get_chr_rom_size(const ROM& self) {
 }
 
 void rom_load(ROM& self, const Str& path) {
-    INFO("reading rom from {}", path);
+    log_debug("reading rom from {}", path);
 
     auto file = file_content_str(path.c_str(), memory::tmp());
     uint8_t* buffer = (uint8_t*) file.data();
@@ -31,7 +31,7 @@ void rom_load(ROM& self, const Str& path) {
 
     // no trainer
     if (self.header.flags6.bits.has_trainer) {
-        WARNING("emulator doesnt support trainers, ignoring trainer");
+        log_warning("emulator doesnt support trainers, ignoring trainer");
     }
 
     // cpy PRG
@@ -61,7 +61,7 @@ void rom_load(ROM& self, const Str& path) {
 
     // no playchoice
     if (self.header.flags7.bits.has_play_choice) {
-        WARNING("emulator doesnt support PlayChoice, ignoring PlayChoice");
+        log_warning("emulator doesnt support PlayChoice, ignoring PlayChoice");
     }
 
     const bool valid_mmc0_rom = rom_get_mapper_number(self) == 0 &&
@@ -71,20 +71,20 @@ void rom_load(ROM& self, const Str& path) {
         panic("only supports MMC0");
     }
 
-    INFO("rom mapper num = {}", rom_get_mapper_number(self));
-    INFO("iNES version = {}", self.header.flags7.bits.nes2format == 2? 2:1);
-    INFO("rom num of PRG roms = {}", self.header.num_prgs);
-    INFO("rom num of CHR roms = {}", self.header.num_chrs);
+    log_debug("rom mapper num = {}", rom_get_mapper_number(self));
+    log_debug("iNES version = {}", self.header.flags7.bits.nes2format == 2? 2:1);
+    log_debug("rom num of PRG roms = {}", self.header.num_prgs);
+    log_debug("rom num of CHR roms = {}", self.header.num_chrs);
     if (!self.header.flags6.bits.ignore_mirroring_control) {
         if (self.header.flags6.bits.mirroring == 0){
-            INFO("rom mirroring is horizontal");
+            log_debug("rom mirroring is horizontal");
         } else {
-            INFO("rom mirroring is vertical");
+            log_debug("rom mirroring is vertical");
         }
     } else {
-        INFO("rom ignores mirroring");
+        log_debug("rom ignores mirroring");
     }
-    INFO("done reading ROM");
+    log_debug("done reading ROM");
 }
 
 bool rom_read(ROM& self, uint16_t addr, uint8_t& data) {
