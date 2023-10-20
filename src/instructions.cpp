@@ -1,7 +1,7 @@
 #include <array>
 #include <functional>
 
-#include "utils.h"
+#include <mu/utils.h>
 #include "common.h"
 #include "CPU.h"
 #include "instructions.h"

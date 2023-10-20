@@ -26,9 +26,9 @@ list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 # dependencies
 include(CPM)
 CPMAddPackage(
-    NAME             fmt
-    GIT_REPOSITORY   https://github.com/fmtlib/fmt.git
-    GIT_TAG          10.0.0
+    NAME             mu
+    GIT_REPOSITORY   https://github.com/mido3ds/mu.git
+    GIT_TAG          6368eee54ffe96c62505454991955e1b62d16238
     GIT_SHALLOW      TRUE
 )
 CPMAddPackage(
@@ -68,18 +68,11 @@ set_property(TARGET ImGui-SFML
         CMAKE_CXX_EXTENSIONS NO
 )
 
-# The additional / is important to remove the last character from the path.
-# Note that it does not matter if the OS uses / or \, because we are only
-# saving the path size.
-string(LENGTH "${CMAKE_SOURCE_DIR}/" SOURCE_PATH_SIZE)
-add_definitions("-DSOURCE_PATH_SIZE=${SOURCE_PATH_SIZE}")
-
 add_executable(nesemu)
 
 ## sources
 target_sources(nesemu
     PRIVATE
-        src/utils.cpp
         src/test/single_instructions.cpp
         src/test/nestestlines.cpp
         src/test/nestest.h
@@ -101,7 +94,6 @@ target_sources(nesemu
         src/CPU.cpp
         src/common.cpp
         src/RAM.cpp
-        src/utils.h
         src/Config.h
         src/main.cpp
 )
@@ -112,7 +104,7 @@ target_include_directories(nesemu PRIVATE src/)
 ## dependecies
 target_link_libraries(nesemu
     PRIVATE
-        fmt
+        mido3ds::mu
         sfml-window
         sfml-graphics
         sfml-audio

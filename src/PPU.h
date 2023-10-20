@@ -1,6 +1,6 @@
 #pragma once
 
-#include "utils.h"
+#include <mu/utils.h>
 #include "common.h"
 
 struct Image;

@@ -3,7 +3,7 @@
 #include <thread>
 
 #include "common.h"
-#include "utils.h"
+#include <mu/utils.h>
 
 struct ROM {
     Vec<uint8_t> prg, chr;

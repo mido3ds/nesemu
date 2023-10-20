@@ -3,7 +3,7 @@
 #include <functional>
 #include <array>
 
-#include "utils.h"
+#include <mu/utils.h>
 #include "common.h"
 #include "CPU.h"
 

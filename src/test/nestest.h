@@ -1,6 +1,6 @@
 #pragma once
 
-#include "utils.h"
+#include <mu/utils.h>
 
 struct TestLogLine {
     uint16_t pc;

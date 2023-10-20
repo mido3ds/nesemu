@@ -5,7 +5,7 @@
 #include <thread>
 #include <cstdint>
 
-#include "utils.h"
+#include <mu/utils.h>
 
 struct RGBAColor {
     uint8_t r, g, b, a;

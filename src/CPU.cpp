@@ -1,7 +1,7 @@
 #include "CPU.h"
 #include "Console.h"
 #include "instructions.h"
-#include "utils.h"
+#include <mu/utils.h>
 
 CPU cpu_new(Console* console) {
     CPU self {};

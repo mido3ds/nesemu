@@ -1,5 +1,5 @@
 #include "common.h"
-#include "utils.h"
+#include <mu/utils.h>
 
 RGBAColor RGBAColor::from_palette_index(uint8_t index) {
     if (index > 0x3F) {
