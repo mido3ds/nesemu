@@ -47,16 +47,16 @@ namespace MyImGui {
 }
 
 int main(int argc, char** argv) {
-    if (argc == 1 || argv[1] == "--help"_str_lit) {
-        fmt::print(stderr, "Usage: {} </path/to/rom | test [args to Catch2] | --help>\n", file_get_base_name(argv[0]));
+    if (argc == 1 || argv[1] == mu::StrView("--help")) {
+        fmt::print(stderr, "Usage: {} </path/to/rom | test [args to Catch2] | --help>\n", mu::file_get_base_name(argv[0]));
         return 1;
     }
 
-    if (argv[1] == "test"_str_lit) {
+    if (argv[1] == mu::StrView("test")) {
         return run_tests(argc-1, argv+1);
     }
-    
-    const Str rom_path = argv[1]; 
+
+    const mu::Str rom_path = argv[1];
 
     Console dev {};
     console_init(dev, rom_path);
@@ -71,7 +71,7 @@ int main(int argc, char** argv) {
     #endif
 
     // window
-    auto title = str_format("NESEMU - {}", rom_path);
+    auto title = mu::str_format("NESEMU - {}", rom_path);
     sf::RenderWindow main_wind(
         sf::VideoMode(Config::main_wind.w * view_scale, Config::main_wind.h * view_scale),
         title.c_str(),
@@ -82,7 +82,7 @@ int main(int argc, char** argv) {
     Image image = image_new();
 
     // imgui
-    auto _imgui_ini_file_path = str_format("{}/{}", folder_config(memory::tmp()), "nesemu-imgui.ini");
+    auto _imgui_ini_file_path = mu::str_format("{}/{}", mu::folder_config(mu::memory::tmp()), "nesemu-imgui.ini");
 
     ImGui::SFML::Init(main_wind);
     defer(ImGui::SFML::Shutdown(main_wind));
@@ -97,12 +97,12 @@ int main(int argc, char** argv) {
 
     sf::Texture tile_texture;
     if (tile_texture.create(8, 8) == false) {
-        panic("failed to create texture");
+        mu::panic("failed to create texture");
     }
     sf::Sprite tile_sprite(tile_texture);
 
     while (main_wind.isOpen()) {
-        memory::reset_tmp();
+        mu::memory::reset_tmp();
         main_wind.clear();
 
         // handle events
@@ -155,7 +155,7 @@ int main(int argc, char** argv) {
                         ImGui::TableSetupScrollFreeze(1, 1);
                         ImGui::TableSetupColumn("", ImGuiTableColumnFlags_NoHeaderLabel);
                         for (int i = 0; i < width; i++) {
-                            ImGui::TableSetupColumn(str_tmpf("{:02X}", i).c_str());
+                            ImGui::TableSetupColumn(mu::str_tmpf("{:02X}", i).c_str());
                         }
                         ImGui::TableHeadersRow();
 
@@ -164,11 +164,11 @@ int main(int argc, char** argv) {
                             for (int j = clipper.DisplayStart; j < clipper.DisplayEnd; j++) {
                                 ImGui::TableNextRow();
                                 ImGui::TableSetColumnIndex(0);
-                                ImGui::Text(str_tmpf("{:04X}", j).c_str());
+                                ImGui::Text(mu::str_tmpf("{:04X}", j).c_str());
 
                                 for (int i = 0; i < width; i++) {
                                     ImGui::TableSetColumnIndex(i+1);
-                                    ImGui::TextColored(ImVec4 {1.0f, 1.0f, 0, 1.0f}, str_tmpf("{:02X}", dev.ram[j*width+i]).c_str());
+                                    ImGui::TextColored(ImVec4 {1.0f, 1.0f, 0, 1.0f}, mu::str_tmpf("{:02X}", dev.ram[j*width+i]).c_str());
                                 }
                             }
                         }
@@ -187,7 +187,7 @@ int main(int argc, char** argv) {
                         ImGui::TableSetupScrollFreeze(1, 1);
                         ImGui::TableSetupColumn("", ImGuiTableColumnFlags_NoHeaderLabel);
                         for (int i = 0; i < width; i++) {
-                            ImGui::TableSetupColumn(str_tmpf("{:02X}", i).c_str());
+                            ImGui::TableSetupColumn(mu::str_tmpf("{:02X}", i).c_str());
                         }
                         ImGui::TableHeadersRow();
 
@@ -196,11 +196,11 @@ int main(int argc, char** argv) {
                             for (int j = clipper.DisplayStart; j < clipper.DisplayEnd; j++) {
                                 ImGui::TableNextRow();
                                 ImGui::TableSetColumnIndex(0);
-                                ImGui::Text(str_tmpf("{:04X}", j).c_str());
+                                ImGui::Text(mu::str_tmpf("{:04X}", j).c_str());
 
                                 for (int i = 0; i < width; i++) {
                                     ImGui::TableSetColumnIndex(i+1);
-                                    ImGui::TextColored(ImVec4 {1.0f, 1.0f, 0, 1.0f}, str_tmpf("{:02X}", prg[j*width+i]).c_str());
+                                    ImGui::TextColored(ImVec4 {1.0f, 1.0f, 0, 1.0f}, mu::str_tmpf("{:02X}", prg[j*width+i]).c_str());
                                 }
                             }
                         }
@@ -219,7 +219,7 @@ int main(int argc, char** argv) {
                         ImGui::TableSetupScrollFreeze(1, 1);
                         ImGui::TableSetupColumn("", ImGuiTableColumnFlags_NoHeaderLabel);
                         for (int i = 0; i < width; i++) {
-                            ImGui::TableSetupColumn(str_tmpf("{:02X}", i).c_str());
+                            ImGui::TableSetupColumn(mu::str_tmpf("{:02X}", i).c_str());
                         }
                         ImGui::TableHeadersRow();
 
@@ -228,11 +228,11 @@ int main(int argc, char** argv) {
                             for (int j = clipper.DisplayStart; j < clipper.DisplayEnd; j++) {
                                 ImGui::TableNextRow();
                                 ImGui::TableSetColumnIndex(0);
-                                ImGui::Text(str_tmpf("{:04X}", j).c_str());
+                                ImGui::Text(mu::str_tmpf("{:04X}", j).c_str());
 
                                 for (int i = 0; i < width; i++) {
                                     ImGui::TableSetColumnIndex(i+1);
-                                    ImGui::TextColored(ImVec4 {1.0f, 1.0f, 0, 1.0f}, str_tmpf("{:02X}", chr[j*width+i]).c_str());
+                                    ImGui::TextColored(ImVec4 {1.0f, 1.0f, 0, 1.0f}, mu::str_tmpf("{:02X}", chr[j*width+i]).c_str());
                                 }
                             }
                         }
@@ -311,7 +311,7 @@ int main(int argc, char** argv) {
                                     case 1: color = {131.0f/255.0f, 162.0f/255.0f, 173.0f/255.0f, 1.0f}; break;
                                     default: unreachable();
                                     }
-                                    ImGui::TextColored(color, str_tmpf("{}", val).c_str());
+                                    ImGui::TextColored(color, mu::str_tmpf("{}", val).c_str());
                                 }
                             }
                         }
@@ -338,16 +338,16 @@ int main(int argc, char** argv) {
                     MyImGui::InputByte("Universal Background", &dev.ppu.universal_bg_index);
                     ImGui::Separator();
                     for (int i = 0; i < 4; i++) {
-                        ImGui::Text(str_tmpf("Background {}", i).c_str());
+                        ImGui::Text(mu::str_tmpf("Background {}", i).c_str());
                         for (int j = 0; j < 4; j++) {
-                            MyImGui::InputByte(str_tmpf("{}##bg{}", j, i).c_str(), &dev.ppu.bg_palette[i].index[j]);
+                            MyImGui::InputByte(mu::str_tmpf("{}##bg{}", j, i).c_str(), &dev.ppu.bg_palette[i].index[j]);
                         }
                     }
                     ImGui::Separator();
                     for (int i = 0; i < 4; i++) {
-                        ImGui::Text(str_tmpf("Sprite {}", i).c_str());
+                        ImGui::Text(mu::str_tmpf("Sprite {}", i).c_str());
                         for (int j = 0; j < 4; j++) {
-                            MyImGui::InputByte(str_tmpf("{}##sp{}", j, i).c_str(), &dev.ppu.sprite_palette[i].index[j]);
+                            MyImGui::InputByte(mu::str_tmpf("{}##sp{}", j, i).c_str(), &dev.ppu.sprite_palette[i].index[j]);
                         }
                     }
 
@@ -362,7 +362,7 @@ int main(int argc, char** argv) {
         if (ImGui::Begin("Debug")) {
             // fps
             auto time_millis = elapsed_time.asMilliseconds();
-            ImGui::Text(str_tmpf("FPS: {}", time_millis == 0? 0 : 1000 / time_millis).c_str());
+            ImGui::Text(mu::str_tmpf("FPS: {}", time_millis == 0? 0 : 1000 / time_millis).c_str());
 
             if (should_pause) {
                 if (ImGui::Button("Resume")) {
@@ -388,23 +388,23 @@ int main(int argc, char** argv) {
 
             if (ImGui::TreeNodeEx("Regs", ImGuiTreeNodeFlags_DefaultOpen)) {
                 const auto& regs = dev.cpu.regs;
-                ImGui::Text(str_tmpf("PC: ${:04X}", regs.pc).c_str());
+                ImGui::Text(mu::str_tmpf("PC: ${:04X}", regs.pc).c_str());
 
-                ImGui::Text(str_tmpf("SP: ${:02X}", regs.sp).c_str());
-                ImGui::Text(str_tmpf("A: ${:02X}", regs.a).c_str());
+                ImGui::Text(mu::str_tmpf("SP: ${:02X}", regs.sp).c_str());
+                ImGui::Text(mu::str_tmpf("A: ${:02X}", regs.a).c_str());
 
-                ImGui::Text(str_tmpf("X: ${:02X}", regs.x).c_str());
-                ImGui::Text(str_tmpf("Y: ${:02X}", regs.y).c_str());
+                ImGui::Text(mu::str_tmpf("X: ${:02X}", regs.x).c_str());
+                ImGui::Text(mu::str_tmpf("Y: ${:02X}", regs.y).c_str());
 
-                ImGui::Text(str_tmpf("C: {}", regs.flags.bits.c).c_str());
-                ImGui::Text(str_tmpf("Z: {}", regs.flags.bits.z).c_str());
-                ImGui::Text(str_tmpf("I: {}", regs.flags.bits.i).c_str());
+                ImGui::Text(mu::str_tmpf("C: {}", regs.flags.bits.c).c_str());
+                ImGui::Text(mu::str_tmpf("Z: {}", regs.flags.bits.z).c_str());
+                ImGui::Text(mu::str_tmpf("I: {}", regs.flags.bits.i).c_str());
 
-                ImGui::Text(str_tmpf("D: {}", regs.flags.bits.d).c_str());
-                ImGui::Text(str_tmpf("B: {}", regs.flags.bits.b).c_str());
-                ImGui::Text(str_tmpf("V: {}", regs.flags.bits.v).c_str());
+                ImGui::Text(mu::str_tmpf("D: {}", regs.flags.bits.d).c_str());
+                ImGui::Text(mu::str_tmpf("B: {}", regs.flags.bits.b).c_str());
+                ImGui::Text(mu::str_tmpf("V: {}", regs.flags.bits.v).c_str());
 
-                ImGui::Text(str_tmpf("N: {}", regs.flags.bits.n).c_str());
+                ImGui::Text(mu::str_tmpf("N: {}", regs.flags.bits.n).c_str());
 
                 ImGui::TreePop();
             }
@@ -427,7 +427,7 @@ int main(int argc, char** argv) {
                             }
 
                             if (ImGui::TableSetColumnIndex(0)) {
-                                ImGui::Text(str_tmpf("${:04X}", assembly[j].adr).c_str());
+                                ImGui::Text(mu::str_tmpf("${:04X}", assembly[j].adr).c_str());
                             }
                             if (ImGui::TableSetColumnIndex(1)) {
                                 ImGui::Text(assembly[j].instr.c_str());

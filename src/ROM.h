@@ -6,7 +6,7 @@
 #include <mu/utils.h>
 
 struct ROM {
-    Vec<uint8_t> prg, chr;
+    mu::Vec<uint8_t> prg, chr;
 
     struct Header {
         uint8_t num_prgs = 0;
@@ -52,7 +52,7 @@ struct ROM {
     } header;
 };
 
-void rom_load(ROM& self, const Str& path);
+void rom_load(ROM& self, const mu::Str& path);
 
 inline uint16_t rom_get_mapper_number(const ROM& self) {
     return self.header.flags6.bits.lower_mapper_num | self.header.flags7.bits.upper_mapper_num << 8;
@@ -63,7 +63,7 @@ bool rom_write(ROM& self, uint16_t addr, uint8_t data);
 
 struct Assembly {
     uint16_t adr;
-    Str instr;
+    mu::Str instr;
 };
 
-Vec<Assembly> rom_disassemble(const ROM& self, memory::Allocator* allocator = memory::default_allocator());
+mu::Vec<Assembly> rom_disassemble(const ROM& self, mu::memory::Allocator* allocator = mu::memory::default_allocator());

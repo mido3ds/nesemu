@@ -11,7 +11,7 @@ CPU cpu_new(Console* console) {
 
     // https://wiki.nesdev.com/w/index.php/CPU_power_up_state#At_power-up
     self.regs.pc = self.read16(RH);
-    log_debug("PC = memory[0xFFFC] = 0x{:04X}", self.regs.pc);
+    mu::log_debug("PC = memory[0xFFFC] = 0x{:04X}", self.regs.pc);
 
     self.regs.sp = 0xFD;
     self.regs.flags.byte = 0x34; // IRQ disabled
@@ -31,7 +31,7 @@ CPU cpu_new(Console* console) {
 
 void cpu_reset(CPU& self) {
     self.regs.pc = self.read16(RH);
-    log_debug("PC = memory[0xFFFC] = 0x{:04X}", self.regs.pc);
+    mu::log_debug("PC = memory[0xFFFC] = 0x{:04X}", self.regs.pc);
 
     self.regs.sp = 0xFD;
     self.regs.flags.byte = 0;
@@ -137,7 +137,7 @@ void CPU::reprepare_jmp_arg() {
         arg_addr = indirect_address(a, b);
         break;
     default:
-        log_error("not JMP address mode");
+        mu::log_error("not JMP address mode");
         return;
     }
 
@@ -165,7 +165,7 @@ uint8_t CPU::read(uint16_t address) {
         || ram_read(console->ram, address, data)
         || ppu_read(console->ppu, address, data);
     if (!success) {
-       log_warning("read from unregistered address 0x{:02X}", address);
+       mu::log_warning("read from unregistered address 0x{:02X}", address);
     }
     return data;
 }
@@ -175,7 +175,7 @@ void CPU::write(uint16_t address, uint8_t data)  {
         || ram_write(console->ram, address, data)
         || ppu_read(console->ppu, address, data);
     if (!success) {
-       log_warning("write to unregistered address 0x{:02X}", address);
+       mu::log_warning("write to unregistered address 0x{:02X}", address);
     }
 }
 

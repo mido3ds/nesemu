@@ -3,7 +3,7 @@
 #include "Console.h"
 #include "ROM.h"
 
-void console_init(Console& self, const Str& rom_path) {
+void console_init(Console& self, const mu::Str& rom_path) {
     self = {};
 
     if (!rom_path.empty()) {

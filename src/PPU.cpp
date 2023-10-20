@@ -74,7 +74,7 @@ bool ppu_write(PPU& self, uint16_t addr, uint8_t data) {
 RGBAColor ppu_get_color(PPU& self, uint8_t index, ColorType type) {
     auto index_into_palette = index >> 2;
     if (index_into_palette > 4) {
-        panic("only 4 palettes to select from, found index = {}", index_into_palette);
+        mu::panic("only 4 palettes to select from, found index = {}", index_into_palette);
     }
     auto index_into_indices = index & 0b11;
 

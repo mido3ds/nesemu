@@ -31,7 +31,7 @@ struct Region {
 // struct Mirror {
 //     Region source, dest;
 
-//     Vec<uint16_t> get_address(const uint16_t address) const;
+//     mu::Vec<uint16_t> get_address(const uint16_t address) const;
 // };
 
 // enum class SpriteType : uint8_t {S8x8 = 0, S8x16 = 1};
@@ -85,7 +85,7 @@ constexpr uint8_t SPRITE_8x8_SIZE = 16;
 constexpr uint8_t SPRITE_8x16_SIZE = 2 * SPRITE_8x8_SIZE;
 constexpr uint32_t MEM_SIZE = 0xFFFF + 1;
 
-typedef Arr<uint8_t, MEM_SIZE> MemType;
+typedef mu::Arr<uint8_t, MEM_SIZE> MemType;
 
 // Video systems info
 constexpr struct VideoSystem {
@@ -134,18 +134,18 @@ constexpr Region
     IMG_PLT {0x3F00, 0x3F10-1},
     SPR_PLT {0x3F10, 0x3F20-1};
 
-// constexpr Arr<Mirror, 2> MEM_MIRRORS {
+// constexpr mu::Arr<Mirror, 2> MEM_MIRRORS {
 //     Mirror({{0x0000, 0x07FF}, {0x0800, 0x2000-1}}),
 //     Mirror({IO_REGS0, {0x2008, 0x4000-1}}),
 // };
 
-// constexpr Arr<Mirror, 3> VRAM_MIRRORS {
+// constexpr mu::Arr<Mirror, 3> VRAM_MIRRORS {
 //     Mirror({{0x2000, 0x2EFF}, {0x3000, 0x3F00-1}}),
 //     Mirror({{0x3F00, 0x3F1F}, {0x3F20, 0x4000-1}}),
 //     Mirror({{0x0000, 0x3FFF}, {0x4000, 0xFFFF}}),
 // };
 
-// interrupt Vec table
+// interrupt mu::Vec table
 constexpr uint16_t
     IRQ = 0xFFFE,
     NMI = 0xFFFA,

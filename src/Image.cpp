@@ -6,7 +6,7 @@ Image image_new() {
     self.sfml_image.create(Config::resolution.w, Config::resolution.h);
 
     if (!self.texture.create(Config::resolution.w, Config::resolution.h)) {
-        panic("texture.create failed");
+        mu::panic("texture.create failed");
     }
 
     return self;

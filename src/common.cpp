@@ -3,11 +3,11 @@
 
 RGBAColor RGBAColor::from_palette_index(uint8_t index) {
     if (index > 0x3F) {
-        log_error("invalid index color(0x{:02x}), returning black", index);
+        mu::log_error("invalid index color(0x{:02x}), returning black", index);
         return {};
     }
 
-    static constexpr Arr<RGBAColor, 0x3F + 1> sys_palette = {
+    static constexpr mu::Arr<RGBAColor, 0x3F + 1> sys_palette = {
         RGBAColor({0x75, 0x75, 0x75, 0xFF}),
         RGBAColor({0x27, 0x1B, 0x8F, 0xFF}),
         RGBAColor({0x00, 0x00, 0xAB, 0xFF}),
