@@ -1,7 +1,6 @@
 #include <fstream>
 #include <tuple>
 
-#include <mu/utils.h>
 #include "ROM.h"
 #include "instructions.h"
 
@@ -88,7 +87,7 @@ void rom_load(ROM& self, const mu::Str& path) {
 }
 
 bool rom_read(ROM& self, uint16_t addr, uint8_t& data) {
-    if (self.prg.size() > 0 && PRG_REGION.contains(addr)) {
+    if (self.prg.size() > 0 && region_contains(PRG_REGION, addr)) {
         data = self.prg[(addr - PRG_ROM_LOW.start) % self.prg.size()];
 
         return true;
@@ -98,7 +97,7 @@ bool rom_read(ROM& self, uint16_t addr, uint8_t& data) {
 }
 
 bool rom_write(ROM& self, uint16_t addr, uint8_t data) {
-    if (self.prg.size() > 0 && PRG_REGION.contains(addr)) {
+    if (self.prg.size() > 0 && region_contains(PRG_REGION, addr)) {
         self.prg[(addr - PRG_ROM_LOW.start) % self.prg.size()] = data;
 
         return true;
@@ -113,7 +112,7 @@ mu::Vec<Assembly> rom_disassemble(const ROM& rom, mu::memory::Allocator* allocat
     uint8_t const* mem = rom.prg.data();
     int size = rom.prg.size();
 
-    uint16_t addr = (size == PRG_ROM_LOW.size())? PRG_ROM_UP.start : PRG_ROM_LOW.start;
+    uint16_t addr = (size == region_size(PRG_ROM_LOW)) ? PRG_ROM_UP.start : PRG_ROM_LOW.start;
 
     while (size > 0) {
         int consumedBytes = 1;

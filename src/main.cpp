@@ -4,7 +4,6 @@
 #include <SFML/Window.hpp>
 #include <SFML/Graphics.hpp>
 
-#include <mu/utils.h>
 #include "Console.h"
 #include "Image.h"
 

@@ -11,5 +11,5 @@ struct TestLogLine {
     uint64_t cycles;
 };
 
-typedef mu::Arr<TestLogLine, 8991> TestLogs;
+using TestLogs = mu::Arr<TestLogLine, 8991>;
 extern const TestLogs testLogs;

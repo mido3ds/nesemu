@@ -1,7 +1,6 @@
 #include "common.h"
-#include <mu/utils.h>
 
-RGBAColor RGBAColor::from_palette_index(uint8_t index) {
+RGBAColor color_from_palette(uint8_t index) {
     if (index > 0x3F) {
         mu::log_error("invalid index color(0x{:02x}), returning black", index);
         return {};

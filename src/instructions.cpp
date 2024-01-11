@@ -1,7 +1,6 @@
 #include <array>
 #include <functional>
 
-#include <mu/utils.h>
 #include "common.h"
 #include "CPU.h"
 #include "instructions.h"
@@ -52,7 +51,7 @@ void ASL(CPU& cpu) {
     cpu.regs.flags.bits.z = v == 0; // TODO: not sure if Accumulator only or any value
     cpu.regs.flags.bits.n = v >> 7;
 
-    cpu.write_arg(v);
+    cpu_write_arg(cpu, v);
 }
 
 void AXS(CPU& cpu) {
@@ -130,9 +129,9 @@ void BPL(CPU& cpu) {
 void BRK(CPU& cpu) {
     if (cpu.regs.flags.bits.i == 1) return;
 
-    cpu.push(cpu.regs.pc);
-    cpu.push(cpu.regs.flags.byte);
-    cpu.regs.pc = cpu.read16(IRQ);
+    cpu_push(cpu, cpu.regs.pc);
+    cpu_push(cpu, cpu.regs.flags.byte);
+    cpu.regs.pc = cpu_read16(cpu, IRQ);
     cpu.regs.flags.bits.b = 1;
     cpu.regs.flags.bits.i = 1;
 }
@@ -208,7 +207,7 @@ void DEC(CPU& cpu) {
     cpu.regs.flags.bits.z = v == 0;
     cpu.regs.flags.bits.n = v >> 7;
 
-    cpu.write_arg(v);
+    cpu_write_arg(cpu, v);
 }
 
 void DEX(CPU& cpu) {
@@ -238,7 +237,7 @@ void INC(CPU& cpu) {
     cpu.regs.flags.bits.z = v == 0;
     cpu.regs.flags.bits.n = v >> 7;
 
-    cpu.write_arg(v);
+    cpu_write_arg(cpu, v);
 }
 
 void INX(CPU& cpu) {
@@ -258,12 +257,12 @@ void ISC(CPU& cpu) {
 }
 
 void JMP(CPU& cpu) {
-    cpu.reprepare_jmp_arg();
+    cpu_reprepare_jmp_arg(cpu);
     cpu.regs.pc = cpu.arg_addr;
 }
 
 void JSR(CPU& cpu) {
-    cpu.push16(cpu.regs.pc);
+    cpu_push16(cpu, cpu.regs.pc);
     cpu.regs.pc = cpu.arg_addr;
 }
 
@@ -312,7 +311,7 @@ void LSR(CPU& cpu) {
     cpu.regs.flags.bits.z = v == 0;
     cpu.regs.flags.bits.n = 0;
 
-    cpu.write_arg(v);
+    cpu_write_arg(cpu, v);
 }
 
 void NOP(CPU& cpu) {}
@@ -326,19 +325,19 @@ void ORA(CPU& cpu) {
 }
 
 void PHA(CPU& cpu) {
-    cpu.push(cpu.regs.a);
+    cpu_push(cpu, cpu.regs.a);
 }
 
 void PHP(CPU& cpu) {
-    cpu.push(cpu.regs.flags.byte);
+    cpu_push(cpu, cpu.regs.flags.byte);
 }
 
 void PLA(CPU& cpu) {
-    cpu.regs.a = cpu.pop();
+    cpu.regs.a = cpu_pop(cpu);
 }
 
 void PLP(CPU& cpu) {
-    cpu.regs.flags.byte = cpu.pop();
+    cpu.regs.flags.byte = cpu_pop(cpu);
 }
 
 void RLA(CPU& cpu) {
@@ -356,7 +355,7 @@ void ROL(CPU& cpu) {
     cpu.regs.flags.bits.z = v == 0;
     cpu.regs.flags.bits.n = v >> 7;
 
-    cpu.write_arg(v);
+    cpu_write_arg(cpu, v);
 }
 
 void ROR(CPU& cpu) {
@@ -370,7 +369,7 @@ void ROR(CPU& cpu) {
     cpu.regs.flags.bits.z = v == 0;
     cpu.regs.flags.bits.n = oldCarry;
 
-    cpu.write_arg(v);
+    cpu_write_arg(cpu, v);
 }
 
 void RRA(CPU& cpu) {
@@ -378,12 +377,12 @@ void RRA(CPU& cpu) {
 }
 
 void RTI(CPU& cpu) {
-    cpu.regs.flags.byte = cpu.pop();
-    cpu.regs.pc = cpu.pop16();
+    cpu.regs.flags.byte = cpu_pop(cpu);
+    cpu.regs.pc = cpu_pop16(cpu);
 }
 
 void RTS(CPU& cpu) {
-    cpu.regs.pc = cpu.pop16() + 1;
+    cpu.regs.pc = cpu_pop16(cpu) + 1;
 }
 
 void SAX(CPU& cpu) {
@@ -432,15 +431,15 @@ void SRE(CPU& cpu) {
 }
 
 void STA(CPU& cpu) {
-    cpu.write_arg(cpu.regs.a);
+    cpu_write_arg(cpu, cpu.regs.a);
 }
 
 void STX(CPU& cpu) {
-    cpu.write_arg(cpu.regs.x);
+    cpu_write_arg(cpu, cpu.regs.x);
 }
 
 void STY(CPU& cpu) {
-    cpu.write_arg(cpu.regs.y);
+    cpu_write_arg(cpu, cpu.regs.y);
 }
 
 void TAS(CPU& cpu) {

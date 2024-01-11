@@ -1,9 +1,6 @@
 #pragma once
 
-#include <thread>
-
 #include "common.h"
-#include <mu/utils.h>
 
 struct ROM {
     mu::Vec<uint8_t> prg, chr;

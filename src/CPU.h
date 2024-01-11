@@ -1,7 +1,5 @@
 #pragma once
 
-#include <thread>
-
 #include "common.h"
 
 struct CPURegs {
@@ -28,45 +26,35 @@ struct CPURegs {
 struct Console;
 
 struct CPU {
-    CPURegs regs;
-    uint16_t cycles = 0;
     Console* console;
 
-    /*addressing modes for 6502
-    from Appendix E: http://www.nesdev.com/NESDoc.pdf
-    */
-    uint16_t zero_page_address(const uint8_t bb);
-    uint16_t indexed_zero_page_address(const uint8_t bb, const uint8_t i);
-    uint16_t absolute_address(const uint8_t bb, const uint8_t cc);
-    uint16_t indexed_absolute_address(const uint8_t bb, const uint8_t cc, const uint8_t i);
-    uint16_t indirect_address(const uint8_t bb, const uint8_t cc);
-    uint16_t indexed_indirect_address(const uint8_t bb, const uint8_t i);
-    uint16_t indirect_indexed_address(const uint8_t bb, const uint8_t i);
-
-    // ram
-    uint8_t read(uint16_t address);
-    uint16_t read16(uint16_t address);
-    uint8_t fetch(); // read and increment pc
-
-    void write(uint16_t address, uint8_t data);
-    void write16(uint16_t address, uint16_t v);
-
-    void push(uint8_t v);
-    void push16(uint16_t v);
-
-    uint8_t pop();
-    uint16_t pop16();
+    CPURegs regs;
+    uint16_t cycles;
 
     // for instructions
     uint8_t arg_value;
     uint16_t arg_addr;
     AddressMode mode;
 
-    void write_arg(uint8_t v); 
-    void reprepare_jmp_arg();
     bool cross_page_penalty;
 };
 
 CPU cpu_new(Console* console);
 void cpu_reset(CPU& self);
 void cpu_clock(CPU& self);
+
+uint8_t cpu_read(CPU& self, uint16_t address);
+uint16_t cpu_read16(CPU& self, uint16_t address);
+uint8_t cpu_fetch(CPU& self); // read and increment pc
+
+void cpu_write(CPU& self, uint16_t address, uint8_t data);
+void cpu_write16(CPU& self, uint16_t address, uint16_t v);
+
+void cpu_push(CPU& self, uint8_t v);
+void cpu_push16(CPU& self, uint16_t v);
+
+uint8_t cpu_pop(CPU& self);
+uint16_t cpu_pop16(CPU& self);
+
+void cpu_write_arg(CPU& self, uint8_t v);
+void cpu_reprepare_jmp_arg(CPU& self);

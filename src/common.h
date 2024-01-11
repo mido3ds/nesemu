@@ -9,10 +9,10 @@
 
 struct RGBAColor {
     uint8_t r, g, b, a;
-
-    // nes color palette index -> RGB color
-    static RGBAColor from_palette_index(uint8_t index);
 };
+
+// nes color palette index -> RGB color
+RGBAColor color_from_palette(uint8_t index);
 
 enum class AddressMode {
     Implicit, Accumulator, Immediate, ZeroPage,
@@ -23,10 +23,17 @@ enum class AddressMode {
 
 struct Region {
     uint16_t start, end;
-
-    constexpr bool contains(uint16_t addr) const {return addr <= end && addr >= start;}
-    constexpr uint16_t size() const {return (end + 1) - start;}
 };
+
+inline static bool
+region_contains(Region self, uint16_t addr) {
+    return addr <= self.end && addr >= self.start;
+}
+
+inline static uint16_t
+region_size(Region self) {
+    return (self.end + 1) - self.start;
+}
 
 // struct Mirror {
 //     Region source, dest;
@@ -77,15 +84,15 @@ union PatternTablePointer {
         uint8_t:3;
     } bits;
     const uint16_t word = 0;
-
-    static_assert(sizeof(word) == sizeof(bits) && sizeof(word) == 16/8);
 };
+
+static_assert(sizeof(PatternTablePointer::word) == sizeof(PatternTablePointer::bits) && sizeof(PatternTablePointer::word) == 16/8);
 
 constexpr uint8_t SPRITE_8x8_SIZE = 16;
 constexpr uint8_t SPRITE_8x16_SIZE = 2 * SPRITE_8x8_SIZE;
 constexpr uint32_t MEM_SIZE = 0xFFFF + 1;
 
-typedef mu::Arr<uint8_t, MEM_SIZE> MemType;
+using MemType = mu::Arr<uint8_t, MEM_SIZE>;
 
 // Video systems info
 constexpr struct VideoSystem {

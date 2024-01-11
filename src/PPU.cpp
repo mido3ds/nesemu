@@ -85,5 +85,5 @@ RGBAColor ppu_get_color(PPU& self, uint8_t index, ColorType type) {
         final_index = self.sprite_palette[index_into_palette].index[index_into_indices];
     }
 
-    return RGBAColor::from_palette_index(final_index);
+    return color_from_palette(final_index);
 }

@@ -3,7 +3,6 @@
 #include <functional>
 #include <array>
 
-#include <mu/utils.h>
 #include "common.h"
 #include "CPU.h"
 
@@ -15,5 +14,5 @@ struct Instruction {
     bool cross_page_penalty;
 };
 
-typedef mu::Arr<Instruction, 0xFF+1> InstructionSet;
+using InstructionSet = mu::Arr<Instruction, 0xFF+1>;
 extern const InstructionSet instruction_set;
