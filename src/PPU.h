@@ -25,5 +25,5 @@ void ppu_reset(PPU& self);
 bool ppu_read(PPU& self, uint16_t addr, uint8_t& data);
 bool ppu_write(PPU& self, uint16_t addr, uint8_t data);
 
-enum class ColorType { BG, SPRITE };
-RGBAColor ppu_get_color(PPU& self, uint8_t index, ColorType type);
+RGBAColor ppu_get_bg_color(const PPU& self, uint8_t index);
+RGBAColor ppu_get_sprite_color(const PPU& self, uint8_t index);

@@ -1,9 +1,5 @@
 #pragma once
 
-#include <functional>
-#include <array>
-
-#include "common.h"
 #include "CPU.h"
 
 struct Instruction {

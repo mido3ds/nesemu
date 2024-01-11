@@ -253,6 +253,7 @@ int main(int argc, char** argv) {
                 if (ImGui::BeginTabItem("Pattern Table")) {
                     // get tile
                     static int row = 0, col = 0, palette_index = 0 /*0-4*/;
+                    enum class ColorType { BG, SPRITE };
                     static ColorType color_type = ColorType::BG;
                     static auto table_half = PatternTablePointer::TableHalf::LEFT;
                     PatternTablePointer p {
@@ -281,7 +282,8 @@ int main(int argc, char** argv) {
                     RGBAColor tile_monochrome[8][8] = {0};
                     for (int j = 0; j < 8; j++) {
                         for (int i = 0; i< 8; i++) {
-                            tile_monochrome[j][i] = ppu_get_color(dev.ppu, tile[j][i], color_type);
+                            tile_monochrome[j][i] = color_type == ColorType::BG ?
+                                ppu_get_bg_color(dev.ppu, tile[j][i]) : ppu_get_sprite_color(dev.ppu, tile[j][i]);
                         }
                     }
                     tile_texture.update((const sf::Uint8*)tile_monochrome);
