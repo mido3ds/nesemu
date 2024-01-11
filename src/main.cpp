@@ -7,11 +7,6 @@
 #include "Console.h"
 #include "Image.h"
 
-#define MEM_WIDTH 16
-#define MEM_HEIGHT 46
-#define MEM_HPADDING 5
-#define MEM_VPADDING 5
-
 int run_tests(int argc, char** argv);
 
 namespace MyImGui {
