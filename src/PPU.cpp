@@ -14,7 +14,7 @@ void ppu_clock(PPU& self, Image* image) {
     if (image) {
         for (int i = 0; i < Config::sys.resolution.height; i++) {
             for (int j = 0; j < Config::sys.resolution.width; j++) {
-                image_pixel(*image, j, i, rand()%10 == 0? RGBAColor{}:RGBAColor{255,255,255,255});
+                image_set_pixel(*image, j, i, rand()%10 == 0? RGBAColor{}:RGBAColor{255,255,255,255});
             }
         }
     }

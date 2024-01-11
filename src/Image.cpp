@@ -12,11 +12,11 @@ Image image_new() {
     return self;
 }
 
-void image_pixel(Image& self, int x, int y, RGBAColor c) {
+void image_set_pixel(Image& self, int x, int y, RGBAColor c) {
     self.sfml_image.setPixel(x, y, sf::Color(c.r, c.g, c.b, c.a));
 }
 
-void image_show(Image& self, sf::RenderWindow& window) {
+void image_render(Image& self, sf::RenderWindow& window) {
     self.texture.update(self.sfml_image);
     self.sprite.setTexture(self.texture);
 

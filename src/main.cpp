@@ -442,7 +442,7 @@ int main(int argc, char** argv) {
 
         ImGui::ShowDemoWindow();
 
-        image_show(image, main_wind);
+        image_render(image, main_wind);
         ImGui::SFML::Render(main_wind);
 
         main_wind.display();
