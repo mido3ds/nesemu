@@ -39,4 +39,12 @@ namespace Config {
 
     constexpr auto font_path = ASSETS_DIR "/zig.ttf";
     constexpr int font_size = 13;
+
+    // scale if use retina display, because it has very big resolution
+    // very hacky solution, if another system has big resolution it would fail :D
+    #ifdef OS_MACOS
+    constexpr int view_scale = 2;
+    #else
+    constexpr int view_scale = 1;
+    #endif
 }

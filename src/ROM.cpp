@@ -110,7 +110,7 @@ mu::Vec<Assembly> rom_disassemble(const ROM& rom, mu::memory::Allocator* allocat
     mu::Vec<Assembly> out (allocator);
 
     uint8_t const* mem = rom.prg.data();
-    size_t size = rom.prg.size();
+    int size = (int) rom.prg.size();
 
     uint16_t addr = (size == region_size(PRG_ROM_LOW)) ? PRG_ROM_UP.start : PRG_ROM_LOW.start;
 
