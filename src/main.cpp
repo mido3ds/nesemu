@@ -79,7 +79,7 @@ int main(int argc, char** argv) {
     auto _imgui_ini_file_path = mu::str_format("{}/{}", mu::folder_config(mu::memory::tmp()), "nesemu-imgui.ini");
 
     ImGui::SFML::Init(main_wind);
-    defer(ImGui::SFML::Shutdown(main_wind));
+    mu_defer(ImGui::SFML::Shutdown(main_wind));
 
     ImGui::StyleColorsDark();
     ImGui::GetIO().IniFilename = _imgui_ini_file_path.c_str();
@@ -305,7 +305,7 @@ int main(int argc, char** argv) {
                                     case 3: color = {1.0f, 1.0f, 1.0f, 1.0f}; break;
                                     case 2: color = {67.0f/255.0f, 145.0f/255.0f, 170.0f/255.0f, 1.0f}; break;
                                     case 1: color = {131.0f/255.0f, 162.0f/255.0f, 173.0f/255.0f, 1.0f}; break;
-                                    default: unreachable();
+                                    default: mu_unreachable();
                                     }
                                     ImGui::TextColored(color, mu::str_tmpf("{}", val).c_str());
                                 }
