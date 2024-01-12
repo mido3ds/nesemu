@@ -211,7 +211,6 @@ namespace sys {
                     static auto table_half = PatternTablePointer::TableHalf::LEFT;
                     PatternTablePointer p {
                         .bits = {
-                            .bit_plane = PatternTablePointer::BitPlane::LOWER,
                             .tile_col = (uint8_t) col,
                             .tile_row = (uint8_t) row,
                             .table_half = table_half,
@@ -226,23 +225,9 @@ namespace sys {
                         auto h = std::bitset<8>(world.console.rom.chr[p.word]);
 
                         for (int i = 0; i < 8; i++) {
-                            tile[j][i] = palette_index << 2 | h[7-i] << 1 | l[7-i];
+                            tile[j][i] = h[7-i] << 1 | l[7-i];
                         }
                     }
-
-                    // render tile
-                    RGBAColor tile_monochrome[8][8] = {0};
-                    for (int j = 0; j < 8; j++) {
-                        for (int i = 0; i< 8; i++) {
-                            tile_monochrome[j][i] = color_type == ColorType::BG ?
-                                ppu_get_bg_color(world.console.ppu, tile[j][i]) : ppu_get_sprite_color(world.console.ppu, tile[j][i]);
-                        }
-                    }
-                    world.tile_texture.update((const sf::Uint8*)tile_monochrome);
-                    world.tile_sprite.setScale(15 * Config::view_scale, 15 * Config::view_scale);
-                    ImGui::Image(world.tile_sprite);
-
-                    ImGui::SameLine();
 
                     // tile as a table
                     constexpr auto TABLE_FLAGS = ImGuiTableFlags_NoHostExtendX | ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_BordersOuter;
@@ -271,6 +256,22 @@ namespace sys {
 
                         ImGui::EndTable();
                     }
+
+                    ImGui::SameLine();
+
+                    // render tile
+                    RGBAColor tile_monochrome[8][8] = {0};
+                    const Palette& palette = color_type == ColorType::BG ?
+                        world.console.ppu.bg_palettes[palette_index] : world.console.ppu.sprite_palettes[palette_index];
+                    for (int i = 0; i < 8; i++) {
+                        for (int j = 0; j< 8; j++) {
+                            tile_monochrome[i][j] = color_from_palette(palette.index[tile[i][j]]);
+                        }
+                    }
+                    world.tile_texture.update((const sf::Uint8*)tile_monochrome);
+                    world.tile_sprite.setScale(15 * Config::view_scale, 15 * Config::view_scale);
+                    ImGui::Image(world.tile_sprite);
+
 
                     ImGui::SliderInt("Col", &col, 0, 15, "%d", ImGuiSliderFlags_AlwaysClamp);
                     ImGui::SliderInt("Row", &row, 0, 15, "%d", ImGuiSliderFlags_AlwaysClamp);
@@ -339,20 +340,20 @@ namespace sys {
 
                     ImGui::Text("Background");
                     for (int i = 0; i < 4; i++) {
-                        MyImGui_ColorButton(mu::str_tmpf("bg{}0", i), &world.console.ppu.bg_palette[i].index[0]); ImGui::SameLine();
-                        MyImGui_ColorButton(mu::str_tmpf("bg{}1", i), &world.console.ppu.bg_palette[i].index[1]); ImGui::SameLine();
-                        MyImGui_ColorButton(mu::str_tmpf("bg{}2", i), &world.console.ppu.bg_palette[i].index[2]); ImGui::SameLine();
-                        MyImGui_ColorButton(mu::str_tmpf("bg{}3", i), &world.console.ppu.bg_palette[i].index[3]);
+                        MyImGui_ColorButton(mu::str_tmpf("bg{}0", i), &world.console.ppu.bg_palettes[i].index[0]); ImGui::SameLine();
+                        MyImGui_ColorButton(mu::str_tmpf("bg{}1", i), &world.console.ppu.bg_palettes[i].index[1]); ImGui::SameLine();
+                        MyImGui_ColorButton(mu::str_tmpf("bg{}2", i), &world.console.ppu.bg_palettes[i].index[2]); ImGui::SameLine();
+                        MyImGui_ColorButton(mu::str_tmpf("bg{}3", i), &world.console.ppu.bg_palettes[i].index[3]);
                     }
 
                     ImGui::Separator();
 
                     ImGui::Text("Sprite");
                     for (int i = 0; i < 4; i++) {
-                        MyImGui_ColorButton(mu::str_tmpf("sp{}0", i), &world.console.ppu.sprite_palette[i].index[0]); ImGui::SameLine();
-                        MyImGui_ColorButton(mu::str_tmpf("sp{}1", i), &world.console.ppu.sprite_palette[i].index[1]); ImGui::SameLine();
-                        MyImGui_ColorButton(mu::str_tmpf("sp{}2", i), &world.console.ppu.sprite_palette[i].index[2]); ImGui::SameLine();
-                        MyImGui_ColorButton(mu::str_tmpf("sp{}3", i), &world.console.ppu.sprite_palette[i].index[3]);
+                        MyImGui_ColorButton(mu::str_tmpf("sp{}0", i), &world.console.ppu.sprite_palettes[i].index[0]); ImGui::SameLine();
+                        MyImGui_ColorButton(mu::str_tmpf("sp{}1", i), &world.console.ppu.sprite_palettes[i].index[1]); ImGui::SameLine();
+                        MyImGui_ColorButton(mu::str_tmpf("sp{}2", i), &world.console.ppu.sprite_palettes[i].index[2]); ImGui::SameLine();
+                        MyImGui_ColorButton(mu::str_tmpf("sp{}3", i), &world.console.ppu.sprite_palettes[i].index[3]);
                     }
 
                     ImGui::EndTabItem();

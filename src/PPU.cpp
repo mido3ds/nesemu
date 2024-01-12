@@ -70,23 +70,3 @@ bool ppu_write(PPU& self, uint16_t addr, uint8_t data) {
     }
     return false;
 }
-
-RGBAColor ppu_get_bg_color(const PPU& self, uint8_t index) {
-    auto index_into_palette = index >> 2;
-    if (index_into_palette > 4) {
-        mu::panic("only 4 palettes to select from, found index = {}", index_into_palette);
-    }
-    auto index_into_indices = index & 0b11;
-    uint8_t palette_index = self.bg_palette[index_into_palette].index[index_into_indices];
-    return color_from_palette(palette_index);
-}
-
-RGBAColor ppu_get_sprite_color(const PPU& self, uint8_t index) {
-    auto index_into_palette = index >> 2;
-    if (index_into_palette > 4) {
-        mu::panic("only 4 palettes to select from, found index = {}", index_into_palette);
-    }
-    auto index_into_indices = index & 0b11;
-    uint8_t palette_index = self.sprite_palette[index_into_palette].index[index_into_indices];
-    return color_from_palette(palette_index);
-}

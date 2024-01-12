@@ -161,11 +161,11 @@ union PatternTablePointer {
 
 static_assert(sizeof(PatternTablePointer) == sizeof(uint16_t));
 
-constexpr uint8_t SPRITE_8x8_SIZE = 16;
-constexpr uint8_t SPRITE_8x16_SIZE = 2 * SPRITE_8x8_SIZE;
-constexpr uint32_t MEM_SIZE = 0xFFFF + 1;
+// constexpr uint8_t SPRITE_8x8_SIZE = 16;
+// constexpr uint8_t SPRITE_8x16_SIZE = 2 * SPRITE_8x8_SIZE;
+// constexpr uint32_t MEM_SIZE = 0xFFFF + 1;
 
-using MemType = mu::Arr<uint8_t, MEM_SIZE>;
+// using MemType = mu::Arr<uint8_t, MEM_SIZE>;
 
 // Video systems info
 constexpr struct VideoSystem {
