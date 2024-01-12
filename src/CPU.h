@@ -2,6 +2,8 @@
 
 #include "common.h"
 
+struct Console;
+
 struct CPURegs {
     uint16_t pc; // program counter
     uint8_t sp; // stack pointer
@@ -23,7 +25,7 @@ struct CPURegs {
     } flags; // processor status
 };
 
-struct Console;
+static_assert(sizeof(CPURegs::flags) == sizeof(uint8_t));
 
 struct CPU {
     Console* console;

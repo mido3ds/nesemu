@@ -7,7 +7,7 @@ void console_init(Console& self, const mu::Str& rom_path) {
     self = {};
 
     if (!rom_path.empty()) {
-        rom_load(self.rom, rom_path);
+        rom_from_ines_file(self.rom, rom_path);
     }
 
     self.ppu = ppu_new(&self);

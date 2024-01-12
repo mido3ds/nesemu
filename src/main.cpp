@@ -100,7 +100,7 @@ namespace sys {
                 constexpr auto TABLE_FLAGS = ImGuiTableFlags_ScrollX | ImGuiTableFlags_ScrollY | ImGuiTableFlags_RowBg | ImGuiTableFlags_BordersOuter;
 
                 if (ImGui::BeginTabItem("RAM")) {
-                    const uint32_t height = world.console.ram.size() / width;
+                    const auto height = int(world.console.ram.size() / width);
                     if (ImGui::BeginTable("ram_table", width+1, TABLE_FLAGS)) {
                         ImGui::TableSetupScrollFreeze(1, 1);
                         ImGui::TableSetupColumn("", ImGuiTableColumnFlags_NoHeaderLabel);
@@ -132,7 +132,7 @@ namespace sys {
 
                 if (ImGui::BeginTabItem("PRG")) {
                     const auto& prg = world.console.rom.prg;
-                    const uint32_t height = prg.size() / width;
+                    const auto height = int(prg.size() / width);
                     if (ImGui::BeginTable("ram_table", width+1, TABLE_FLAGS)) {
                         ImGui::TableSetupScrollFreeze(1, 1);
                         ImGui::TableSetupColumn("", ImGuiTableColumnFlags_NoHeaderLabel);
@@ -164,7 +164,7 @@ namespace sys {
 
                 if (ImGui::BeginTabItem("CHR")) {
                     const auto& chr = world.console.rom.chr;
-                    const uint32_t height = chr.size() / width;
+                    const auto height = int(chr.size() / width);
                     if (ImGui::BeginTable("ram_table", width+1, TABLE_FLAGS)) {
                         ImGui::TableSetupScrollFreeze(1, 1);
                         ImGui::TableSetupColumn("", ImGuiTableColumnFlags_NoHeaderLabel);
@@ -373,7 +373,7 @@ namespace sys {
                     ImGui::TableSetupColumn("Inst");
                     ImGui::TableHeadersRow();
 
-                    ImGuiListClipper clipper(world.assembly.size());
+                    ImGuiListClipper clipper(int(world.assembly.size()));
                     while (clipper.Step()) {
                         for (int j = clipper.DisplayStart; j < clipper.DisplayEnd; j++) {
                             ImGui::TableNextRow();

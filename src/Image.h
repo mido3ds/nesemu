@@ -1,9 +1,7 @@
 #pragma once
 
-#include <SFML/Window.hpp>
 #include <SFML/Graphics.hpp>
 
-#include "common.h"
 #include "Config.h"
 
 struct Image {

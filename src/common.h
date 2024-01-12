@@ -83,10 +83,10 @@ union PatternTablePointer {
         TableHalf table_half:1;
         uint8_t:3;
     } bits;
-    const uint16_t word = 0;
+    uint16_t word;
 };
 
-static_assert(sizeof(PatternTablePointer::word) == sizeof(PatternTablePointer::bits) && sizeof(PatternTablePointer::word) == 16/8);
+static_assert(sizeof(PatternTablePointer) == sizeof(uint16_t));
 
 constexpr uint8_t SPRITE_8x8_SIZE = 16;
 constexpr uint8_t SPRITE_8x16_SIZE = 2 * SPRITE_8x8_SIZE;
