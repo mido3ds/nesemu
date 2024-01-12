@@ -92,7 +92,6 @@ target_sources(nesemu
         src/PPU.cpp
         src/PPU.h
         src/CPU.cpp
-        src/common.cpp
         src/RAM.cpp
         src/Config.h
         src/main.cpp

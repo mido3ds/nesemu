@@ -211,7 +211,6 @@ namespace sys {
                     static auto table_half = PatternTablePointer::TableHalf::LEFT;
                     PatternTablePointer p {
                         .bits = {
-                            .row_in_tile = 0,
                             .bit_plane = PatternTablePointer::BitPlane::LOWER,
                             .tile_col = (uint8_t) col,
                             .tile_row = (uint8_t) row,
@@ -289,20 +288,71 @@ namespace sys {
                 }
 
                 if (ImGui::BeginTabItem("Palettes")) {
-                    MyImGui::InputByte("Universal Background", &world.console.ppu.universal_bg_index);
-                    ImGui::Separator();
-                    for (int i = 0; i < 4; i++) {
-                        ImGui::Text(mu::str_tmpf("Background {}", i).c_str());
-                        for (int j = 0; j < 4; j++) {
-                            MyImGui::InputByte(mu::str_tmpf("{}##bg{}", j, i).c_str(), &world.console.ppu.bg_palette[i].index[j]);
+                    constexpr auto PALETTE_POPUP_NAME = "nes-palette-color-picker";
+                    static uint8_t* popup_clr_index_ptr = nullptr;
+
+                    if (ImGui::BeginPopup(PALETTE_POPUP_NAME)) {
+                        ImGui::Text("Palette");
+                        for (uint8_t i = 0; i < NES_PALETTE.size(); i++) {
+                            ImGui::PushID(i);
+                            if ((i % 16) != 0) {
+                                ImGui::SameLine(0.0f, ImGui::GetStyle().ItemSpacing.y);
+                            }
+
+                            ImVec4 colorvec {
+                                NES_PALETTE[i].r / float(0xFF),
+                                NES_PALETTE[i].g / float(0xFF),
+                                NES_PALETTE[i].b / float(0xFF),
+                                NES_PALETTE[i].a / float(0xFF),
+                            };
+
+                            ImGuiColorEditFlags palette_button_flags = ImGuiColorEditFlags_NoAlpha | ImGuiColorEditFlags_NoPicker;
+                            if (ImGui::ColorButton(mu::str_tmpf("0x{:02X}##palette", i).c_str(), colorvec, palette_button_flags, ImVec2(20, 20))) {
+                                *popup_clr_index_ptr = i;
+                                ImGui::CloseCurrentPopup();
+                            }
+
+                            ImGui::PopID();
                         }
+                        ImGui::EndPopup();
                     }
-                    ImGui::Separator();
-                    for (int i = 0; i < 4; i++) {
-                        ImGui::Text(mu::str_tmpf("Sprite {}", i).c_str());
-                        for (int j = 0; j < 4; j++) {
-                            MyImGui::InputByte(mu::str_tmpf("{}##sp{}", j, i).c_str(), &world.console.ppu.sprite_palette[i].index[j]);
+
+                    const auto MyImGui_ColorButton = [](mu::StrView id, uint8_t* index) {
+                        ImVec4 color {
+                            NES_PALETTE[*index].r / float(0xFF),
+                            NES_PALETTE[*index].g / float(0xFF),
+                            NES_PALETTE[*index].b / float(0xFF),
+                            NES_PALETTE[*index].a / float(0xFF),
+                        };
+                        auto desc_id = mu::str_tmpf("0x{:02X}##color-picker:{}", *index, id).c_str();
+                        if (ImGui::ColorButton(desc_id, color, 0)) {
+                            popup_clr_index_ptr = index;
+                            ImGui::OpenPopup(PALETTE_POPUP_NAME);
                         }
+                    };
+
+                    ImGui::Text("Universal Background");
+                    ImGui::SameLine();
+                    MyImGui_ColorButton("ub", &world.console.ppu.universal_bg_index);
+
+                    ImGui::Separator();
+
+                    ImGui::Text("Background");
+                    for (int i = 0; i < 4; i++) {
+                        MyImGui_ColorButton(mu::str_tmpf("bg{}0", i), &world.console.ppu.bg_palette[i].index[0]); ImGui::SameLine();
+                        MyImGui_ColorButton(mu::str_tmpf("bg{}1", i), &world.console.ppu.bg_palette[i].index[1]); ImGui::SameLine();
+                        MyImGui_ColorButton(mu::str_tmpf("bg{}2", i), &world.console.ppu.bg_palette[i].index[2]); ImGui::SameLine();
+                        MyImGui_ColorButton(mu::str_tmpf("bg{}3", i), &world.console.ppu.bg_palette[i].index[3]);
+                    }
+
+                    ImGui::Separator();
+
+                    ImGui::Text("Sprite");
+                    for (int i = 0; i < 4; i++) {
+                        MyImGui_ColorButton(mu::str_tmpf("sp{}0", i), &world.console.ppu.sprite_palette[i].index[0]); ImGui::SameLine();
+                        MyImGui_ColorButton(mu::str_tmpf("sp{}1", i), &world.console.ppu.sprite_palette[i].index[1]); ImGui::SameLine();
+                        MyImGui_ColorButton(mu::str_tmpf("sp{}2", i), &world.console.ppu.sprite_palette[i].index[2]); ImGui::SameLine();
+                        MyImGui_ColorButton(mu::str_tmpf("sp{}3", i), &world.console.ppu.sprite_palette[i].index[3]);
                     }
 
                     ImGui::EndTabItem();
@@ -505,6 +555,8 @@ int main(int argc, char** argv) {
                 sys::imgui_memory_window(world);
                 sys::imgui_viewer_window(world);
                 sys::imgui_debug_window(world);
+
+                ImGui::ShowDemoWindow();
             }
             sys::imgui_rendering_end(world);
         }
@@ -518,8 +570,6 @@ int main(int argc, char** argv) {
 
 /*
 TODO:
-- pallette:
-    - show/edit current color palette as colors
 - nametable
     - render one frame without color
     - render one frame with color from one palette
