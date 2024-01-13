@@ -262,13 +262,12 @@ constexpr uint16_t PPU_CTRL_REG0 = 0x2000,
                 APU_VERTICAL_CLOCK_SIGNAL_REG         = 0x4015;
 
 namespace Config {
-    constexpr VideoSystem sys = NTSC;
+    constexpr VideoSystem sys = PAL;
 
     struct Rect {int w, h;};
-    constexpr Rect resolution{NTSC.resolution.width, NTSC.resolution.height};
+    constexpr Rect resolution{sys.resolution.width, sys.resolution.height};
 
-    constexpr Rect main_wind{resolution.w * 3, resolution.h * 3};
-    constexpr Rect debug_wind{230, main_wind.h};
+    constexpr Rect window{resolution.w * 3, resolution.h * 3};
 
     constexpr auto font_path = ASSETS_DIR "/zig.ttf";
     constexpr int font_size = 13;

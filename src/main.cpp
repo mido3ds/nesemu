@@ -68,7 +68,7 @@ namespace Config {
 
 struct World {
     mu::Str rom_path;
-    sf::RenderWindow main_wind;
+    sf::RenderWindow window;
     mu::Str imgui_ini_file_path;
 
     bool should_pause;
@@ -88,16 +88,16 @@ struct World {
 namespace sys {
     void window_init(World& world) {
         auto title = mu::str_format("NESEMU - {}", world.rom_path);
-        world.main_wind.create(
-            sf::VideoMode(Config::main_wind.w * Config::view_scale, Config::main_wind.h * Config::view_scale),
+        world.window.create(
+            sf::VideoMode(Config::window.w * Config::view_scale, Config::window.h * Config::view_scale),
             title.c_str(),
             sf::Style::Titlebar|sf::Style::Close
         );
-        world.main_wind.setPosition(sf::Vector2i(0,0));
+        world.window.setPosition(sf::Vector2i(0,0));
     }
 
     void imgui_init(World& world) {
-        ImGui::SFML::Init(world.main_wind);
+        ImGui::SFML::Init(world.window);
 
         ImGui::StyleColorsDark();
 
@@ -108,15 +108,15 @@ namespace sys {
     }
 
     void imgui_free(World& world) {
-        ImGui::SFML::Shutdown(world.main_wind);
+        ImGui::SFML::Shutdown(world.window);
     }
 
     void imgui_rendering_begin(World& world) {
-        ImGui::SFML::Update(world.main_wind, world.frame_time);
+        ImGui::SFML::Update(world.window, world.frame_time);
     }
 
     void imgui_rendering_end(World& world) {
-        ImGui::SFML::Render(world.main_wind);
+        ImGui::SFML::Render(world.window);
     }
 
     void imgui_memory_window(World& world) {
@@ -479,27 +479,27 @@ namespace sys {
     }
 
     void wnd_rendering_begin(World& world) {
-        world.main_wind.setView(world.main_wind.getDefaultView());
-        world.main_wind.clear();
+        world.window.setView(world.window.getDefaultView());
+        world.window.clear();
     }
 
     void wnd_rendering_end(World& world) {
-        world.main_wind.display();
+        world.window.display();
     }
 
     void events_collect(World& world) {
         sf::Event event;
-        while (world.main_wind.pollEvent(event)) {
-            ImGui::SFML::ProcessEvent(world.main_wind, event);
+        while (world.window.pollEvent(event)) {
+            ImGui::SFML::ProcessEvent(world.window, event);
 
             switch (event.type) {
             case sf::Event::Closed:
-                world.main_wind.close();
+                world.window.close();
                 break;
             case sf::Event::KeyPressed:
                 switch (event.key.code) {
                 case Config::exit:
-                    world.main_wind.close();
+                    world.window.close();
                     break;
                 }
                 break;
@@ -548,8 +548,8 @@ namespace sys {
 
     void console_render_screen(World& world) {
         world.console_texture.update((const sf::Uint8*) world.console.screen_buf.pixels.data());
-        world.main_wind.setView(sf::View(sf::FloatRect(0, 0, (float)world.console.screen_buf.w, (float)world.console.screen_buf.h)));
-        world.main_wind.draw(world.console_sprite);
+        world.window.setView(sf::View(sf::FloatRect(0, 0, (float)world.console.screen_buf.w, (float)world.console.screen_buf.h)));
+        world.window.draw(world.console_sprite);
     }
 }
 
@@ -574,7 +574,7 @@ int main(int argc, char** argv) {
 
     sys::console_init(world);
 
-    while (world.main_wind.isOpen()) {
+    while (world.window.isOpen()) {
         sys::clock_update(world);
         sys::events_collect(world);
         sys::console_update(world);
