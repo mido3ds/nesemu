@@ -78,22 +78,13 @@ target_sources(nesemu
         src/test/nestest.h
         src/test/run_tests.cpp
         src/test/nestest.cpp
-        src/Image.cpp
-        src/Image.h
-        src/common.h
-        src/instructions.h
         src/Console.h
         src/Console.cpp
         src/ROM.cpp
-        src/RAM.h
-        src/CPU.h
         src/instructions.cpp
-        src/ROM.h
         src/PPU.cpp
-        src/PPU.h
         src/CPU.cpp
         src/RAM.cpp
-        src/Config.h
         src/main.cpp
 )
 

@@ -1,6 +1,4 @@
-#include "PPU.h"
-#include "Config.h"
-#include "Image.h"
+#include "Console.h"
 
 PPU ppu_new(Console* console) {
     return PPU {
@@ -8,14 +6,13 @@ PPU ppu_new(Console* console) {
     };
 }
 
-void ppu_clock(PPU& self, Image* image) {
+void ppu_clock(PPU& self) {
     // TODO
     // for now we will draw random white-black pixels
-    if (image) {
-        for (int i = 0; i < Config::sys.resolution.height; i++) {
-            for (int j = 0; j < Config::sys.resolution.width; j++) {
-                image_set_pixel(*image, j, i, rand()%10 == 0? RGBAColor{}:RGBAColor{255,255,255,255});
-            }
+    auto& buf = self.console->screen_buf;
+    for (size_t y = 0; y < buf.h; y++) {
+        for (size_t x = 0; x < buf.w; x++) {
+            screenbuf_put(buf, x, y, rand()%10 == 0? RGBAColor{}:RGBAColor{255,255,255,255});
         }
     }
 }

@@ -1,6 +1,4 @@
-#include "CPU.h"
 #include "Console.h"
-#include "instructions.h"
 
 CPU cpu_new(Console* console) {
     CPU self {

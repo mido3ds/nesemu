@@ -1,11 +1,11 @@
 #include <bitset>
+
 #include <imgui.h>
 #include <imgui-SFML.h>
 #include <SFML/Window.hpp>
 #include <SFML/Graphics.hpp>
 
 #include "Console.h"
-#include "Image.h"
 
 int run_tests(int argc, char** argv);
 
@@ -40,6 +40,32 @@ namespace MyImGui {
     }
 }
 
+namespace Config {
+    constexpr sf::Keyboard::Key
+        // window
+        pause = sf::Keyboard::P,
+        exit = sf::Keyboard::Escape,
+
+        // console
+        reset = sf::Keyboard::R,
+        up = sf::Keyboard::Up,
+        down = sf::Keyboard::Down,
+        left = sf::Keyboard::Left,
+        right = sf::Keyboard::Right,
+        a = sf::Keyboard::A,
+        b = sf::Keyboard::S,
+        start = sf::Keyboard::Return,
+        select = sf::Keyboard::Tab,
+
+        // debugging
+        next_instr = sf::Keyboard::F10,
+        debug = sf::Keyboard::D,
+        show_mem = sf::Keyboard::M,
+        toggle_stepping = sf::Keyboard::F5,
+        scroll_mem_down = sf::Keyboard::J,
+        scroll_mem_up = sf::Keyboard::K;
+}
+
 struct World {
     mu::Str rom_path;
     sf::RenderWindow main_wind;
@@ -52,9 +78,9 @@ struct World {
     sf::Time frame_time;
 
     Console console;
-    mu::Vec<Assembly> assembly;
+    sf::Sprite console_sprite;
+    sf::Texture console_texture;
 
-    Image console_image;
     sf::Texture tile_texture;
     sf::Sprite tile_sprite;
 };
@@ -424,20 +450,20 @@ namespace sys {
                     ImGui::TableSetupColumn("Inst");
                     ImGui::TableHeadersRow();
 
-                    ImGuiListClipper clipper(int(world.assembly.size()));
+                    ImGuiListClipper clipper(int(world.console.assembly.size()));
                     while (clipper.Step()) {
                         for (int j = clipper.DisplayStart; j < clipper.DisplayEnd; j++) {
                             ImGui::TableNextRow();
 
-                            if (world.assembly[j].adr == world.console.cpu.regs.pc) {
+                            if (world.console.assembly[j].adr == world.console.cpu.regs.pc) {
                                 ImGui::TableSetBgColor(ImGuiTableBgTarget_RowBg0, ImGui::GetColorU32(ImVec4{0.3f, 0.3f, 0.7f, 0.65f}));
                             }
 
                             if (ImGui::TableSetColumnIndex(0)) {
-                                ImGui::Text(mu::str_tmpf("${:04X}", world.assembly[j].adr).c_str());
+                                ImGui::Text(mu::str_tmpf("${:04X}", world.console.assembly[j].adr).c_str());
                             }
                             if (ImGui::TableSetColumnIndex(1)) {
-                                ImGui::Text(world.assembly[j].instr.c_str());
+                                ImGui::Text(world.console.assembly[j].instr.c_str());
                             }
                         }
                     }
@@ -453,15 +479,12 @@ namespace sys {
     }
 
     void wnd_rendering_begin(World& world) {
+        world.main_wind.setView(world.main_wind.getDefaultView());
         world.main_wind.clear();
     }
 
     void wnd_rendering_end(World& world) {
         world.main_wind.display();
-    }
-
-    void wnd_render_images(World& world) {
-        image_render(world.console_image, world.main_wind);
     }
 
     void events_collect(World& world) {
@@ -491,12 +514,13 @@ namespace sys {
     void console_init(World& world) {
         console_init(world.console, world.rom_path);
 
-        world.assembly = rom_disassemble(world.console.rom);
-
         world.should_pause = true;
         world.do_one_instr = false;
 
-        world.console_image = image_new();
+        if (world.console_texture.create(Config::resolution.w, Config::resolution.h) == false) {
+            mu::panic("texture.create failed");
+        }
+        world.console_sprite.setTexture(world.console_texture);
 
         if (world.tile_texture.create(8, 8) == false) {
             mu::panic("failed to create texture");
@@ -517,9 +541,15 @@ namespace sys {
                 .right   = sf::Keyboard::isKeyPressed(Config::right)
             });
 
-            console_clock(world.console, &world.console_image);
+            console_clock(world.console);
         }
         world.do_one_instr = !world.should_pause;
+    }
+
+    void console_render_screen(World& world) {
+        world.console_texture.update((const sf::Uint8*) world.console.screen_buf.pixels.data());
+        world.main_wind.setView(sf::View(sf::FloatRect(0, 0, (float)world.console.screen_buf.w, (float)world.console.screen_buf.h)));
+        world.main_wind.draw(world.console_sprite);
     }
 }
 
@@ -550,7 +580,7 @@ int main(int argc, char** argv) {
         sys::console_update(world);
 
         sys::wnd_rendering_begin(world); {
-            sys::wnd_render_images(world);
+            sys::console_render_screen(world);
 
             sys::imgui_rendering_begin(world); {
                 sys::imgui_memory_window(world);
@@ -571,6 +601,7 @@ int main(int argc, char** argv) {
 
 /*
 TODO:
+- remove vram
 - nametable
     - render one frame without color
     - render one frame with color from one palette

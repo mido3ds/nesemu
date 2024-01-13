@@ -1,10 +1,6 @@
-#include <cstring>
+#include <catch2/catch.hpp>
 
 #include "Console.h"
-#include "instructions.h"
-#include "Image.h"
-
-#include <catch2/catch.hpp>
 
 static uint8_t mem_read(RAM& ram, uint16_t a) {
     uint8_t data;
@@ -49,7 +45,7 @@ TEST_CASE("branch") {
         mem_write(dev.ram, regs.pc, BCC);
         mem_write(dev.ram, regs.pc+1, addr);
 
-        console_clock(dev, nullptr);
+        console_clock(dev);
 
         REQUIRE(regs.pc == oldpc+addr+2);
         REQUIRE(oldflags == regs.flags.byte);
@@ -65,7 +61,7 @@ TEST_CASE("branch") {
         mem_write(dev.ram, regs.pc, BCC);
         mem_write(dev.ram, regs.pc+1, addr);
 
-        console_clock(dev, nullptr);
+        console_clock(dev);
 
         REQUIRE(regs.pc == oldpc+2);
         REQUIRE(oldflags == regs.flags.byte);
@@ -82,7 +78,7 @@ TEST_CASE("branch") {
         mem_write(dev.ram, regs.pc, BCC);
         mem_write(dev.ram, regs.pc+1, addr);
 
-        console_clock(dev, nullptr);
+        console_clock(dev);
 
         REQUIRE(regs.pc == oldpc+addr+2);
         REQUIRE(oldflags == regs.flags.byte);
@@ -98,7 +94,7 @@ TEST_CASE("branch") {
         mem_write(dev.ram, regs.pc, BEQ);
         mem_write(dev.ram, regs.pc+1, addr);
 
-        console_clock(dev, nullptr);
+        console_clock(dev);
 
         REQUIRE(regs.pc == oldpc+addr+2);
         REQUIRE(oldflags == regs.flags.byte);
@@ -114,7 +110,7 @@ TEST_CASE("branch") {
         mem_write(dev.ram, regs.pc, BEQ);
         mem_write(dev.ram, regs.pc+1, addr);
 
-        console_clock(dev, nullptr);
+        console_clock(dev);
 
         REQUIRE(regs.pc == oldpc+2);
         REQUIRE(oldflags == regs.flags.byte);
@@ -130,7 +126,7 @@ TEST_CASE("branch") {
         mem_write(dev.ram, regs.pc, BEQ);
         mem_write(dev.ram, regs.pc+1, addr);
 
-        console_clock(dev, nullptr);
+        console_clock(dev);
 
         REQUIRE(regs.pc == oldpc+addr+2);
         REQUIRE(oldflags == regs.flags.byte);
@@ -146,7 +142,7 @@ TEST_CASE("branch") {
         mem_write(dev.ram, regs.pc, BEQ);
         mem_write(dev.ram, regs.pc+1, addr);
 
-        console_clock(dev, nullptr);
+        console_clock(dev);
 
         REQUIRE(regs.pc == oldpc+2);
         REQUIRE(oldflags == regs.flags.byte);
@@ -167,7 +163,7 @@ TEST_CASE("immediate-instructs") {
         regs.a = 0b01010101;
         mem_write(dev.ram, 0, 0x29);
         mem_write(dev.ram, 1, 0b00010001);
-        console_clock(dev, nullptr);
+        console_clock(dev);
         REQUIRE(regs.a == (0b01010101 & 0b00010001));
         REQUIRE(regs.flags.bits.z == 0);
     }
@@ -176,7 +172,7 @@ TEST_CASE("immediate-instructs") {
         regs.a = 0b01010101;
         mem_write(dev.ram, 0, 0x29);
         mem_write(dev.ram, 1, 0b00000000);
-        console_clock(dev, nullptr);
+        console_clock(dev);
         REQUIRE(regs.a == (0b01010101 & 0b00000000));
         REQUIRE(regs.flags.bits.z == 1);
     }
@@ -186,7 +182,7 @@ TEST_CASE("immediate-instructs") {
         regs.flags.bits.c = 1;
         mem_write(dev.ram, 0, 0x69);
         mem_write(dev.ram, 1, 99);
-        console_clock(dev, nullptr);
+        console_clock(dev);
         REQUIRE(regs.a == (3 + 99 + 1));
         REQUIRE(regs.flags.bits.c == 0);
     }
@@ -195,7 +191,7 @@ TEST_CASE("immediate-instructs") {
         regs.a = 0xFF;
         mem_write(dev.ram, 0, 0x69);
         mem_write(dev.ram, 1, 1);
-        console_clock(dev, nullptr);
+        console_clock(dev);
         REQUIRE(regs.a == 0);
         REQUIRE(regs.flags.bits.c == 1);
     }
@@ -204,7 +200,7 @@ TEST_CASE("immediate-instructs") {
         regs.a = 4;
         mem_write(dev.ram, 0, 0x69);
         mem_write(dev.ram, 1, -10);
-        console_clock(dev, nullptr);
+        console_clock(dev);
         REQUIRE(regs.a == uint8_t(4-10));
         REQUIRE(regs.flags.bits.c == 0);
         REQUIRE(regs.flags.bits.v == 1);
@@ -223,7 +219,7 @@ TEST_CASE("implied-instructs") {
     SECTION("PHP") {
         regs.flags.byte = 0xF5;
         mem_write(dev.ram, 0, 0x08);
-        console_clock(dev, nullptr);
+        console_clock(dev);
         REQUIRE(regs.flags.byte == 0xF5);
         REQUIRE(mem_read(dev.ram, STACK.start | (regs.sp+1)) == 0xF5);
     }
@@ -243,7 +239,7 @@ TEST_CASE("jmp-bug") {
         mem_write(dev.ram, 0x00FF, 0x11);
         mem_write(dev.ram, 0x0000, 0xF5);
 
-        console_clock(dev, nullptr);
+        console_clock(dev);
         REQUIRE(regs.pc == 0xF511);
     }
 
@@ -256,7 +252,7 @@ TEST_CASE("jmp-bug") {
         mem_write(dev.ram, 0x1511, 0x13);
         mem_write(dev.ram, 0x1512, 0x0F);
 
-        console_clock(dev, nullptr);
+        console_clock(dev);
         REQUIRE(regs.pc == 0x0F13);
     }
 
@@ -266,7 +262,7 @@ TEST_CASE("jmp-bug") {
         mem_write(dev.ram, 0x00FE, 0x11);
         mem_write(dev.ram, 0x00FF, 0xF5);
 
-        console_clock(dev, nullptr);
+        console_clock(dev);
         REQUIRE(regs.pc == 0xF511);
     }
 
@@ -279,7 +275,7 @@ TEST_CASE("jmp-bug") {
         mem_write(dev.ram, 0x1511, 0x13);
         mem_write(dev.ram, 0x1512, 0x0F);
 
-        console_clock(dev, nullptr);
+        console_clock(dev);
         REQUIRE(regs.pc == 0x0F13);
     }
 }

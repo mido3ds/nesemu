@@ -1,5 +1,4 @@
-#include "RAM.h"
-#include "common.h"
+#include "Console.h"
 
 bool ram_read(RAM& self, uint16_t addr, uint8_t& data) {
     if (region_contains(RAM_REGION, addr)) {

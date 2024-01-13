@@ -1,9 +1,4 @@
-#include <array>
-#include <functional>
-
-#include "common.h"
-#include "CPU.h"
-#include "instructions.h"
+#include "Console.h"
 
 void ADC(CPU& cpu) {
     auto v = cpu.arg_value;
@@ -745,3 +740,99 @@ const InstructionSet instruction_set{
     Instruction{_DEF(INC), AddressMode::AbsoluteX,       7, 0},
     Instruction{_DEF(ISC), AddressMode::AbsoluteX,       7, 0}
 };
+
+mu::Vec<Assembly>
+bytecodes_disassemble(const mu::Vec<uint8_t>& bytecodes, mu::memory::Allocator* allocator) {
+    mu::Vec<Assembly> out(allocator);
+
+    uint8_t const* mem = bytecodes.data();
+    int size = (int) bytecodes.size();
+
+    uint16_t addr = (size == region_size(PRG_ROM_LOW)) ? PRG_ROM_UP.start : PRG_ROM_LOW.start;
+
+    while (size > 0) {
+        int consumedBytes = 1;
+        mu::Str instr(allocator);
+        mu::Str a(mu::memory::tmp()), b(mu::memory::tmp());
+
+        auto name = instruction_set[mem[0]].name;
+        if (name == "???") {
+            mu::str_push(instr, "{:02X} ?????", mem[0]);
+        } else {
+            mu::str_push(instr, name);
+        }
+
+        if (size >= 2) { mu::str_push(a, "{:02X}", mem[1]); }
+        else           { a = "??"; }
+
+        if (size >= 3) { mu::str_push(b, "{:02X}", mem[1]); }
+        else           { b = "??"; }
+
+        switch (instruction_set[mem[0]].mode ) {
+        case AddressMode::Implicit:
+            break;
+        case AddressMode::Accumulator:
+            mu::str_push(instr, " A");
+            break;
+        case AddressMode::Immediate:
+            mu::str_push(instr, " #{}", a);
+            consumedBytes++;
+            break;
+        case AddressMode::ZeroPage:
+            mu::str_push(instr, " ${}", a);
+            consumedBytes++;
+            break;
+        case AddressMode::ZeroPageX:
+            mu::str_push(instr, " ${}, X", a);
+            consumedBytes++;
+            break;
+        case AddressMode::ZeroPageY:
+            mu::str_push(instr, " ${}, Y", a);
+            consumedBytes++;
+            break;
+        case AddressMode::Relative:
+            if (size >= 2) { a.clear(); mu::str_push(a, "{:+}", int8_t(mem[1])); }
+            else           { a = "??"; }
+
+            mu::str_push(instr, " {}", a);
+            consumedBytes++;
+            break;
+        case AddressMode::Absolute:
+            mu::str_push(instr, " ${}{}", b, a);
+            consumedBytes += 2;
+            break;
+        case AddressMode::AbsoluteX:
+            mu::str_push(instr, " ${}{}, X", b, a);
+            consumedBytes += 2;
+            break;
+        case AddressMode::AbsoluteY:
+            mu::str_push(instr, " ${}{}, Y", b, a);
+            consumedBytes += 2;
+            break;
+        case AddressMode::Indirect:
+            mu::str_push(instr, " (${}{})", b, a);
+            consumedBytes += 2;
+            break;
+        case AddressMode::IndexedIndirect:
+            mu::str_push(instr, " (${}, X)", a);
+            consumedBytes++;
+            break;
+        case AddressMode::IndirectIndexed:
+            mu::str_push(instr, " (${}, Y)", a);
+            consumedBytes++;
+            break;
+        default: mu_unreachable();
+        }
+
+        out.push_back(Assembly {
+            .adr = addr,
+            .instr = instr,
+        });
+
+        size -= consumedBytes;
+        mem  += consumedBytes;
+        addr += consumedBytes;
+    }
+
+    return out;
+}
