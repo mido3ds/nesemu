@@ -74,12 +74,13 @@ struct World {
     bool should_pause;
     bool do_one_instr;
 
-    sf::Clock delta_clock;
-    sf::Time frame_time;
+    mu::Timer loop_timer;
+    double frame_time_secs;
 
     Console console;
     sf::Sprite console_sprite;
     sf::Texture console_texture;
+    mu::Timer console_render_timer;
 
     sf::Texture tile_texture;
     sf::Sprite tile_sprite;
@@ -112,7 +113,7 @@ namespace sys {
     }
 
     void imgui_rendering_begin(World& world) {
-        ImGui::SFML::Update(world.window, world.frame_time);
+        ImGui::SFML::Update(world.window, sf::seconds((float)world.frame_time_secs));
     }
 
     void imgui_rendering_end(World& world) {
@@ -394,8 +395,9 @@ namespace sys {
     void imgui_debug_window(World& world) {
         if (ImGui::Begin("Debug")) {
             // fps
-            auto time_millis = world.frame_time.asMilliseconds();
-            ImGui::Text(mu::str_tmpf("FPS: {}", time_millis == 0? 0 : 1000 / time_millis).c_str());
+            auto time_millis = std::max(mu::timer_elapsed(world.loop_timer), uint64_t(1));
+            auto fps = uint64_t(1000.0 / time_millis);
+            ImGui::Text(mu::str_tmpf("FPS: {}", fps).c_str());
 
             if (world.should_pause) {
                 if (ImGui::Button("Resume")) {
@@ -508,7 +510,8 @@ namespace sys {
     }
 
     void clock_update(World& world) {
-        world.frame_time = world.delta_clock.restart();
+        world.frame_time_secs = std::max(mu::timer_elapsed(world.loop_timer) / 1000.0, 0.001);
+        world.loop_timer = mu::timer_new();
     }
 
     void console_init(World& world) {
@@ -530,18 +533,23 @@ namespace sys {
 
     void console_update(World& world) {
         if (!world.should_pause || world.do_one_instr) {
-            console_input(world.console, JoyPadInput {
-                .a       = sf::Keyboard::isKeyPressed(Config::a),
-                .b       = sf::Keyboard::isKeyPressed(Config::b),
-                .select  = sf::Keyboard::isKeyPressed(Config::select),
-                .start   = sf::Keyboard::isKeyPressed(Config::start),
-                .up      = sf::Keyboard::isKeyPressed(Config::up),
-                .down    = sf::Keyboard::isKeyPressed(Config::down),
-                .left    = sf::Keyboard::isKeyPressed(Config::left),
-                .right   = sf::Keyboard::isKeyPressed(Config::right)
-            });
+            // console_input(world.console, JoyPadInput {
+            //     .a       = sf::Keyboard::isKeyPressed(Config::a),
+            //     .b       = sf::Keyboard::isKeyPressed(Config::b),
+            //     .select  = sf::Keyboard::isKeyPressed(Config::select),
+            //     .start   = sf::Keyboard::isKeyPressed(Config::start),
+            //     .up      = sf::Keyboard::isKeyPressed(Config::up),
+            //     .down    = sf::Keyboard::isKeyPressed(Config::down),
+            //     .left    = sf::Keyboard::isKeyPressed(Config::left),
+            //     .right   = sf::Keyboard::isKeyPressed(Config::right)
+            // });
 
             console_clock(world.console);
+
+            if (mu::timer_elapsed(world.console_render_timer) >= Config::sys.millis_per_frame) {
+                world.console_render_timer = mu::timer_new();
+                ppu_render(world.console.ppu, world.console.screen_buf);
+            }
         }
         world.do_one_instr = !world.should_pause;
     }
@@ -573,6 +581,8 @@ int main(int argc, char** argv) {
     mu_defer(sys::imgui_free(world));
 
     sys::console_init(world);
+
+    sys::clock_update(world);
 
     while (world.window.isOpen()) {
         sys::clock_update(world);

@@ -177,8 +177,8 @@ void cpu_write_arg(CPU& self, uint8_t v) {
 uint8_t cpu_read(CPU& self, uint16_t address) {
     uint8_t data = 0;
     bool success = rom_read(self.console->rom, address, data)
-        || ram_read(self.console->ram, address, data)
-        || ppu_read(self.console->ppu, address, data);
+        || ram_read(self.console->ram, address, data);
+        // || ppu_read(self.console->ppu, address, data);
     if (!success) {
        mu::log_warning("read from unregistered address 0x{:02X}", address);
     }
@@ -191,8 +191,8 @@ uint16_t cpu_read16(CPU& self, uint16_t address) {
 
 void cpu_write(CPU& self, uint16_t address, uint8_t data)  {
     bool success = rom_write(self.console->rom, address, data)
-        || ram_write(self.console->ram, address, data)
-        || ppu_read(self.console->ppu, address, data);
+        || ram_write(self.console->ram, address, data);
+        // || ppu_read(self.console->ppu, address, data);
     if (!success) {
        mu::log_warning("write to unregistered address 0x{:02X}", address);
     }

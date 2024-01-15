@@ -93,12 +93,12 @@ struct Region {
     uint16_t start, end;
 };
 
-inline static bool
+constexpr bool
 region_contains(Region self, uint16_t addr) {
     return addr <= self.end && addr >= self.start;
 }
 
-inline static uint16_t
+constexpr uint16_t
 region_size(Region self) {
     return (self.end + 1) - self.start;
 }
@@ -166,7 +166,7 @@ static_assert(sizeof(PatternTablePointer) == sizeof(uint16_t));
 constexpr struct VideoSystem {
     int cpu_cycles; // in nanoseconds
     int fps;
-    float time_per_frame; // in milliseconds
+    float millis_per_frame; // in milliseconds
     int scanlines_per_frame;
     float cpu_cycles_per_scanline;
     struct {int width, height;} resolution;
@@ -382,19 +382,21 @@ struct Palette {
 
 struct PPU {
     Console* console;
-    uint16_t cycles = 0, row = 0, col = 0;
+    uint16_t cycles, row, col;
 
     // vram
     uint8_t universal_bg_index; // $3F00
     Palette bg_palettes[4],      // $3F01 - $3F0F
             sprite_palettes[4];  // $3F11 - $3F1F
+
+    mu::Arr<uint8_t, region_size(NAME_TBL0)> nametable;
 };
 
-PPU ppu_new(Console* console);
-void ppu_clock(PPU& self);
-void ppu_reset(PPU& self);
-bool ppu_read(PPU& self, uint16_t addr, uint8_t& data);
-bool ppu_write(PPU& self, uint16_t addr, uint8_t data);
+// void ppu_clock(PPU& self);
+// void ppu_reset(PPU& self);
+// bool ppu_read(PPU& self, uint16_t addr, uint8_t& data);
+// bool ppu_write(PPU& self, uint16_t addr, uint8_t data);
+void ppu_render(const PPU& self, ScreenBuf& buf);
 
 using RAM = mu::Arr<uint8_t, 0x07FF+1>;
 
@@ -479,15 +481,15 @@ void console_init(Console& self, const mu::Str& rom_path = "");
 void console_reset(Console& self);
 void console_clock(Console& self);
 
-struct JoyPadInput {
-    bool a;
-    bool b;
-    bool select;
-    bool start;
-    bool up;
-    bool down;
-    bool left;
-    bool right;
-};
+// struct JoyPadInput {
+//     bool a;
+//     bool b;
+//     bool select;
+//     bool start;
+//     bool up;
+//     bool down;
+//     bool left;
+//     bool right;
+// };
 
-void console_input(Console& self, JoyPadInput joypad);
+// void console_input(Console& self, JoyPadInput joypad);
