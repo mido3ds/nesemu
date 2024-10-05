@@ -231,21 +231,25 @@ namespace sys {
         if (ImGui::Begin("Viewer")) {
             if (ImGui::BeginTabBar("viewer_tab_bar")) {
                 if (ImGui::BeginTabItem("Pattern Table")) {
-                    // get tile
-                    static int row = 0, col = 0, palette_index = 0 /*0-4*/;
+                    static auto table_half = PatternTablePointer::TableHalf::LEFT;
+                    static int row = 0, col = 0;
+
                     enum class ColorType { BG, SPRITE };
                     static ColorType color_type = ColorType::BG;
-                    static auto table_half = PatternTablePointer::TableHalf::LEFT;
-                    PatternTablePointer p {
-                        .bits = {
-                            .tile_col = (uint8_t) col,
-                            .tile_row = (uint8_t) row,
-                            .table_half = table_half,
-                        }
-                    };
+                    static int palette_index = 0; // 0,1,2,3
+
+                    // get tile
                     uint8_t tile[8][8] = {0};
+                    RGBAColor colored_tile[8][8] = {0};
                     for (int j = 0; j < 8; j++) {
-                        p.bits.row_in_tile = j;
+                        PatternTablePointer p {
+                            .bits = {
+                                .row_in_tile = (uint8_t) j,
+                                .tile_col = (uint8_t) col,
+                                .tile_row = (uint8_t) row,
+                                .table_half = table_half,
+                            }
+                        };
                         p.bits.bit_plane = PatternTablePointer::BitPlane::LOWER;
                         auto l = std::bitset<8>(world.console.rom.chr[p.word]);
                         p.bits.bit_plane = PatternTablePointer::BitPlane::UPPER;
@@ -253,6 +257,10 @@ namespace sys {
 
                         for (int i = 0; i < 8; i++) {
                             tile[j][i] = h[7-i] << 1 | l[7-i];
+
+                            const Palette& palette = color_type == ColorType::BG ?
+                                world.console.ppu.bg_palettes[palette_index] : world.console.ppu.sprite_palettes[palette_index];
+                            colored_tile[j][i] = color_from_palette(palette.index[tile[j][i]]);
                         }
                     }
 
@@ -286,31 +294,24 @@ namespace sys {
 
                     ImGui::SameLine();
 
-                    // render tile
-                    RGBAColor tile_monochrome[8][8] = {0};
-                    const Palette& palette = color_type == ColorType::BG ?
-                        world.console.ppu.bg_palettes[palette_index] : world.console.ppu.sprite_palettes[palette_index];
-                    for (int i = 0; i < 8; i++) {
-                        for (int j = 0; j< 8; j++) {
-                            tile_monochrome[i][j] = color_from_palette(palette.index[tile[i][j]]);
-                        }
-                    }
-                    world.tile_texture.update((const sf::Uint8*)tile_monochrome);
+                    // tile as image
+                    world.tile_texture.update((const sf::Uint8*)colored_tile);
                     world.tile_sprite.setScale(15 * Config::view_scale, 15 * Config::view_scale);
                     ImGui::Image(world.tile_sprite);
 
-
+                    // configs
                     ImGui::SliderInt("Col", &col, 0, 15, "%d", ImGuiSliderFlags_AlwaysClamp);
                     ImGui::SliderInt("Row", &row, 0, 15, "%d", ImGuiSliderFlags_AlwaysClamp);
                     MyImGui::EnumsCombo("Half", &table_half, {
                         {PatternTablePointer::TableHalf::LEFT, "LEFT"},
                         {PatternTablePointer::TableHalf::RIGHT, "RIGHT"},
                     });
-                    ImGui::SliderInt("Palette Index", &palette_index, 0, 3, "%d", ImGuiSliderFlags_AlwaysClamp);
+                    ImGui::NewLine();
                     MyImGui::EnumsCombo("Color Type", &color_type, {
                         {ColorType::BG, "BG"},
                         {ColorType::SPRITE, "SPRITE"},
                     });
+                    ImGui::SliderInt("Palette Index", &palette_index, 0, 3, "%d", ImGuiSliderFlags_AlwaysClamp);
 
                     ImGui::EndTabItem();
                 }
@@ -612,7 +613,9 @@ int main(int argc, char** argv) {
 /*
 TODO:
 - remove vram
+- whole pattern table (left and right)
 - nametable
+    - what are registers?
     - render one frame without color
     - render one frame with color from one palette
     - select palette from attribute table
