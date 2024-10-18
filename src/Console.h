@@ -493,3 +493,20 @@ void console_clock(Console& self);
 // };
 
 // void console_input(Console& self, JoyPadInput joypad);
+
+mu::Vec<uint8_t>
+console_get_tile_as_indices(
+    const Console& self,
+    PatternTablePointer::TableHalf table_half, int row, int col,
+    mu::memory::Allocator* allocator = mu::memory::default_allocator()
+);
+
+enum class PaletteType { BG, SPRITE };
+
+mu::Vec<RGBAColor>
+console_get_tile_as_pixels(
+    const Console& self,
+    const mu::Vec<uint8_t>& tile_as_indices,
+    PaletteType palette_type, int palette_index,
+    mu::memory::Allocator* allocator = mu::memory::default_allocator()
+);

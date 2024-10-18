@@ -1,5 +1,3 @@
-#include <bitset>
-
 #include <imgui.h>
 #include <imgui-SFML.h>
 #include <SFML/Window.hpp>
@@ -82,8 +80,8 @@ struct World {
     sf::Texture console_texture;
     mu::Timer console_render_timer;
 
-    sf::Texture tile_texture;
-    sf::Sprite tile_sprite;
+    sf::Texture tile_texture, ptables_texture[2];
+    sf::Sprite tile_sprite, ptables_sprite[2];
 };
 
 namespace sys {
@@ -231,88 +229,84 @@ namespace sys {
         if (ImGui::Begin("Viewer")) {
             if (ImGui::BeginTabBar("viewer_tab_bar")) {
                 if (ImGui::BeginTabItem("Pattern Table")) {
-                    static auto table_half = PatternTablePointer::TableHalf::LEFT;
-                    static int row = 0, col = 0;
-
-                    enum class ColorType { BG, SPRITE };
-                    static ColorType color_type = ColorType::BG;
+                    static PaletteType palette_type = PaletteType::BG;
                     static int palette_index = 0; // 0,1,2,3
 
-                    // get tile
-                    uint8_t tile[8][8] = {0};
-                    RGBAColor colored_tile[8][8] = {0};
-                    for (int j = 0; j < 8; j++) {
-                        PatternTablePointer p {
-                            .bits = {
-                                .row_in_tile = (uint8_t) j,
-                                .tile_col = (uint8_t) col,
-                                .tile_row = (uint8_t) row,
-                                .table_half = table_half,
-                            }
-                        };
-                        p.bits.bit_plane = PatternTablePointer::BitPlane::LOWER;
-                        auto l = std::bitset<8>(world.console.rom.chr[p.word]);
-                        p.bits.bit_plane = PatternTablePointer::BitPlane::UPPER;
-                        auto h = std::bitset<8>(world.console.rom.chr[p.word]);
-
-                        for (int i = 0; i < 8; i++) {
-                            tile[j][i] = h[7-i] << 1 | l[7-i];
-
-                            const Palette& palette = color_type == ColorType::BG ?
-                                world.console.ppu.bg_palettes[palette_index] : world.console.ppu.sprite_palettes[palette_index];
-                            colored_tile[j][i] = color_from_palette(palette.index[tile[j][i]]);
-                        }
-                    }
-
-                    // tile as a table
-                    constexpr auto TABLE_FLAGS = ImGuiTableFlags_NoHostExtendX | ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_BordersOuter;
-                    if (ImGui::BeginTable("pattern_table", 8, TABLE_FLAGS)) {
-                        for (int j = 0; j < 8; j++) {
-                            ImGui::TableNextRow();
-
-                            for (int i = 0; i < 8; i++) {
-                                ImGui::TableSetColumnIndex(i);
-
-                                const int val = tile[j][i] & 0b11;
-                                if (val == 0) {
-                                    ImGui::Text(".");
-                                } else {
-                                    ImVec4 color;
-                                    switch (val) {
-                                    case 3: color = {1.0f, 1.0f, 1.0f, 1.0f}; break;
-                                    case 2: color = {67.0f/255.0f, 145.0f/255.0f, 170.0f/255.0f, 1.0f}; break;
-                                    case 1: color = {131.0f/255.0f, 162.0f/255.0f, 173.0f/255.0f, 1.0f}; break;
-                                    default: mu_unreachable();
-                                    }
-                                    ImGui::TextColored(color, mu::str_tmpf("{}", val).c_str());
-                                }
-                            }
-                        }
-
-                        ImGui::EndTable();
-                    }
-
-                    ImGui::SameLine();
-
-                    // tile as image
-                    world.tile_texture.update((const sf::Uint8*)colored_tile);
-                    world.tile_sprite.setScale(15 * Config::view_scale, 15 * Config::view_scale);
-                    ImGui::Image(world.tile_sprite);
-
-                    // configs
-                    ImGui::SliderInt("Col", &col, 0, 15, "%d", ImGuiSliderFlags_AlwaysClamp);
-                    ImGui::SliderInt("Row", &row, 0, 15, "%d", ImGuiSliderFlags_AlwaysClamp);
-                    MyImGui::EnumsCombo("Half", &table_half, {
-                        {PatternTablePointer::TableHalf::LEFT, "LEFT"},
-                        {PatternTablePointer::TableHalf::RIGHT, "RIGHT"},
-                    });
-                    ImGui::NewLine();
-                    MyImGui::EnumsCombo("Color Type", &color_type, {
-                        {ColorType::BG, "BG"},
-                        {ColorType::SPRITE, "SPRITE"},
+                    MyImGui::EnumsCombo("Color Type", &palette_type, {
+                        {PaletteType::BG, "BG"},
+                        {PaletteType::SPRITE, "SPRITE"},
                     });
                     ImGui::SliderInt("Palette Index", &palette_index, 0, 3, "%d", ImGuiSliderFlags_AlwaysClamp);
+                    ImGui::NewLine();
 
+                    if (ImGui::CollapsingHeader("Tiles")) {
+                        static auto table_half = PatternTablePointer::TableHalf::LEFT;
+                        static int row = 0, col = 0;
+
+                        auto tile_indices = console_get_tile_as_indices(world.console, table_half, row, col, mu::memory::tmp());
+                        auto tile_pixels = console_get_tile_as_pixels(world.console, tile_indices, palette_type, palette_index, mu::memory::tmp());
+
+                        // tile as indices
+                        constexpr auto TABLE_FLAGS = ImGuiTableFlags_NoHostExtendX | ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_BordersOuter;
+                        if (ImGui::BeginTable("pattern_table", 8, TABLE_FLAGS)) {
+                            for (int j = 0; j < 8; j++) {
+                                ImGui::TableNextRow();
+
+                                for (int i = 0; i < 8; i++) {
+                                    ImGui::TableSetColumnIndex(i);
+
+                                    const int val = tile_indices[j*8+i] & 0b11;
+                                    if (val == 0) {
+                                        ImGui::Text(".");
+                                    } else {
+                                        ImVec4 color;
+                                        switch (val) {
+                                        case 3: color = {1.0f, 1.0f, 1.0f, 1.0f}; break;
+                                        case 2: color = {67.0f/255.0f, 145.0f/255.0f, 170.0f/255.0f, 1.0f}; break;
+                                        case 1: color = {131.0f/255.0f, 162.0f/255.0f, 173.0f/255.0f, 1.0f}; break;
+                                        default: mu_unreachable();
+                                        }
+                                        ImGui::TextColored(color, mu::str_tmpf("{}", val).c_str());
+                                    }
+                                }
+                            }
+
+                            ImGui::EndTable();
+                        }
+
+                        ImGui::SameLine();
+
+                        // tile as image
+                        world.tile_texture.update((const sf::Uint8*)tile_pixels.data());
+                        world.tile_sprite.setScale(15 * Config::view_scale, 15 * Config::view_scale);
+                        ImGui::Image(world.tile_sprite);
+
+                        // configs
+                        ImGui::SliderInt("Col", &col, 0, 15, "%d", ImGuiSliderFlags_AlwaysClamp);
+                        ImGui::SliderInt("Row", &row, 0, 15, "%d", ImGuiSliderFlags_AlwaysClamp);
+                        MyImGui::EnumsCombo("Half", &table_half, {
+                            {PatternTablePointer::TableHalf::LEFT, "LEFT"},
+                            {PatternTablePointer::TableHalf::RIGHT, "RIGHT"},
+                        });
+                    }
+
+                    if (ImGui::CollapsingHeader("Tables", ImGuiTreeNodeFlags_DefaultOpen)) {
+                        mu::memory::Arena arena {};
+                        mu::StrView table_name[2] {"Left", "Right"};
+                        for (int table = 0; table < 2; table++)  {
+                            ImGui::Text(mu::str_tmpf("{} Half", table_name[table]).c_str());
+
+                            for (int row = 0; row < 16; row++) {
+                                for (int col = 0; col < 16; col++) {
+                                    auto tile_indices = console_get_tile_as_indices(world.console, (PatternTablePointer::TableHalf)table, row, col, &arena);
+                                    auto tile_pixels = console_get_tile_as_pixels(world.console, tile_indices, palette_type, palette_index, &arena);
+                                    world.ptables_texture[table].update((const sf::Uint8*)tile_pixels.data(), 8, 8, col*8, row*8);
+                                }
+                            }
+                            world.ptables_sprite[table].setScale(2 * Config::view_scale, 2 * Config::view_scale);
+                            ImGui::Image(world.ptables_sprite[table]);
+                        }
+                    }
                     ImGui::EndTabItem();
                 }
 
@@ -530,6 +524,13 @@ namespace sys {
             mu::panic("failed to create texture");
         }
         world.tile_sprite.setTexture(world.tile_texture);
+
+        for (int i = 0; i < 2; i++) {
+            if (world.ptables_texture[i].create(8*16, 8*16) == false) {
+                mu::panic("failed to create texture");
+            }
+            world.ptables_sprite[i].setTexture(world.ptables_texture[i]);
+        }
     }
 
     void console_update(World& world) {
@@ -613,7 +614,6 @@ int main(int argc, char** argv) {
 /*
 TODO:
 - remove vram
-- whole pattern table (left and right)
 - nametable
     - what are registers?
     - render one frame without color
