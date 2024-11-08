@@ -68,6 +68,8 @@ struct World {
     mu::Str rom_path;
     sf::RenderWindow window;
     mu::Str imgui_ini_file_path;
+    mu::Vec<sf::Texture> textures;
+    mu::Vec<sf::Sprite> sprites;
 
     bool should_pause;
     bool do_one_instr;
@@ -76,12 +78,7 @@ struct World {
     double frame_time_secs;
 
     Console console;
-    sf::Sprite console_sprite;
-    sf::Texture console_texture;
     mu::Timer console_render_timer;
-
-    sf::Texture tile_texture, ptables_texture[2];
-    sf::Sprite tile_sprite, ptables_sprite[2];
 };
 
 namespace sys {
@@ -277,9 +274,15 @@ namespace sys {
                         ImGui::SameLine();
 
                         // tile as image
-                        world.tile_texture.update((const sf::Uint8*)tile_pixels.data());
-                        world.tile_sprite.setScale(15 * Config::view_scale, 15 * Config::view_scale);
-                        ImGui::Image(world.tile_sprite);
+                        auto& tile_texture = world.textures.emplace_back(sf::Texture());
+                        if (tile_texture.create(8, 8) == false) {
+                            mu::panic("failed to create texture");
+                        }
+                        auto& tile_sprite = world.sprites.emplace_back(sf::Sprite(tile_texture));
+                        tile_sprite.setTexture(tile_texture);
+                        tile_texture.update((const sf::Uint8*)tile_pixels.data());
+                        tile_sprite.setScale(15 * Config::view_scale, 15 * Config::view_scale);
+                        ImGui::Image(tile_sprite);
 
                         // configs
                         ImGui::SliderInt("Col", &col, 0, 15, "%d", ImGuiSliderFlags_AlwaysClamp);
@@ -296,15 +299,22 @@ namespace sys {
                         for (int table = 0; table < 2; table++)  {
                             ImGui::Text(mu::str_tmpf("{} Half", table_name[table]).c_str());
 
+                            auto& texture = world.textures.emplace_back(sf::Texture());
+                            if (texture.create(8*16, 8*16) == false) {
+                                mu::panic("failed to create texture");
+                            }
+
                             for (int row = 0; row < 16; row++) {
                                 for (int col = 0; col < 16; col++) {
                                     auto tile_indices = console_get_tile_as_indices(world.console, (PatternTablePointer::TableHalf)table, row, col, &arena);
                                     auto tile_pixels = console_get_tile_as_pixels(world.console, tile_indices, palette_type, palette_index, &arena);
-                                    world.ptables_texture[table].update((const sf::Uint8*)tile_pixels.data(), 8, 8, col*8, row*8);
+                                    texture.update((const sf::Uint8*)tile_pixels.data(), 8, 8, col*8, row*8);
                                 }
                             }
-                            world.ptables_sprite[table].setScale(2 * Config::view_scale, 2 * Config::view_scale);
-                            ImGui::Image(world.ptables_sprite[table]);
+
+                            auto& sprite = world.sprites.emplace_back(sf::Sprite(texture));
+                            sprite.setScale(2 * Config::view_scale, 2 * Config::view_scale);
+                            ImGui::Image(sprite);
                         }
                     }
                     ImGui::EndTabItem();
@@ -476,6 +486,8 @@ namespace sys {
     }
 
     void wnd_rendering_begin(World& world) {
+        world.textures = mu::Vec<sf::Texture>(mu::memory::tmp());
+        world.sprites = mu::Vec<sf::Sprite>(mu::memory::tmp());
         world.window.setView(world.window.getDefaultView());
         world.window.clear();
     }
@@ -514,23 +526,6 @@ namespace sys {
 
         world.should_pause = true;
         world.do_one_instr = false;
-
-        if (world.console_texture.create(Config::resolution.w, Config::resolution.h) == false) {
-            mu::panic("texture.create failed");
-        }
-        world.console_sprite.setTexture(world.console_texture);
-
-        if (world.tile_texture.create(8, 8) == false) {
-            mu::panic("failed to create texture");
-        }
-        world.tile_sprite.setTexture(world.tile_texture);
-
-        for (int i = 0; i < 2; i++) {
-            if (world.ptables_texture[i].create(8*16, 8*16) == false) {
-                mu::panic("failed to create texture");
-            }
-            world.ptables_sprite[i].setTexture(world.ptables_texture[i]);
-        }
     }
 
     void console_update(World& world) {
@@ -557,9 +552,14 @@ namespace sys {
     }
 
     void console_render_screen(World& world) {
-        world.console_texture.update((const sf::Uint8*) world.console.screen_buf.pixels.data());
+        sf::Texture tex;
+        if (tex.create(Config::resolution.w, Config::resolution.h) == false) {
+            mu::panic("failed to create texture");
+        }
+        tex.update((const sf::Uint8*) world.console.screen_buf.pixels.data());
+
         world.window.setView(sf::View(sf::FloatRect(0, 0, (float)world.console.screen_buf.w, (float)world.console.screen_buf.h)));
-        world.window.draw(world.console_sprite);
+        world.window.draw(sf::Sprite(tex));
     }
 }
 
